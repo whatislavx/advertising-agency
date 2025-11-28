@@ -14,6 +14,14 @@ services:
     networks:
       - app-network
 
+    mongo:
+    image: mongo:6
+    container_name: ag_mongo
+    volumes:
+      - mongodata:/data/db
+    networks:
+      - app-network
+
   redis:
     image: redis:7
     container_name: ag_redis
