@@ -14,7 +14,7 @@ services:
     networks:
       - app-network
 
-    mongo:
+  mongo:
     image: mongo:6
     container_name: ag_mongo
     volumes:
