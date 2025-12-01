@@ -1,0 +1,49 @@
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="date"],
+input[type="tel"],
+select,
+textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #d1d5db; // gray-300
+    border-radius: var(--radius);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+
+    &:focus {
+        border-color: transparent;
+        box-shadow: 0 0 0 2px $orange;
+    }
+
+    &:disabled {
+        background-color: #f9fafb; // gray-50
+        cursor: not-allowed;
+    }
+}
+
+// Радіо-кнопки вибору ролі (Auth page)
+.role-radio-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius);
+    border: 2px solid #d1d5db;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #4b5563; // gray-600
+
+    &:hover {
+        border-color: #9ca3af;
+    }
+}
+
+input[type="radio"]:checked+.role-radio-label {
+    border-color: $orange;
+    background-color: #fff5f2;
+    color: $orange;
+}
