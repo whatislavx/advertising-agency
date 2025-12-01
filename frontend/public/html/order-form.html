@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Створення замовлення</title>
+    <link rel="stylesheet" href="../css/main.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+  </head>
+  <body class="bg-gray-50 min-h-screen">
+    <header class="header">
+      <div class="header-container header-content">
+        <div class="flex items-center gap-4">
+          <a
+            href="catalog.html"
+            class="flex items-center gap-2 text-gray-600 hover:text-[#1a3a5c] transition-colors"
+          >
+            <i data-lucide="arrow-left" class="w-5 h-5"></i> Назад до каталогу
+          </a>
+        </div>
+        <h1 class="text-2xl text-[#1a3a5c] font-medium">
+          Створення замовлення
+        </h1>
+        <a
+          href="index.html"
+          class="flex items-center gap-2 text-gray-600 hover:text-red-600 transition-colors"
+        >
+          <i data-lucide="log-out" class="w-5 h-5"></i> Вихід
+        </a>
+      </div>
+    </header>
+
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <form id="orderForm" onsubmit="handleSubmit(event)" class="space-y-6">
+        <div class="card p-6">
+          <div class="flex items-center gap-3 mb-4">
+            <div
+              class="w-10 h-10 rounded-full bg-[#ff6b35] text-white flex items-center justify-center font-bold"
+            >
+              A
+            </div>
+            <h2 class="text-xl text-[#1a3a5c] font-medium">Деталі послуги</h2>
+          </div>
+          <div
+            class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 rounded-lg p-4"
+          >
+            <div>
+              <label class="block text-sm text-gray-500 mb-1"
+                >Назва послуги</label
+              >
+              <p class="text-lg text-[#1a3a5c] font-medium">
+                Зовнішня реклама (Білборди)
+              </p>
+            </div>
+            <div>
+              <label class="block text-sm text-gray-500 mb-1"
+                >Базова ціна</label
+              >
+              <p
+                class="text-lg text-[#1a3a5c] font-medium"
+                id="basePrice"
+                data-price="15000"
+              >
+                15,000 грн
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card p-6">
+          <div class="flex items-center gap-3 mb-4">
+            <div
+              class="w-10 h-10 rounded-full bg-[#ff6b35] text-white flex items-center justify-center font-bold"
+            >
+              B
+            </div>
+            <h2 class="text-xl text-[#1a3a5c] font-medium">Період кампанії</h2>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm text-gray-700 mb-2">
+                <i data-lucide="calendar" class="inline mr-2 w-4 h-4"></i> Дата
+                початку
+              </label>
+              <input type="date" required />
+            </div>
+            <div>
+              <label class="block text-sm text-gray-700 mb-2">
+                <i data-lucide="calendar" class="inline mr-2 w-4 h-4"></i> Дата
+                завершення
+              </label>
+              <input type="date" required />
+            </div>
+          </div>
+        </div>
+
+        <div class="card p-6">
+          <div class="flex items-center gap-3 mb-4">
+            <div
+              class="w-10 h-10 rounded-full bg-[#ff6b35] text-white flex items-center justify-center font-bold"
+            >
+              C
+            </div>
+            <h2 class="text-xl text-[#1a3a5c] font-medium">
+              Додаткові ресурси
+            </h2>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <label class="resource-card">
+              <input
+                type="checkbox"
+                class="mt-1 w-5 h-5 text-[#ff6b35] focus:ring-[#ff6b35] resource-checkbox"
+                data-price="3000"
+                onchange="updateTotal(this)"
+              />
+              <div class="flex-1">
+                <p class="text-[#1a3a5c] font-medium">Оренда камери</p>
+                <p class="text-sm text-gray-600">+3,000 грн</p>
+              </div>
+            </label>
+
+            <label class="resource-card">
+              <input
+                type="checkbox"
+                class="mt-1 w-5 h-5 text-[#ff6b35] focus:ring-[#ff6b35] resource-checkbox"
+                data-price="2500"
+                onchange="updateTotal(this)"
+              />
+              <div class="flex-1">
+                <p class="text-[#1a3a5c] font-medium">Оператор</p>
+                <p class="text-sm text-gray-600">+2,500 грн</p>
+              </div>
+            </label>
+
+            <label class="resource-card">
+              <input
+                type="checkbox"
+                class="mt-1 w-5 h-5 text-[#ff6b35] focus:ring-[#ff6b35] resource-checkbox"
+                data-price="4000"
+                onchange="updateTotal(this)"
+              />
+              <div class="flex-1">
+                <p class="text-[#1a3a5c] font-medium">Монтажер</p>
+                <p class="text-sm text-gray-600">+4,000 грн</p>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div
+          class="bg-gradient-to-br from-[#1a3a5c] to-[#0d1f35] rounded-lg shadow-lg p-6 text-white"
+        >
+          <div class="flex items-center gap-3 mb-6">
+            <div
+              class="w-10 h-10 rounded-full bg-[#ff6b35] text-white flex items-center justify-center font-bold"
+            >
+              D
+            </div>
+            <h2 class="text-xl font-medium">Підсумок замовлення</h2>
+          </div>
+          <div class="space-y-3 mb-6">
+            <div
+              class="flex justify-between items-center pb-3 border-b border-white/20"
+            >
+              <span class="text-gray-300">Базова вартість:</span>
+              <span class="text-xl">15,000 грн</span>
+            </div>
+            <div class="flex justify-between items-center pt-3">
+              <span class="text-xl">Загальна вартість:</span>
+              <span class="text-3xl font-bold" id="totalPrice">15,000 грн</span>
+            </div>
+          </div>
+          <button
+            type="submit"
+            class="w-full btn bg-[#ff6b35] hover:bg-[#ff5722] text-white text-lg"
+          >
+            <i data-lucide="credit-card" class="w-6 h-6"></i> Підтвердити і
+            оплатити
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <script>
+      lucide.createIcons();
+
+      function updateTotal(checkbox) {
+        // Visual toggle style is handled via CSS :has(input:checked) in _cards.scss
+        // JS is only needed for calculation now
+
+        const basePrice = 15000;
+        let extrasTotal = 0;
+        document
+          .querySelectorAll(".resource-checkbox:checked")
+          .forEach((box) => {
+            extrasTotal += parseInt(box.getAttribute("data-price"));
+          });
+
+        const total = basePrice + extrasTotal;
+        document.getElementById("totalPrice").innerText =
+          total.toLocaleString() + " грн";
+      }
+
+      function handleSubmit(e) {
+        e.preventDefault();
+        alert("Замовлення успішно створено!");
+        window.location.href = "my-orders.html";
+      }
+    </script>
+  </body>
+</html>

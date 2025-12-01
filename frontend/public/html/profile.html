@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Профіль</title>
+    <link rel="stylesheet" href="../css/main.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+  </head>
+  <body class="bg-gray-50 min-h-screen">
+    <header class="header">
+      <div class="header-container header-content">
+        <h1 class="header-logo">Рекламне Агентство</h1>
+        <nav class="header-nav">
+          <a href="catalog.html">Каталог</a>
+          <a href="my-orders.html">Мої замовлення</a>
+          <a href="profile.html" class="active flex items-center gap-2">
+            <i data-lucide="user" class="w-4 h-4"></i> Профіль
+          </a>
+        </nav>
+        <a
+          href="index.html"
+          class="flex items-center gap-2 text-gray-600 hover:text-red-600 transition-colors"
+        >
+          <i data-lucide="log-out" class="w-5 h-5"></i> Вихід
+        </a>
+      </div>
+    </header>
+
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="mb-8">
+        <h2 class="text-3xl text-[#1a3a5c] font-medium mb-2">
+          Особистий кабінет
+        </h2>
+        <p class="text-gray-600">Управління вашим профілем та налаштуваннями</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-1">
+          <div class="card p-6">
+            <div class="text-center mb-6">
+              <div
+                class="w-24 h-24 bg-gradient-to-br from-[#1a3a5c] to-[#0d1f35] rounded-full mx-auto mb-4 flex items-center justify-center"
+              >
+                <i data-lucide="user" class="text-white w-12 h-12"></i>
+              </div>
+              <h3 class="text-xl text-[#1a3a5c] font-medium mb-1">
+                Іван Петренко
+              </h3>
+              <p class="text-sm text-gray-600">ivan.petrenko@example.com</p>
+            </div>
+            <div class="space-y-3 pt-4 border-t border-gray-200">
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-gray-600">Статус:</span>
+                <span class="badge badge-green">Активний</span>
+              </div>
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-gray-600">Реєстрація:</span>
+                <span class="text-gray-900">2024-06-15</span>
+              </div>
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-gray-600">Замовлень:</span>
+                <span class="text-gray-900">5</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-2">
+          <div class="card p-6">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="text-xl text-[#1a3a5c] font-medium">
+                Інформація профілю
+              </h3>
+
+              <div id="actionButtons">
+                <button
+                  onclick="enableEditing()"
+                  class="btn btn-primary px-4 py-2"
+                >
+                  <i data-lucide="edit-2" class="w-4 h-4"></i> Редагувати
+                </button>
+              </div>
+
+              <div id="editButtons" class="hidden gap-2">
+                <button
+                  onclick="saveProfile()"
+                  class="btn btn-green px-4 py-2 bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <i data-lucide="save" class="w-4 h-4"></i> Зберегти
+                </button>
+                <button
+                  onclick="cancelEditing()"
+                  class="btn btn-secondary px-4 py-2"
+                >
+                  <i data-lucide="x" class="w-4 h-4"></i> Скасувати
+                </button>
+              </div>
+            </div>
+
+            <div class="space-y-5">
+              <div>
+                <label
+                  class="flex items-center gap-2 text-sm text-gray-700 mb-2 font-medium"
+                >
+                  <i data-lucide="user" class="w-4 h-4"></i> Повне ім'я
+                </label>
+                <input
+                  type="text"
+                  id="inputName"
+                  value="Іван Петренко"
+                  disabled
+                />
+              </div>
+              <div>
+                <label
+                  class="flex items-center gap-2 text-sm text-gray-700 mb-2 font-medium"
+                >
+                  <i data-lucide="mail" class="w-4 h-4"></i> Email
+                </label>
+                <input
+                  type="email"
+                  id="inputEmail"
+                  value="ivan.petrenko@example.com"
+                  disabled
+                />
+              </div>
+              <div>
+                <label
+                  class="flex items-center gap-2 text-sm text-gray-700 mb-2 font-medium"
+                >
+                  <i data-lucide="phone" class="w-4 h-4"></i> Телефон
+                </label>
+                <input
+                  type="tel"
+                  id="inputPhone"
+                  value="+380 67 123 45 67"
+                  disabled
+                />
+              </div>
+              <div>
+                <label
+                  class="flex items-center gap-2 text-sm text-gray-700 mb-2 font-medium"
+                >
+                  <i data-lucide="map-pin" class="w-4 h-4"></i> Адреса
+                </label>
+                <input
+                  type="text"
+                  id="inputAddress"
+                  value="м. Київ, вул. Хрещатик, 1"
+                  disabled
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="card p-6 mt-6">
+            <h3 class="text-xl text-[#1a3a5c] font-medium mb-6">Безпека</h3>
+            <div class="space-y-4">
+              <button
+                class="w-full flex justify-between items-center px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-left"
+              >
+                <span>Змінити пароль</span>
+                <i
+                  data-lucide="chevron-right"
+                  class="w-4 h-4 text-gray-400"
+                ></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      lucide.createIcons();
+
+      function enableEditing() {
+        document.getElementById("actionButtons").classList.add("hidden");
+        document.getElementById("editButtons").classList.remove("hidden");
+        document.getElementById("editButtons").classList.add("flex");
+
+        // Вмикаємо всі інпути. Стилі зміняться автоматично завдяки CSS :disabled
+        const inputs = document.querySelectorAll("input");
+        inputs.forEach((input) => {
+          input.disabled = false;
+        });
+      }
+
+      function cancelEditing() {
+        document.getElementById("editButtons").classList.add("hidden");
+        document.getElementById("editButtons").classList.remove("flex");
+        document.getElementById("actionButtons").classList.remove("hidden");
+
+        const inputs = document.querySelectorAll("input");
+        inputs.forEach((input) => {
+          input.disabled = true;
+        });
+      }
+
+      function saveProfile() {
+        alert("Профіль успішно оновлено!");
+        cancelEditing();
+      }
+    </script>
+  </body>
+</html>
