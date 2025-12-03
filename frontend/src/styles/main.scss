@@ -11,9 +11,10 @@
 @import 'components/cards';
 @import 'components/tables';
 @import 'components/status';
+@import 'components/modals';
 
 /* Layouts */
-@import 'layouts/header'; // Якщо створиш
+@import 'layouts/header';
 @import 'layouts/sidebar';
 @import 'layouts/auth';
 @import 'layouts/order-form';

@@ -1,15 +1,17 @@
 {
   "compilerOptions": {
-    "target": "es6",
-    "module": "es2015",
-    "outDir": "./public/js",
     "rootDir": "./src/scripts",
+    "outDir": "./public/js",
+
+    "target": "ES6",
+    "module": "ESNext",
+    "lib": ["dom", "es6"],
+
     "strict": true,
-    "skipLibCheck": true,
     "esModuleInterop": true,
+    "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": [
-    "src/scripts/**/*"
-  ]
+
+  "include": ["src/scripts/**/*"]
 }

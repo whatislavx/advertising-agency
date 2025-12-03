@@ -36,18 +36,36 @@
 .resource-item {
     border: 1px solid $border-color;
     border-radius: var(--radius);
-    padding: 15px; cursor: pointer;
-    transition: all 0.2s ease; background: #fff;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-    
-    .res-name { font-size: 14px; color: $primary; margin-bottom: 5px; font-weight: bold; }
-    .res-price { font-size: 12px; color: #6B7280; }
-    
-    &:hover { border-color: #9CA3AF; transform: translateY(-2px); }
-    
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+    .res-name {
+        font-size: 14px;
+        color: $primary;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+
+    .res-price {
+        font-size: 12px;
+        color: #6B7280;
+    }
+
+    &:hover {
+        border-color: #9CA3AF;
+        transform: translateY(-2px);
+    }
+
     &.selected {
-        border-color: $orange; background-color: #FFF5F0;
+        border-color: $orange;
+        background-color: #FFF5F0;
         box-shadow: 0 0 0 1px $orange;
-        .res-name { color: $orange; }
+
+        .res-name {
+            color: $orange;
+        }
     }
 }

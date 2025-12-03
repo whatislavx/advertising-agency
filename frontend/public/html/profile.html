@@ -75,25 +75,19 @@
               </h3>
 
               <div id="actionButtons">
-                <button
-                  onclick="enableEditing()"
-                  class="btn btn-primary px-4 py-2"
-                >
+                <button id="btn-edit" class="btn btn-primary px-4 py-2">
                   <i data-lucide="edit-2" class="w-4 h-4"></i> Редагувати
                 </button>
               </div>
 
               <div id="editButtons" class="hidden gap-2">
                 <button
-                  onclick="saveProfile()"
+                  id="btn-save"
                   class="btn btn-green px-4 py-2 bg-green-600 hover:bg-green-700 text-white"
                 >
                   <i data-lucide="save" class="w-4 h-4"></i> Зберегти
                 </button>
-                <button
-                  onclick="cancelEditing()"
-                  class="btn btn-secondary px-4 py-2"
-                >
+                <button id="btn-cancel" class="btn btn-secondary px-4 py-2">
                   <i data-lucide="x" class="w-4 h-4"></i> Скасувати
                 </button>
               </div>
@@ -173,36 +167,6 @@
       </div>
     </div>
 
-    <script>
-      lucide.createIcons();
-
-      function enableEditing() {
-        document.getElementById("actionButtons").classList.add("hidden");
-        document.getElementById("editButtons").classList.remove("hidden");
-        document.getElementById("editButtons").classList.add("flex");
-
-        // Вмикаємо всі інпути. Стилі зміняться автоматично завдяки CSS :disabled
-        const inputs = document.querySelectorAll("input");
-        inputs.forEach((input) => {
-          input.disabled = false;
-        });
-      }
-
-      function cancelEditing() {
-        document.getElementById("editButtons").classList.add("hidden");
-        document.getElementById("editButtons").classList.remove("flex");
-        document.getElementById("actionButtons").classList.remove("hidden");
-
-        const inputs = document.querySelectorAll("input");
-        inputs.forEach((input) => {
-          input.disabled = true;
-        });
-      }
-
-      function saveProfile() {
-        alert("Профіль успішно оновлено!");
-        cancelEditing();
-      }
-    </script>
+    <script src="../js/profile.js" type="module"></script>
   </body>
 </html>
