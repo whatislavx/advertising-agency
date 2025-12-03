@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: ag_postgres
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: agency
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db_init/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - app-network
+
+  mongo:
+    image: mongo:6
+    container_name: ag_mongo
+    volumes:
+      - mongodata:/data/db
+    networks:
+      - app-network
+
+  redis:
+    image: redis:7
+    container_name: ag_redis
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  pgdata:
+  mongodata:

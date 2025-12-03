@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "rootDir": "./src/scripts",
+    "outDir": "./public/js",
+
+    "target": "ES6",
+    "module": "ESNext",
+    "lib": ["dom", "es6"],
+
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+
+  "include": ["src/scripts/**/*"]
+}

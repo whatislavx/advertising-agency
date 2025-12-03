@@ -1,0 +1,28 @@
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px; // full
+    font-size: 0.875rem; // text-sm
+
+    &-green {
+        background-color: #dcfce7; // green-100
+        color: #15803d; // green-700
+    }
+
+    &-yellow {
+        background-color: #fef9c3; // yellow-100
+        color: #a16207; // yellow-700
+    }
+
+    &-blue {
+        background-color: #dbeafe; // blue-100
+        color: #1d4ed8; // blue-700
+    }
+
+    &-gray {
+        background-color: #f3f4f6;
+        color: #374151;
+    }
+}

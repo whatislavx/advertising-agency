@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Створення замовлення</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400&display=swap"
+      rel="stylesheet"
+    />
+
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
+    />
+    <link rel="stylesheet" href="../css/main.css" />
+  </head>
+  <body class="order-form-page">
+    <header class="header">
+      <a href="catalog.html" class="nav-link">← Назад до каталогу</a>
+      <div class="header-title">Створення замовлення</div>
+      <a href="index.html" class="nav-link">Вихід →</a>
+    </header>
+
+    <main class="container">
+      <div class="card">
+        <h2 class="section-title">Деталі послуги</h2>
+        <div class="details-row">
+          <div>
+            <span class="label">Назва послуги</span>
+            <div class="value" id="serviceNameDisplay">...</div>
+          </div>
+          <div>
+            <span class="label">Базова ціна</span>
+            <div class="value" id="basePriceDisplay">...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="section-title">Період кампанії</h2>
+        <div class="date-grid">
+          <div class="input-wrap">
+            <label>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect
+                  x="3"
+                  y="6"
+                  width="18"
+                  height="15"
+                  rx="2"
+                  fill="none"
+                  stroke="#364153"
+                  stroke-width="2"
+                />
+                <path d="M3 10H21" stroke="#364153" stroke-width="2" />
+                <path
+                  d="M8 3V6"
+                  stroke="#364153"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+                <path
+                  d="M16 3V6"
+                  stroke="#364153"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+              </svg>
+              Дата початку
+            </label>
+            <input
+              type="text"
+              id="startDate"
+              class="input-field date-picker"
+              placeholder="Оберіть дату"
+            />
+          </div>
+
+          <div class="input-wrap">
+            <label>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect
+                  x="3"
+                  y="6"
+                  width="18"
+                  height="15"
+                  rx="2"
+                  fill="none"
+                  stroke="#364153"
+                  stroke-width="2"
+                />
+                <path d="M3 10H21" stroke="#364153" stroke-width="2" />
+                <path
+                  d="M8 3V6"
+                  stroke="#364153"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+                <path
+                  d="M16 3V6"
+                  stroke="#364153"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+              </svg>
+              Дата завершення
+            </label>
+            <input
+              type="text"
+              id="endDate"
+              class="input-field date-picker"
+              placeholder="Оберіть дату"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="section-title">Додаткові ресурси</h2>
+        <div class="resources-grid" id="resourceContainer"></div>
+      </div>
+
+      <div class="card summary">
+        <div class="summary-header">
+          <div class="summary-title-text">Підсумок замовлення</div>
+        </div>
+
+        <div class="summary-row">
+          <span>Базова вартість:</span>
+          <span id="summaryBasePrice">...</span>
+        </div>
+
+        <div id="selectedResourcesList" class="selected-resources-list">
+          <div class="resources-title">Додаткові ресурси:</div>
+          <div id="dynamicList"></div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="total-row">
+          <span class="total-label">Загальна вартість:</span>
+          <span class="total-val" id="totalPrice">...</span>
+        </div>
+        <button class="btn-pay">
+          <svg
+            width="20"
+            height="20"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            style="margin-bottom: 2px"
+          >
+            <rect x="2" y="5" width="20" height="14" rx="2" />
+            <line x1="2" y1="10" x2="22" y2="10" />
+          </svg>
+          Підтвердити і оплатити
+        </button>
+      </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/uk.js"></script>
+    <script type="module" src="../js/order-form.js"></script>
+  </body>
+</html>
