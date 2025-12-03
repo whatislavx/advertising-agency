@@ -14,19 +14,19 @@
         <h1 class="text-2xl mb-8 font-bold">Панель Менеджера</h1>
         <nav class="space-y-2">
           <a
-            href="admin-dashboard.html"
+            href="manager-dashboard.html"
             class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
           >
             <i data-lucide="bar-chart-2" class="w-5 h-5"></i> Dashboard
           </a>
           <a
-            href="admin-orders.html"
+            href="manager-orders.html"
             class="flex items-center gap-3 px-4 py-3 rounded-lg active"
           >
             <i data-lucide="package" class="w-5 h-5"></i> Замовлення
           </a>
           <a
-            href="admin-services.html"
+            href="manager-services.html"
             class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
           >
             <i data-lucide="settings" class="w-5 h-5"></i> Послуги
@@ -65,9 +65,8 @@
               <input
                 type="text"
                 id="searchOrders"
-                onkeyup="filterOrders()"
                 placeholder="Пошук за ID, клієнтом або послугою..."
-                class="pl-10"
+                class="pl-10 with-icon"
               />
             </div>
           </div>
@@ -164,33 +163,6 @@
       </div>
     </main>
 
-    <script>
-      lucide.createIcons();
-
-      function filterOrders() {
-        const searchInput = document
-          .getElementById("searchOrders")
-          .value.toLowerCase();
-        const statusFilter = document.getElementById("statusFilter").value;
-        const rows = document.querySelectorAll(".order-row");
-
-        rows.forEach((row) => {
-          const text = row.textContent.toLowerCase();
-          const statusCell = row
-            .querySelector(".status-cell")
-            .textContent.trim();
-
-          const matchesSearch = text.includes(searchInput);
-          const matchesStatus =
-            statusFilter === "all" || statusCell.includes(statusFilter);
-
-          if (matchesSearch && matchesStatus) {
-            row.style.display = "";
-          } else {
-            row.style.display = "none";
-          }
-        });
-      }
-    </script>
+    <script src="../js/manager-orders.js" type="module"></script>
   </body>
 </html>

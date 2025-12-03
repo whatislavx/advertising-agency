@@ -14,19 +14,19 @@
         <h1 class="text-2xl mb-8 font-bold">Панель Менеджера</h1>
         <nav class="space-y-2">
           <a
-            href="admin-dashboard.html"
+            href="manager-dashboard.html"
             class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
           >
             <i data-lucide="bar-chart-2" class="w-5 h-5"></i> Dashboard
           </a>
           <a
-            href="admin-orders.html"
+            href="manager-orders.html"
             class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
           >
             <i data-lucide="package" class="w-5 h-5"></i> Замовлення
           </a>
           <a
-            href="admin-services.html"
+            href="manager-services.html"
             class="flex items-center gap-3 px-4 py-3 rounded-lg active"
           >
             <i data-lucide="settings" class="w-5 h-5"></i> Послуги
@@ -54,7 +54,7 @@
       <div class="mb-12">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-2xl text-primary font-medium">Послуги</h3>
-          <button onclick="toggleModal('serviceModal')" class="btn btn-primary">
+          <button data-modal-target="serviceModal" class="btn btn-primary">
             <i data-lucide="plus" class="w-5 h-5"></i> Додати послугу
           </button>
         </div>
@@ -182,7 +182,7 @@
       <div class="modal-content">
         <div class="modal-header">
           <h3>Додати послугу</h3>
-          <button onclick="toggleModal('serviceModal')" class="btn-icon">
+          <button data-modal-target="serviceModal" class="btn-icon">
             <i data-lucide="x" class="w-6 h-6"></i>
           </button>
         </div>
@@ -211,13 +211,10 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button
-            onclick="toggleModal('serviceModal')"
-            class="btn btn-secondary"
-          >
+          <button data-modal-target="serviceModal" class="btn btn-secondary">
             Скасувати
           </button>
-          <button onclick="toggleModal('serviceModal')" class="btn btn-primary">
+          <button data-modal-target="serviceModal" class="btn btn-primary">
             <i data-lucide="save" class="w-5 h-5"></i> Зберегти
           </button>
         </div>
@@ -276,30 +273,6 @@
       </div>
     </div>
 
-    <script>
-      lucide.createIcons();
-
-      // Проста JS-функція для перемикання класу .hidden
-      function toggleModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal.classList.contains("hidden")) {
-          modal.classList.remove("hidden");
-          // Блокуємо скрол сторінки
-          document.body.style.overflow = "hidden";
-        } else {
-          modal.classList.add("hidden");
-          // Відновлюємо скрол
-          document.body.style.overflow = "";
-        }
-      }
-
-      // Закриття модального вікна при кліку на фон (overlay)
-      window.onclick = function (event) {
-        if (event.target.classList.contains("modal-overlay")) {
-          event.target.classList.add("hidden");
-          document.body.style.overflow = "";
-        }
-      };
-    </script>
+    <script src="../js/manager-services.js"></script>
   </body>
 </html>

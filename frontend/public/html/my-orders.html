@@ -88,7 +88,7 @@
             <tbody>
               <tr
                 class="cursor-pointer hover:bg-gray-50 transition-colors"
-                onclick="toggleDetails('details-1')"
+                data-toggle-details="details-1"
               >
                 <td class="text-[#1a3a5c] font-medium">ORD-001</td>
                 <td class="text-gray-900">Реклама в Instagram</td>
@@ -133,7 +133,7 @@
 
               <tr
                 class="cursor-pointer hover:bg-gray-50 transition-colors"
-                onclick="toggleDetails('details-2')"
+                data-toggle-details="details-2"
               >
                 <td class="text-[#1a3a5c] font-medium">ORD-008</td>
                 <td class="text-gray-900">Зовнішня реклама</td>
@@ -145,10 +145,7 @@
                   </span>
                 </td>
                 <td class="text-center">
-                  <button
-                    class="btn btn-primary text-xs py-1 px-3"
-                    onclick="event.stopPropagation(); alert('Симуляція оплати...')"
-                  >
+                  <button class="btn btn-primary text-xs py-1 px-3 btn-pay">
                     <i data-lucide="credit-card" class="w-3 h-3"></i> Сплатити
                   </button>
                 </td>
@@ -180,17 +177,6 @@
       </div>
     </div>
 
-    <script>
-      lucide.createIcons();
-      function toggleDetails(id) {
-        const row = document.getElementById(id);
-        // Клас 'hidden' визначений у _helpers.scss
-        if (row.classList.contains("hidden")) {
-          row.classList.remove("hidden");
-        } else {
-          row.classList.add("hidden");
-        }
-      }
-    </script>
+    <script src="../js/my-orders.js" type="module"></script>
   </body>
 </html>
