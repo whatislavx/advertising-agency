@@ -7,21 +7,42 @@ import * as reportController from '../controllers/reportController';
 
 const router = Router();
 
-// User routes
+// --- User Routes (PostgreSQL) ---
 router.get('/users', userController.getUsers);
-router.get('/users/:id', userController.getUserById);
+router.get('/users/:id', userController.getUserById); // Профіль
+router.post('/auth/login', userController.login);
+router.post('/auth/register', userController.register);
+router.patch('/users/:id', userController.updateUser); // Оновлення контактів
+router.patch('/users/:id/password', userController.changePassword); // Зміна пароля
+router.patch('/users/:id/discount', userController.setDiscount); // Встановлення знижки (Director)
 
-// Order routes
+// --- Order Routes (PostgreSQL) ---
 router.get('/orders', orderController.getOrders);
-router.post('/orders', orderController.createOrder);
+router.post('/orders', orderController.createOrder); // Створення замовлення
+router.get('/orders/user/:id', orderController.getOrdersByUserId); // "Мої замовлення"
+router.patch('/orders/:id/status', orderController.updateOrderStatus);
+router.post('/orders/:id/reschedule', orderController.rescheduleOrder); // Перенесення дати
 
-// Payment routes
-router.post('/payments', paymentController.processPayment);
+// --- Payment Routes (PostgreSQL) ---
+router.post('/payments', paymentController.processPayment); // Обробка платежу
+router.patch('/payments/:id/confirm', paymentController.confirmPayment); // Підтвердження
 
-// Catalog routes
-router.get('/catalog', catalogController.getCatalog);
+// --- Catalog/Resources Routes (Redis Caching) ---
+// Всі READ запити йдуть через Redis (Cache-Aside) [cite: 14, 29]
+router.get('/services', catalogController.getAllServices); 
+router.get('/resources', catalogController.getResources);
 
-// Report routes
-router.get('/reports', reportController.getReports);
+// Всі WRITE запити інвалідують кеш [cite: 34, 42]
+router.post('/services', catalogController.createService);
+router.patch('/services/:id', catalogController.patchService);
+router.delete('/services/:id', catalogController.deleteService);
+router.post('/resources', catalogController.createResource);
+router.delete('/resources/:id', catalogController.deleteResource);
+
+// --- Report Routes (MongoDB) ---
+router.get('/dashboard/stats', reportController.getDashboardStats);
+router.get('/reports', reportController.getReports); // Список (полегшений) [cite: 182]
+router.post('/reports', reportController.createReport); // Створення (з mixed data) [cite: 171]
+router.get('/reports/:id', reportController.getReportById); // Деталі (повний JSON) [cite: 193]
 
 export default router;

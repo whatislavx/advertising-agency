@@ -52,7 +52,9 @@
           </button>
         </div>
 
-        <form id="form-login" class="space-y-5">
+        <form id="form-login" class="space-y-5" autocomplete="off">
+          <input type="text" style="display:none" />
+          <input type="password" style="display:none" />
           <div>
             <label class="block text-sm text-gray-700 mb-2 font-medium"
               >Email</label
@@ -68,6 +70,7 @@
                 class="pl-11 with-icon"
                 placeholder="your@email.com"
                 required
+                autocomplete="off"
               />
             </div>
           </div>
@@ -82,10 +85,12 @@
                 class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5"
               ></i>
               <input
+                id="password-input"
                 type="password"
                 class="pl-11 with-icon"
                 placeholder="••••••••"
                 required
+                autocomplete="new-password"
               />
             </div>
           </div>
@@ -108,9 +113,11 @@
                 class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5"
               ></i>
               <input
+                id="reg-name"
                 type="text"
                 class="pl-11 with-icon"
                 placeholder="Іван Петренко"
+                autocomplete="off"
               />
             </div>
           </div>
@@ -124,9 +131,11 @@
                 class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5"
               ></i>
               <input
+                id="reg-phone"
                 type="tel"
                 class="pl-11 with-icon"
                 placeholder="+380 XX XXX XX XX"
+                autocomplete="off"
               />
             </div>
           </div>
@@ -140,9 +149,11 @@
                 class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5"
               ></i>
               <input
+                id="reg-email"
                 type="email"
                 class="pl-11 with-icon"
                 placeholder="your@email.com"
+                autocomplete="off"
               />
             </div>
           </div>
@@ -156,9 +167,11 @@
                 class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5"
               ></i>
               <input
+                id="reg-password"
                 type="password"
                 class="pl-11 with-icon"
                 placeholder="••••••••"
+                autocomplete="new-password"
               />
             </div>
           </div>
