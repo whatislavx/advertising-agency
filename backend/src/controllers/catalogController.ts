@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import pgPool from '../config/postgres'; 
+import { ServiceDB, ResourceDB } from '../db/postgres';
 import redisClient from '../config/redis';
 
 // --- Константи для кешування ---
@@ -20,7 +20,7 @@ export const getAllServices = async (req: Request, res: Response) => {
 
         // 2. PostgreSQL
         console.log('Services cache miss. Querying PostgreSQL.');
-        const result = await pgPool.query('SELECT * FROM services'); 
+        const result = await ServiceDB.getAll();
         const services = result.rows;
 
         // 3. Запис в Redis
@@ -49,7 +49,7 @@ export const getResources = async (req: Request, res: Response) => {
         }
 
         console.log('Resources cache miss. Querying PostgreSQL.');
-        const result = await pgPool.query('SELECT * FROM resources'); 
+        const result = await ResourceDB.getAll();
         const resources = result.rows;
 
         if (resources.length > 0) {
@@ -71,10 +71,7 @@ export const getResources = async (req: Request, res: Response) => {
 export const createService = async (req: Request, res: Response) => {
     const { name, base_price, type } = req.body;
     try {
-        const result = await pgPool.query(
-            'INSERT INTO services (name, base_price, type) VALUES ($1, $2, $3) RETURNING *',
-            [name, base_price, type || 'other']
-        );
+        const result = await ServiceDB.create(name, base_price, type);
         await redisClient.del(SERVICES_CACHE_KEY);
         res.status(201).json(result.rows[0]);
     } catch (error) {
@@ -88,10 +85,7 @@ export const patchService = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { name, base_price, type } = req.body;
     try {
-        const result = await pgPool.query(
-            'UPDATE services SET name = $1, base_price = $2, type = COALESCE($3, type) WHERE id = $4 RETURNING *',
-            [name, base_price, type, id]
-        );
+        const result = await ServiceDB.update(id, name, base_price, type);
         if (result.rowCount === 0) return res.status(404).json({ message: 'Not found' });
         
         await redisClient.del(SERVICES_CACHE_KEY); // Видалення старого кешу
@@ -106,10 +100,7 @@ export const patchService = async (req: Request, res: Response) => {
 export const createResource = async (req: Request, res: Response) => {
     const { name, type, cost } = req.body;
     try {
-        const result = await pgPool.query(
-            'INSERT INTO resources (name, type, cost) VALUES ($1, $2, $3) RETURNING *',
-            [name, type, cost]
-        );
+        const result = await ResourceDB.create(name, type, cost);
         await redisClient.del(RESOURCES_CACHE_KEY); 
         res.status(201).json(result.rows[0]);
     } catch (error) {
@@ -122,7 +113,7 @@ export const createResource = async (req: Request, res: Response) => {
 export const deleteService = async (req: Request, res: Response) => {
     const { id } = req.params;
     try {
-        const result = await pgPool.query('DELETE FROM services WHERE id = $1 RETURNING *', [id]);
+        const result = await ServiceDB.delete(id);
         if (result.rowCount === 0) {
             return res.status(404).json({ message: 'Service not found' });
         }
@@ -138,7 +129,7 @@ export const deleteService = async (req: Request, res: Response) => {
 export const deleteResource = async (req: Request, res: Response) => {
     const { id } = req.params;
     try {
-        const result = await pgPool.query('DELETE FROM resources WHERE id = $1 RETURNING *', [id]);
+        const result = await ResourceDB.delete(id);
         if (result.rowCount === 0) {
             return res.status(404).json({ message: 'Resource not found' });
         }

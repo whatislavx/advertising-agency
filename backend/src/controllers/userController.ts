@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import pgPool from '../config/postgres';
+import { UserDB } from '../db/postgres';
 import crypto from 'crypto';
 
 const hashPassword = (password: string) => crypto.createHash('sha256').update(password).digest('hex');
@@ -7,7 +7,7 @@ const hashPassword = (password: string) => crypto.createHash('sha256').update(pa
 // GET /users (Для адмін-панелі)
 export const getUsers = async (req: Request, res: Response) => {
     try {
-        const result = await pgPool.query('SELECT id, email, role, first_name, last_name, personal_discount FROM users');
+        const result = await UserDB.getAll();
         res.json(result.rows);
     } catch (error) {
         console.error(error);
@@ -19,12 +19,7 @@ export const getUsers = async (req: Request, res: Response) => {
 export const getUserById = async (req: Request, res: Response) => {
     try {
         // Отримуємо дані користувача та підраховуємо кількість замовлень
-        const result = await pgPool.query(`
-            SELECT u.id, u.email, u.role, u.first_name, u.last_name, u.phone, u.personal_discount, u.registration_date,
-            (SELECT COUNT(*) FROM orders o WHERE o.user_id = u.id) as order_count
-            FROM users u 
-            WHERE u.id = $1
-        `, [req.params.id]);
+        const result = await UserDB.getById(req.params.id);
 
         if (result.rows.length === 0) return res.status(404).json({ message: 'User not found' });
         res.json(result.rows[0]);
@@ -38,7 +33,7 @@ export const getUserById = async (req: Request, res: Response) => {
 export const login = async (req: Request, res: Response) => {
     const { email, password } = req.body;
     try {
-        const result = await pgPool.query('SELECT * FROM users WHERE email = $1', [email]);
+        const result = await UserDB.getByEmail(email);
         if (result.rows.length === 0) return res.status(401).json({ message: 'Invalid credentials' });
 
         const user = result.rows[0];
@@ -72,10 +67,7 @@ export const register = async (req: Request, res: Response) => {
     try {
         const hashedPassword = hashPassword(password);
         // Додаємо phone згідно з
-        const result = await pgPool.query(
-            'INSERT INTO users (email, password_hash, role, first_name, last_name, phone) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, email, role',
-            [email, hashedPassword, 'client', first_name, last_name, phone]
-        );
+        const result = await UserDB.create(email, hashedPassword, 'client', first_name, last_name, phone);
         res.status(201).json(result.rows[0]);
     } catch (error: any) {
         console.error(error);
@@ -90,10 +82,7 @@ export const register = async (req: Request, res: Response) => {
 export const updateUser = async (req: Request, res: Response) => {
     const { first_name, last_name, phone, email } = req.body;
     try {
-        const result = await pgPool.query(
-            'UPDATE users SET first_name = $1, last_name = $2, phone = $3, email = $4 WHERE id = $5 RETURNING *',
-            [first_name, last_name, phone, email, req.params.id]
-        );
+        const result = await UserDB.update(req.params.id, first_name, last_name, phone, email);
         res.json(result.rows[0]);
     } catch (error) {
         console.error(error);
@@ -108,7 +97,7 @@ export const changePassword = async (req: Request, res: Response) => {
 
     try {
         // 1. Отримуємо поточний хеш пароля
-        const userResult = await pgPool.query('SELECT password_hash FROM users WHERE id = $1', [userId]);
+        const userResult = await UserDB.getPasswordHashById(userId);
         if (userResult.rows.length === 0) return res.status(404).json({ message: 'User not found' });
 
         const user = userResult.rows[0];
@@ -121,7 +110,7 @@ export const changePassword = async (req: Request, res: Response) => {
 
         // 3. Оновлюємо пароль
         const newPasswordHash = hashPassword(newPassword);
-        await pgPool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [newPasswordHash, userId]);
+        await UserDB.updatePassword(userId, newPasswordHash);
 
         res.json({ message: 'Password updated successfully' });
     } catch (error) {
@@ -139,10 +128,7 @@ export const setDiscount = async (req: Request, res: Response) => {
     }
 
     try {
-        const result = await pgPool.query(
-            'UPDATE users SET personal_discount = $1 WHERE id = $2 RETURNING personal_discount',
-            [discount, req.params.id]
-        );
+        const result = await UserDB.updateDiscount(req.params.id, discount);
         res.json(result.rows[0]);
     } catch (error) {
         console.error(error);

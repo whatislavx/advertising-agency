@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import Report from '../models/Report';
-import pgPool from '../config/postgres';
+import { OrderDB } from '../db/postgres';
 
 // Метод 1: Створення звіту
 // POST /reports
@@ -64,11 +64,11 @@ export const getReportById = async (req: Request, res: Response) => {
 export const getDashboardStats = async (req: Request, res: Response) => {
     try {
         // Total Orders
-        const ordersResult = await pgPool.query('SELECT COUNT(*) FROM orders');
+        const ordersResult = await OrderDB.countAll();
         const totalOrders = parseInt(ordersResult.rows[0].count);
 
         // Total Revenue (sum of total_cost of paid/completed orders)
-        const revenueResult = await pgPool.query("SELECT SUM(total_cost) FROM orders WHERE status IN ('paid', 'completed')");
+        const revenueResult = await OrderDB.getTotalRevenue();
         const totalRevenue = parseFloat(revenueResult.rows[0].sum || '0');
 
         // Total Views (Mocked for now, or fetch from Mongo if implemented)
