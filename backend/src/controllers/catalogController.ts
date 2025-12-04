@@ -96,6 +96,27 @@ export const patchService = async (req: Request, res: Response) => {
     }
 };
 
+export const patchResource = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { name, type, cost } = req.body;
+    try {
+        // Викликаємо наш новий метод DB
+        const result = await ResourceDB.update(id, name, type, cost);
+        
+        if (result.rowCount === 0) {
+            return res.status(404).json({ message: 'Resource not found' });
+        }
+        
+        // Інвалідуємо кеш ресурсів, щоб користувачі побачили зміни
+        await redisClient.del(RESOURCES_CACHE_KEY);
+        
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Error updating resource:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 // Метод 5: Створення ресурсу (Інвалідація)
 export const createResource = async (req: Request, res: Response) => {
     const { name, type, cost } = req.body;

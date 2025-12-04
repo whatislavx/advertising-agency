@@ -6,7 +6,7 @@ const redisClient = createClient({
 });
 
 // [cite: 9] Обробка помилок, щоб сервер не падав
-redisClient.on('error', (err) => console.log('Redis Client Error', err));
+redisClient.on('error', (err: Error) => console.log('Redis Client Error', err));
 
 // [cite: 10] Ініціалізація з'єднання
 (async () => {

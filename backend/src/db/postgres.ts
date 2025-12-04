@@ -73,7 +73,13 @@ export const ResourceDB = {
             'INSERT INTO resources (name, type, cost) VALUES ($1, $2, $3) RETURNING *',
             [name, type, cost]
         ),
-
+    
+    update: (id: string, name: string, type: string, cost: number) => 
+        pool.query(
+            'UPDATE resources SET name = $1, type = $2, cost = $3 WHERE id = $4 RETURNING *',
+            [name, type, cost, id]
+        ),
+    
     delete: (id: string) => pool.query('DELETE FROM resources WHERE id = $1 RETURNING *', [id])
 };
 
