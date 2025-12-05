@@ -83,7 +83,19 @@ import { Modal } from './utils/Modal.js';
                     if (tbody) {
                         tbody.innerHTML = '';
                         if (orders.length === 0) {
-                            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500">У вас ще немає замовлень</td></tr>`;
+                            tbody.innerHTML = `
+                            <tr>
+                                <td colspan="6" class="text-center py-12">
+                                    <div class="flex flex-col items-center justify-center text-gray-500">
+                                        <i data-lucide="inbox" class="w-16 h-16 mb-4 text-gray-300"></i>
+                                        <p class="text-lg font-medium mb-2">У вас ще немає замовлень</p>
+                                        <a href="catalog.html" class="text-blue-600 hover:text-blue-700 font-medium transition-colors">
+                                            Перейти до каталогу
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
                         }
                         else {
                             orders.forEach((order) => {

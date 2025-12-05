@@ -165,7 +165,29 @@ export const OrderDB = {
 
     countAll: () => pool.query('SELECT COUNT(*) FROM orders'),
 
-    getTotalRevenue: () => pool.query("SELECT SUM(total_cost) FROM orders WHERE status IN ('paid', 'completed')")
+    countByDateRange: (startDate: Date, endDate: Date) => 
+        pool.query('SELECT COUNT(*) FROM orders WHERE created_at >= $1 AND created_at < $2', [startDate, endDate]),
+
+    getTotalRevenue: () => pool.query("SELECT SUM(total_cost) FROM orders WHERE status IN ('paid', 'completed')"),
+
+    getRevenueByDateRange: (startDate: Date, endDate: Date) => 
+        pool.query("SELECT SUM(total_cost) FROM orders WHERE status IN ('paid', 'completed') AND created_at >= $1 AND created_at < $2", [startDate, endDate]),
+
+    getOrdersCountByService: () => 
+        pool.query('SELECT service_id, COUNT(*) as count FROM orders GROUP BY service_id')
+};
+
+export const ServiceViewsDB = {
+    create: (serviceId: number, userId: number) => 
+        pool.query('INSERT INTO service_views (service_id, user_id) VALUES ($1, $2)', [serviceId, userId]),
+
+    countAll: () => pool.query('SELECT COUNT(*) FROM service_views'),
+
+    countByDateRange: (startDate: Date, endDate: Date) => 
+        pool.query('SELECT COUNT(*) FROM service_views WHERE viewed_at >= $1 AND viewed_at < $2', [startDate, endDate]),
+
+    getViewsCountByService: () => 
+        pool.query('SELECT service_id, COUNT(*) as count FROM service_views GROUP BY service_id')
 };
 
 export const PaymentDB = {

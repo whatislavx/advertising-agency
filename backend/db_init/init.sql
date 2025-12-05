@@ -53,6 +53,14 @@ CREATE TABLE orders (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Перегляди послуг (Аналітика)
+CREATE TABLE service_views (
+    id SERIAL PRIMARY KEY,
+    service_id INTEGER REFERENCES services(id),
+    user_id INTEGER REFERENCES users(id),
+    viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Зв'язок замовлення та ресурсів
 CREATE TABLE order_resources (
     order_id INTEGER REFERENCES orders(id),

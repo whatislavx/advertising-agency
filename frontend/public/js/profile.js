@@ -191,6 +191,45 @@ import { Modal } from './utils/Modal.js';
             if (e.target === passwordModal)
                 toggleModal(false);
         });
+        // Маска телефону для поля профілю
+        const phoneInput = document.getElementById('inputPhone');
+        function formatUaPhone(value) {
+            const digits = value.replace(/\D/g, '');
+            let normalized = digits;
+            if (!normalized.startsWith('380')) {
+                if (normalized.length > 0)
+                    normalized = '380' + normalized;
+            }
+            normalized = normalized.slice(0, 12);
+            const p1 = normalized.slice(3, 5);
+            const p2 = normalized.slice(5, 8);
+            const p3 = normalized.slice(8, 10);
+            const p4 = normalized.slice(10, 12);
+            let out = '+380';
+            if (p1)
+                out += ` ${p1}`;
+            if (p2)
+                out += ` ${p2}`;
+            if (p3)
+                out += ` ${p3}`;
+            if (p4)
+                out += ` ${p4}`;
+            return out;
+        }
+        function enforceDigitsOnly(e) {
+            const allowed = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
+            if (allowed.includes(e.key))
+                return;
+            if (!/\d/.test(e.key)) {
+                e.preventDefault();
+            }
+        }
+        if (phoneInput) {
+            phoneInput.addEventListener('keydown', enforceDigitsOnly);
+            phoneInput.addEventListener('input', () => {
+                phoneInput.value = formatUaPhone(phoneInput.value);
+            });
+        }
         passwordForm === null || passwordForm === void 0 ? void 0 : passwordForm.addEventListener('submit', (e) => __awaiter(this, void 0, void 0, function* () {
             e.preventDefault();
             if (passwordError)

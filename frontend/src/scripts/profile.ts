@@ -196,6 +196,40 @@ document.addEventListener("DOMContentLoaded", () => {
         if (e.target === passwordModal) toggleModal(false);
     });
 
+    // Маска телефону для поля профілю
+    const phoneInput = document.getElementById('inputPhone') as HTMLInputElement | null;
+    function formatUaPhone(value: string): string {
+        const digits = value.replace(/\D/g, '');
+        let normalized = digits;
+        if (!normalized.startsWith('380')) {
+            if (normalized.length > 0) normalized = '380' + normalized;
+        }
+        normalized = normalized.slice(0, 12);
+        const p1 = normalized.slice(3, 5);
+        const p2 = normalized.slice(5, 8);
+        const p3 = normalized.slice(8, 10);
+        const p4 = normalized.slice(10, 12);
+        let out = '+380';
+        if (p1) out += ` ${p1}`;
+        if (p2) out += ` ${p2}`;
+        if (p3) out += ` ${p3}`;
+        if (p4) out += ` ${p4}`;
+        return out;
+    }
+    function enforceDigitsOnly(e: KeyboardEvent) {
+        const allowed = ['Backspace','Delete','ArrowLeft','ArrowRight','Tab'];
+        if (allowed.includes(e.key)) return;
+        if (!/\d/.test(e.key)) {
+            e.preventDefault();
+        }
+    }
+    if (phoneInput) {
+        phoneInput.addEventListener('keydown', enforceDigitsOnly);
+        phoneInput.addEventListener('input', () => {
+            phoneInput.value = formatUaPhone(phoneInput.value);
+        });
+    }
+
     passwordForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
         if (passwordError) passwordError.classList.add('hidden');
