@@ -43,38 +43,28 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         return num.toLocaleString('uk-UA') + ' грн';
     }
     function updateSummary() {
-        const summaryResources = document.getElementById('summaryResources');
+        const listContainer = document.getElementById('selectedResourcesList');
+        const dynamicList = document.getElementById('dynamicList');
         const totalEl = document.getElementById('totalPrice');
-        if (summaryResources) {
+        if (dynamicList) {
+            dynamicList.innerHTML = '';
             if (selectedItems.length > 0) {
-                summaryResources.innerHTML = selectedItems.map(item => `<span class="badge badge-gray bg-white border border-gray-200 text-xs px-2 py-1 rounded">${item.name}</span>`).join('');
+                if (listContainer)
+                    listContainer.style.display = 'block';
+                selectedItems.forEach(item => {
+                    const row = document.createElement('div');
+                    row.className = 'selected-item';
+                    row.innerHTML = `<span>${item.name}</span> <span class="summary-price-val">+${formatCurrency(item.price)}</span>`;
+                    dynamicList.appendChild(row);
+                });
             }
             else {
-                summaryResources.innerHTML = '<span class="text-gray-400 text-sm italic">Немає додаткових ресурсів</span>';
+                if (listContainer)
+                    listContainer.style.display = 'none';
             }
         }
         if (totalEl)
             totalEl.innerText = formatCurrency(currentTotal);
-    }
-    function updateDateSummary() {
-        const startDateInput = document.getElementById('startDate');
-        const endDateInput = document.getElementById('endDate');
-        const summaryDates = document.getElementById('summaryDates');
-        if (summaryDates) {
-            const start = startDateInput.value;
-            const end = endDateInput.value;
-            if (start) {
-                summaryDates.innerHTML = `
-                <i data-lucide="calendar" class="w-4 h-4 text-gray-400"></i>
-                <span>${start} ${end ? '→ ' + end : ''}</span>
-            `;
-                if (window.lucide)
-                    window.lucide.createIcons();
-            }
-            else {
-                summaryDates.innerHTML = '<span class="text-gray-400 italic">Оберіть дату</span>';
-            }
-        }
     }
     function toggleResource(element, resId) {
         const resource = resources.find(r => r.id === resId);
@@ -211,7 +201,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                             endPicker.clear();
                         }
                     }
-                    updateDateSummary();
                 }
             });
         }
@@ -221,7 +210,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 dateFormat: "d.m.Y",
                 minDate: "today",
                 onChange: function () {
-                    updateDateSummary();
                 }
             });
         }
