@@ -8,6 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+// Допоміжна функція для відкриття/закриття модалок
 function toggleModal(modalId) {
     const modal = document.getElementById(modalId);
     if (!modal)
@@ -21,6 +22,8 @@ function toggleModal(modalId) {
         document.body.style.overflow = "";
     }
 }
+// Експортуємо функцію в window
+window.toggleModal = toggleModal;
 (function () {
     const lucide = window.lucide;
     let services = [];
@@ -132,11 +135,16 @@ function toggleModal(modalId) {
             }
         });
     }
-    function renderServices(services) {
+    // --- Рендеринг ---
+    function renderServices(servicesData) {
         const tbody = document.getElementById('services-table-body');
         if (!tbody)
             return;
-        tbody.innerHTML = services.map(service => `
+        if (servicesData.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-500">Послуг не знайдено</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = servicesData.map(service => `
             <tr>
                 <td class="text-gray-600 text-sm text-left">SRV-${service.id.toString().padStart(3, '0')}</td>
                 <td class="text-primary font-medium text-left">${service.name}</td>
@@ -154,15 +162,18 @@ function toggleModal(modalId) {
                 </td>
             </tr>
         `).join('');
-        if (typeof lucide !== 'undefined') {
+        if (typeof lucide !== 'undefined')
             lucide.createIcons();
-        }
     }
-    function renderResources(resources) {
+    function renderResources(resourcesData) {
         const tbody = document.getElementById('resources-table-body');
         if (!tbody)
             return;
-        tbody.innerHTML = resources.map(resource => `
+        if (resourcesData.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-gray-500">Ресурсів не знайдено</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = resourcesData.map(resource => `
             <tr>
                 <td class="text-gray-600 text-sm text-left">RES-${resource.id.toString().padStart(3, '0')}</td>
                 <td class="text-primary font-medium text-left">${resource.name}</td>
@@ -288,7 +299,7 @@ function toggleModal(modalId) {
                         fetchServices();
                     }
                     else {
-                        alert('Failed to delete service');
+                        alert('Не вдалося видалити послугу');
                     }
                 }
                 catch (error) {
@@ -403,7 +414,7 @@ function toggleModal(modalId) {
                         fetchResources();
                     }
                     else {
-                        alert('Failed to delete resource');
+                        alert('Не вдалося видалити ресурс');
                     }
                 }
                 catch (error) {
@@ -412,6 +423,7 @@ function toggleModal(modalId) {
             }
         });
     };
+    // --- Ініціалізація ---
     document.addEventListener("DOMContentLoaded", () => {
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
@@ -420,15 +432,29 @@ function toggleModal(modalId) {
         setupCustomSelect('resourceTypeContainer');
         fetchServices();
         fetchResources();
-        const modalTriggers = document.querySelectorAll("[data-modal-target]");
-        modalTriggers.forEach(trigger => {
-            trigger.addEventListener("click", () => {
-                const targetId = trigger.getAttribute("data-modal-target");
-                if (targetId) {
-                    toggleModal(targetId);
-                }
+        // 1. Прив'язка статичних кнопок "Додати" за ID
+        const addServiceBtn = document.getElementById('btn-add-service');
+        if (addServiceBtn) {
+            addServiceBtn.addEventListener('click', () => {
+                openAddServiceModal();
             });
-        });
+        }
+        const addResourceBtn = document.getElementById('btn-add-resource');
+        if (addResourceBtn) {
+            addResourceBtn.addEventListener('click', () => {
+                openAddResourceModal();
+            });
+        }
+        // 2. Прив'язка кнопок "Зберегти" в модальних вікнах
+        const saveServiceBtn = document.getElementById('save-service-btn');
+        if (saveServiceBtn) {
+            saveServiceBtn.addEventListener('click', handleSaveService);
+        }
+        const saveResourceBtn = document.getElementById('save-resource-btn');
+        if (saveResourceBtn) {
+            saveResourceBtn.addEventListener('click', handleSaveResource);
+        }
+        // 3. Закриття модалок при кліку на Overlay
         window.addEventListener("click", (event) => {
             const target = event.target;
             if (target.classList.contains("modal-overlay")) {

@@ -1,6 +1,14 @@
+interface Window {
+    editService: (id: number) => void;
+    deleteService: (id: number) => Promise<void>;
+    editResource: (id: number) => void;
+    deleteResource: (id: number) => Promise<void>;
+    toggleModal: (modalId: string) => void;
+}
+
+// Допоміжна функція для відкриття/закриття модалок
 function toggleModal(modalId: string) {
     const modal = document.getElementById(modalId);
-    
     if (!modal) return;
 
     if (modal.classList.contains("hidden")) {
@@ -11,14 +19,18 @@ function toggleModal(modalId: string) {
         document.body.style.overflow = "";
     }
 }
+// Експортуємо функцію в window
+window.toggleModal = toggleModal;
 
 (function() {
     const lucide = (window as any).lucide;
+
+    // --- Інтерфейси ---
     interface Service {
         id: number;
         name: string;
-        base_price: string;
-        type?: string;
+        base_price: string | number;
+        type: string;
     }
 
     interface Resource {
@@ -137,11 +149,17 @@ function toggleModal(modalId: string) {
         }
     }
 
-    function renderServices(services: Service[]) {
+    // --- Рендеринг ---
+    function renderServices(servicesData: Service[]) {
         const tbody = document.getElementById('services-table-body');
         if (!tbody) return;
 
-        tbody.innerHTML = services.map(service => `
+        if (servicesData.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-500">Послуг не знайдено</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = servicesData.map(service => `
             <tr>
                 <td class="text-gray-600 text-sm text-left">SRV-${service.id.toString().padStart(3, '0')}</td>
                 <td class="text-primary font-medium text-left">${service.name}</td>
@@ -160,16 +178,19 @@ function toggleModal(modalId: string) {
             </tr>
         `).join('');
         
-        if (typeof lucide !== 'undefined') {
-            lucide.createIcons();
-        }
+        if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
-    function renderResources(resources: Resource[]) {
+    function renderResources(resourcesData: Resource[]) {
         const tbody = document.getElementById('resources-table-body');
         if (!tbody) return;
 
-        tbody.innerHTML = resources.map(resource => `
+        if (resourcesData.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-gray-500">Ресурсів не знайдено</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = resourcesData.map(resource => `
             <tr>
                 <td class="text-gray-600 text-sm text-left">RES-${resource.id.toString().padStart(3, '0')}</td>
                 <td class="text-primary font-medium text-left">${resource.name}</td>
@@ -217,6 +238,25 @@ function toggleModal(modalId: string) {
         toggleModal('serviceModal');
     }
     (window as any).openAddServiceModal = openAddServiceModal;
+
+    // --- Логіка Послуг (Service) ---
+
+    function openAddServiceModal() {
+        editingServiceId = null;
+        
+        const nameInput = document.getElementById('service-name') as HTMLInputElement;
+        const priceInput = document.getElementById('service-price') as HTMLInputElement;
+        const typeInput = document.getElementById('service-type') as HTMLSelectElement;
+
+        if(nameInput) nameInput.value = '';
+        if(priceInput) priceInput.value = '';
+        if(typeInput) typeInput.value = 'internet';
+
+        const header = document.querySelector('#serviceModal h3');
+        if (header) header.textContent = 'Додати послугу';
+
+        toggleModal('serviceModal');
+    }
 
     (window as any).editService = function(id: number) {
         const service = services.find(s => s.id === id);
@@ -300,7 +340,7 @@ function toggleModal(modalId: string) {
                 if (response.ok) {
                     fetchServices();
                 } else {
-                    alert('Failed to delete service');
+                    alert('Не вдалося видалити послугу');
                 }
             } catch (error) {
                 console.error('Error deleting service:', error);
@@ -418,7 +458,7 @@ function toggleModal(modalId: string) {
                 if (response.ok) {
                     fetchResources();
                 } else {
-                    alert('Failed to delete resource');
+                    alert('Не вдалося видалити ресурс');
                 }
             } catch (error) {
                 console.error('Error deleting resource:', error);
@@ -426,6 +466,7 @@ function toggleModal(modalId: string) {
         }
     };
 
+    // --- Ініціалізація ---
     document.addEventListener("DOMContentLoaded", () => {
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
@@ -437,17 +478,33 @@ function toggleModal(modalId: string) {
         fetchServices();
         fetchResources();
 
-        const modalTriggers = document.querySelectorAll("[data-modal-target]");
-        
-        modalTriggers.forEach(trigger => {
-            trigger.addEventListener("click", () => {
-                const targetId = trigger.getAttribute("data-modal-target");
-                if (targetId) {
-                    toggleModal(targetId);
-                }
+        // 1. Прив'язка статичних кнопок "Додати" за ID
+        const addServiceBtn = document.getElementById('btn-add-service');
+        if (addServiceBtn) {
+            addServiceBtn.addEventListener('click', () => {
+                openAddServiceModal();
             });
-        });
+        }
 
+        const addResourceBtn = document.getElementById('btn-add-resource');
+        if (addResourceBtn) {
+            addResourceBtn.addEventListener('click', () => {
+                openAddResourceModal();
+            });
+        }
+
+        // 2. Прив'язка кнопок "Зберегти" в модальних вікнах
+        const saveServiceBtn = document.getElementById('save-service-btn');
+        if (saveServiceBtn) {
+            saveServiceBtn.addEventListener('click', handleSaveService);
+        }
+
+        const saveResourceBtn = document.getElementById('save-resource-btn');
+        if (saveResourceBtn) {
+            saveResourceBtn.addEventListener('click', handleSaveResource);
+        }
+
+        // 3. Закриття модалок при кліку на Overlay
         window.addEventListener("click", (event) => {
             const target = event.target as HTMLElement;
             if (target.classList.contains("modal-overlay")) {
