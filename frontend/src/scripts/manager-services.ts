@@ -18,6 +18,7 @@ function toggleModal(modalId: string) {
         id: number;
         name: string;
         base_price: string;
+        type?: string;
     }
 
     interface Resource {
@@ -27,6 +28,11 @@ function toggleModal(modalId: string) {
         cost: string | number;
         is_available: boolean;
     }
+
+    let services: Service[] = [];
+    let resources: Resource[] = [];
+    let editingServiceId: number | null = null;
+    let editingResourceId: number | null = null;
 
     function formatCurrency(amount: string | number): string {
         return Number(amount).toLocaleString('uk-UA', { style: 'currency', currency: 'UAH' }).replace('UAH', '₴').replace(',', '.');
@@ -113,7 +119,7 @@ function toggleModal(modalId: string) {
         try {
             const response = await fetch('/api/services');
             if (!response.ok) throw new Error('Failed to fetch services');
-            const services: Service[] = await response.json();
+            services = await response.json();
             renderServices(services);
         } catch (error) {
             console.error('Error fetching services:', error);
@@ -124,7 +130,7 @@ function toggleModal(modalId: string) {
         try {
             const response = await fetch('/api/resources');
             if (!response.ok) throw new Error('Failed to fetch resources');
-            const resources: Resource[] = await response.json();
+            resources = await response.json();
             renderResources(resources);
         } catch (error) {
             console.error('Error fetching resources:', error);
@@ -210,8 +216,9 @@ function toggleModal(modalId: string) {
 
         toggleModal('serviceModal');
     }
+    (window as any).openAddServiceModal = openAddServiceModal;
 
-    window.editService = function(id: number) {
+    (window as any).editService = function(id: number) {
         const service = services.find(s => s.id === id);
         if (!service) return;
 
@@ -286,7 +293,7 @@ function toggleModal(modalId: string) {
         }
     }
 
-    window.deleteService = async function(id: number) {
+    (window as any).deleteService = async function(id: number) {
         if(confirm('Ви впевнені, що хочете видалити цю послугу?')) {
             try {
                 const response = await fetch(`/api/services/${id}`, { method: 'DELETE' });
@@ -323,8 +330,9 @@ function toggleModal(modalId: string) {
 
         toggleModal('resourceModal');
     }
+    (window as any).openAddResourceModal = openAddResourceModal;
 
-    window.editResource = function(id: number) {
+    (window as any).editResource = function(id: number) {
         const resource = resources.find(r => r.id === id);
         if (!resource) return;
 
@@ -403,7 +411,7 @@ function toggleModal(modalId: string) {
         }
     }
 
-    window.deleteResource = async function(id: number) {
+    (window as any).deleteResource = async function(id: number) {
         if(confirm('Ви впевнені, що хочете видалити цей ресурс?')) {
             try {
                 const response = await fetch(`/api/resources/${id}`, { method: 'DELETE' });
@@ -448,7 +456,14 @@ function toggleModal(modalId: string) {
             }
         });
 
-        // Add event listeners for save buttons (if they exist in HTML)
-        // ... (omitted for brevity, assuming HTML is updated)
+        const saveServiceBtn = document.getElementById('save-service-btn');
+        if (saveServiceBtn) {
+            saveServiceBtn.addEventListener('click', handleSaveService);
+        }
+
+        const saveResourceBtn = document.getElementById('save-resource-btn');
+        if (saveResourceBtn) {
+            saveResourceBtn.addEventListener('click', handleSaveResource);
+        }
     });
 })();

@@ -77,10 +77,10 @@ export const ResourceDB = {
             [name, type, cost, is_available]
         ),
     
-    update: (id: string, name: string, type: string, cost: number) => 
+    update: (id: string, name: string, type: string, cost: number, is_available: boolean) => 
         pool.query(
-            'UPDATE resources SET name = $1, type = $2, cost = $3 WHERE id = $4 RETURNING *',
-            [name, type, cost, id]
+            'UPDATE resources SET name = $1, type = $2, cost = $3, is_available = $4 WHERE id = $5 RETURNING *',
+            [name, type, cost, is_available, id]
         ),
     
     delete: (id: string) => pool.query('DELETE FROM resources WHERE id = $1 RETURNING *', [id])

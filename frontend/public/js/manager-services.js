@@ -23,11 +23,13 @@ function toggleModal(modalId) {
 }
 (function () {
     const lucide = window.lucide;
+    let services = [];
+    let resources = [];
+    let editingServiceId = null;
+    let editingResourceId = null;
     function formatCurrency(amount) {
         return Number(amount).toLocaleString('uk-UA', { style: 'currency', currency: 'UAH' }).replace('UAH', '₴').replace(',', '.');
     }
-<<<<<<< Updated upstream
-=======
     const typeTranslations = {
         'equipment': 'Обладнання',
         'personnel': 'Персонал',
@@ -102,14 +104,13 @@ function toggleModal(modalId) {
         });
     }
     // --- API запити ---
->>>>>>> Stashed changes
     function fetchServices() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const response = yield fetch('/api/services');
                 if (!response.ok)
                     throw new Error('Failed to fetch services');
-                const services = yield response.json();
+                services = yield response.json();
                 renderServices(services);
             }
             catch (error) {
@@ -123,7 +124,7 @@ function toggleModal(modalId) {
                 const response = yield fetch('/api/resources');
                 if (!response.ok)
                     throw new Error('Failed to fetch resources');
-                const resources = yield response.json();
+                resources = yield response.json();
                 renderResources(resources);
             }
             catch (error) {
@@ -137,17 +138,10 @@ function toggleModal(modalId) {
             return;
         tbody.innerHTML = services.map(service => `
             <tr>
-<<<<<<< Updated upstream
-                <td class="text-gray-600 text-sm">SRV-${service.id.toString().padStart(3, '0')}</td>
-                <td class="text-primary font-medium">${service.name}</td>
-                <td><span class="badge badge-blue">General</span></td>
-                <td class="text-right text-primary font-bold">${formatCurrency(service.base_price)}</td>
-=======
                 <td class="text-gray-600 text-sm text-left">SRV-${service.id.toString().padStart(3, '0')}</td>
                 <td class="text-primary font-medium text-left">${service.name}</td>
                 <td class="text-left"><span class="badge badge-blue">${translateType(service.type || 'other')}</span></td>
                 <td class="text-left text-primary font-bold">${formatCurrency(service.base_price)}</td>
->>>>>>> Stashed changes
                 <td class="text-center">
                     <div class="flex justify-center gap-2">
                         <button class="btn-icon text-blue-600 hover:bg-blue-50" onclick="editService(${service.id})">
@@ -191,15 +185,9 @@ function toggleModal(modalId) {
                 </td>
             </tr>
         `).join('');
-        if (typeof lucide !== 'undefined') {
+        if (typeof lucide !== 'undefined')
             lucide.createIcons();
-        }
     }
-<<<<<<< Updated upstream
-    // Expose functions to window
-    window.editService = function (id) {
-        console.log('Edit service', id);
-=======
     // --- Логіка Послуг (Service) ---
     function openAddServiceModal() {
         editingServiceId = null;
@@ -220,6 +208,7 @@ function toggleModal(modalId) {
             header.textContent = 'Додати послугу';
         toggleModal('serviceModal');
     }
+    window.openAddServiceModal = openAddServiceModal;
     window.editService = function (id) {
         const service = services.find(s => s.id === id);
         if (!service)
@@ -244,11 +233,55 @@ function toggleModal(modalId) {
         if (header)
             header.textContent = 'Редагувати послугу';
         toggleModal('serviceModal');
->>>>>>> Stashed changes
     };
+    function handleSaveService() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const nameInput = document.getElementById('service-name');
+            const priceInput = document.getElementById('service-price');
+            const typeInput = document.getElementById('service-type');
+            const name = nameInput.value.trim();
+            const base_price = parseFloat(priceInput.value);
+            const type = typeInput.value;
+            if (!name || isNaN(base_price)) {
+                alert('Будь ласка, заповніть всі поля коректно');
+                return;
+            }
+            const payload = { name, base_price, type };
+            try {
+                let response;
+                if (editingServiceId) {
+                    // UPDATE (PATCH)
+                    response = yield fetch(`/api/services/${editingServiceId}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                }
+                else {
+                    // CREATE (POST)
+                    response = yield fetch('/api/services', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                }
+                if (response.ok) {
+                    toggleModal('serviceModal');
+                    fetchServices();
+                }
+                else {
+                    alert('Помилка при збереженні послуги');
+                }
+            }
+            catch (error) {
+                console.error(error);
+                alert('Помилка з\'єднання');
+            }
+        });
+    }
     window.deleteService = function (id) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (confirm('Are you sure you want to delete this service?')) {
+            if (confirm('Ви впевнені, що хочете видалити цю послугу?')) {
                 try {
                     const response = yield fetch(`/api/services/${id}`, { method: 'DELETE' });
                     if (response.ok) {
@@ -264,11 +297,6 @@ function toggleModal(modalId) {
             }
         });
     };
-<<<<<<< Updated upstream
-    window.editResource = function (id) {
-        console.log('Edit resource', id);
-    };
-=======
     // --- Логіка Ресурсів (Resource) ---
     function openAddResourceModal() {
         editingResourceId = null;
@@ -292,6 +320,7 @@ function toggleModal(modalId) {
             header.textContent = 'Додати ресурс';
         toggleModal('resourceModal');
     }
+    window.openAddResourceModal = openAddResourceModal;
     window.editResource = function (id) {
         const resource = resources.find(r => r.id === id);
         if (!resource)
@@ -365,10 +394,9 @@ function toggleModal(modalId) {
             }
         });
     }
->>>>>>> Stashed changes
     window.deleteResource = function (id) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (confirm('Are you sure you want to delete this resource?')) {
+            if (confirm('Ви впевнені, що хочете видалити цей ресурс?')) {
                 try {
                     const response = yield fetch(`/api/resources/${id}`, { method: 'DELETE' });
                     if (response.ok) {
@@ -408,7 +436,13 @@ function toggleModal(modalId) {
                 document.body.style.overflow = "";
             }
         });
-        // Add event listeners for save buttons (if they exist in HTML)
-        // ... (omitted for brevity, assuming HTML is updated)
+        const saveServiceBtn = document.getElementById('save-service-btn');
+        if (saveServiceBtn) {
+            saveServiceBtn.addEventListener('click', handleSaveService);
+        }
+        const saveResourceBtn = document.getElementById('save-resource-btn');
+        if (saveResourceBtn) {
+            saveResourceBtn.addEventListener('click', handleSaveResource);
+        }
     });
 })();

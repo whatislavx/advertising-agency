@@ -102,10 +102,10 @@ export const patchService = async (req: Request, res: Response) => {
 
 export const patchResource = async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { name, type, cost } = req.body;
+    const { name, type, cost, is_available } = req.body;
     try {
         // Викликаємо наш новий метод DB
-        const result = await ResourceDB.update(id, name, type, cost);
+        const result = await ResourceDB.update(id, name, type, cost, is_available);
         
         if (result.rowCount === 0) {
             return res.status(404).json({ message: 'Resource not found' });
