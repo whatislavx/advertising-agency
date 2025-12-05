@@ -1,3 +1,5 @@
+import { Modal } from './utils/Modal.js';
+
 (function() {
     const flatpickr = (window as any).flatpickr;
 
@@ -40,7 +42,7 @@
             
         } catch (e) {
             console.error("Failed to fetch data from backend", e);
-            alert("Не вдалося завантажити прайс-лист. Перевірте підключення до сервера.");
+            await Modal.alert("Не вдалося завантажити прайс-лист. Перевірте підключення до сервера.");
         }
     }
 
@@ -179,7 +181,7 @@
     async function submitOrder() {
         const userStr = localStorage.getItem('user');
         if (!userStr) {
-            alert('Будь ласка, увійдіть в систему');
+            await Modal.alert('Будь ласка, увійдіть в систему');
             window.location.href = 'index.html';
             return;
         }
@@ -187,7 +189,7 @@
 
         if (!currentService) return;
         if (durationInDays <= 0) {
-            alert('Оберіть коректний період кампанії');
+            await Modal.alert('Оберіть коректний період кампанії');
             return;
         }
 
@@ -217,15 +219,21 @@
 
             if (res.ok) {
                 const data = await res.json();
-                alert(`Замовлення #${data.orderId} успішно створено! Сума: ${formatCurrency(data.total)}`);
+                await Modal.alert(`
+                    <p>Ваше замовлення успішно зареєстровано в системі.</p>
+                    <div class="order-success-details">
+                        <p><span>Номер замовлення:</span> <strong>#${data.orderId}</strong></p>
+                        <p class="total-price"><span>До сплати:</span> <span>${formatCurrency(data.total)}</span></p>
+                    </div>
+                `, 'Успішно!', 'success');
                 window.location.href = 'my-orders.html';
             } else {
                 const err = await res.json();
-                alert('Помилка: ' + (err.message || 'Не вдалося створити замовлення'));
+                await Modal.alert('Помилка: ' + (err.message || 'Не вдалося створити замовлення'));
             }
         } catch (e) {
             console.error(e);
-            alert('Помилка з\'єднання');
+            await Modal.alert('Помилка з\'єднання');
         }
     }
 

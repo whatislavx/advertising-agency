@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,6 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+import { Modal } from './utils/Modal.js';
 (function () {
     const lucide = window.lucide;
     // Отримання поточного юзера з localStorage
@@ -126,7 +126,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                     })
                 });
                 if (response.ok) {
-                    alert("Профіль успішно оновлено!");
+                    yield Modal.alert("Профіль успішно оновлено!", "Успіх", "success");
                     yield loadProfileData(); // Перезавантажити дані і оновити UI
                     // Приховуємо кнопки редагування
                     const actionButtons = document.getElementById("actionButtons");
@@ -140,12 +140,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                     inputs.forEach((input) => input.disabled = true);
                 }
                 else {
-                    alert("Помилка при збереженні даних");
+                    yield Modal.alert("Помилка при збереженні даних");
                 }
             }
             catch (e) {
                 console.error(e);
-                alert("Помилка з'єднання");
+                yield Modal.alert("Помилка з'єднання");
             }
             finally {
                 btnSave.innerHTML = originalText;
@@ -219,7 +219,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 });
                 const data = yield response.json();
                 if (response.ok) {
-                    alert('Пароль успішно змінено');
+                    yield Modal.alert('Пароль успішно змінено', 'Успіх', 'success');
                     toggleModal(false);
                 }
                 else {

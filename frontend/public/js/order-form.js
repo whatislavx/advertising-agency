@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,6 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+import { Modal } from './utils/Modal.js';
 (function () {
     const flatpickr = window.flatpickr;
     let services = [];
@@ -31,7 +31,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             }
             catch (e) {
                 console.error("Failed to fetch data from backend", e);
-                alert("Не вдалося завантажити прайс-лист. Перевірте підключення до сервера.");
+                yield Modal.alert("Не вдалося завантажити прайс-лист. Перевірте підключення до сервера.");
             }
         });
     }
@@ -158,7 +158,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         return __awaiter(this, void 0, void 0, function* () {
             const userStr = localStorage.getItem('user');
             if (!userStr) {
-                alert('Будь ласка, увійдіть в систему');
+                yield Modal.alert('Будь ласка, увійдіть в систему');
                 window.location.href = 'index.html';
                 return;
             }
@@ -166,7 +166,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             if (!currentService)
                 return;
             if (durationInDays <= 0) {
-                alert('Оберіть коректний період кампанії');
+                yield Modal.alert('Оберіть коректний період кампанії');
                 return;
             }
             const startDateInput = document.getElementById('startDate');
@@ -190,17 +190,23 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 });
                 if (res.ok) {
                     const data = yield res.json();
-                    alert(`Замовлення #${data.orderId} успішно створено! Сума: ${formatCurrency(data.total)}`);
+                    yield Modal.alert(`
+                    <p>Ваше замовлення успішно зареєстровано в системі.</p>
+                    <div class="order-success-details">
+                        <p><span>Номер замовлення:</span> <strong>#${data.orderId}</strong></p>
+                        <p class="total-price"><span>До сплати:</span> <span>${formatCurrency(data.total)}</span></p>
+                    </div>
+                `, 'Успішно!', 'success');
                     window.location.href = 'my-orders.html';
                 }
                 else {
                     const err = yield res.json();
-                    alert('Помилка: ' + (err.message || 'Не вдалося створити замовлення'));
+                    yield Modal.alert('Помилка: ' + (err.message || 'Не вдалося створити замовлення'));
                 }
             }
             catch (e) {
                 console.error(e);
-                alert('Помилка з\'єднання');
+                yield Modal.alert('Помилка з\'єднання');
             }
         });
     }

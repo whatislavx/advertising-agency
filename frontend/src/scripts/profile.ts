@@ -1,3 +1,5 @@
+import { Modal } from './utils/Modal.js';
+
 (function() {
 const lucide = (window as any).lucide;
 
@@ -124,7 +126,7 @@ async function saveProfile() {
         });
 
         if (response.ok) {
-            alert("Профіль успішно оновлено!");
+            await Modal.alert("Профіль успішно оновлено!", "Успіх", "success");
             await loadProfileData(); // Перезавантажити дані і оновити UI
             
             // Приховуємо кнопки редагування
@@ -140,11 +142,11 @@ async function saveProfile() {
             inputs.forEach((input) => input.disabled = true);
 
         } else {
-            alert("Помилка при збереженні даних");
+            await Modal.alert("Помилка при збереженні даних");
         }
     } catch (e) {
         console.error(e);
-        alert("Помилка з'єднання");
+        await Modal.alert("Помилка з'єднання");
     } finally {
         btnSave.innerHTML = originalText;
         btnSave.disabled = false;
@@ -226,7 +228,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const data = await response.json();
 
             if (response.ok) {
-                alert('Пароль успішно змінено');
+                await Modal.alert('Пароль успішно змінено', 'Успіх', 'success');
                 toggleModal(false);
             } else {
                 if (passwordError) {

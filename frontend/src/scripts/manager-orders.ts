@@ -1,3 +1,5 @@
+import { Modal } from './utils/Modal.js';
+
 (function() {
     const lucide = (window as any).lucide;
 
@@ -185,19 +187,19 @@
             const matchesSearch = text.includes(searchValue);
             const matchesStatus = filterValue === "all" || status === filterValue;
 
+            const nextRow = htmlRow.nextElementSibling as HTMLElement;
+            const isDetailsRow = nextRow && nextRow.id.startsWith('details-');
+
             if (matchesSearch && matchesStatus) {
                 htmlRow.style.display = "";
-                const nextRow = htmlRow.nextElementSibling as HTMLElement;
-                if (nextRow && nextRow.id.startsWith('details-')) {
-                    if (!matchesSearch || !matchesStatus) {
-                        nextRow.classList.add('hidden');
-                    }
+                if (isDetailsRow) {
+                    nextRow.style.display = ""; // Reset inline display to allow class-based toggling
                 }
             } else {
                 htmlRow.style.display = "none";
-                const nextRow = htmlRow.nextElementSibling as HTMLElement;
-                if (nextRow && nextRow.id.startsWith('details-')) {
+                if (isDetailsRow) {
                     nextRow.style.display = "none";
+                    nextRow.classList.add('hidden'); // Reset to collapsed state
                 }
             }
         });
@@ -214,7 +216,7 @@
     };
 
     (window as any).cancelOrder = async (id: number) => {
-        if(!confirm('Ви впевнені, що хочете скасувати це замовлення?')) return;
+        if(!(await Modal.confirm('Ви впевнені, що хочете скасувати це замовлення?'))) return;
         try {
             const res = await fetch(`/api/orders/${id}/status`, {
                 method: 'PATCH',
@@ -224,11 +226,11 @@
             if(res.ok) {
                 fetchOrders();
             } else {
-                alert('Помилка при скасуванні');
+                await Modal.alert('Помилка при скасуванні');
             }
         } catch(e) {
             console.error(e);
-            alert('Помилка з\'єднання');
+            await Modal.alert('Помилка з\'єднання');
         }
     };
 

@@ -1,3 +1,5 @@
+import { Modal } from './utils/Modal.js';
+
 (function() {
 const lucide = (window as any).lucide;
 lucide?.createIcons();
@@ -56,11 +58,11 @@ async function handleLogin(e: Event) {
                 window.location.href = "catalog.html";
             }
         } else {
-            alert(data.message || 'Невірний email або пароль');
+            await Modal.alert(data.message || 'Невірний email або пароль');
         }
     } catch (error) {
         console.error('Login error', error);
-        alert('Помилка з\'єднання з сервером');
+        await Modal.alert('Помилка з\'єднання з сервером');
     }
 }
 
@@ -73,7 +75,7 @@ async function handleRegister(e: Event) {
     const passwordInput = document.getElementById("reg-password") as HTMLInputElement;
 
     if (!nameInput || !emailInput || !passwordInput) {
-        alert("Заповніть обов'язкові поля");
+        await Modal.alert("Заповніть обов'язкові поля");
         return;
     }
 
@@ -94,15 +96,15 @@ async function handleRegister(e: Event) {
         });
 
         if (response.ok) {
-            alert('Реєстрація успішна! Тепер увійдіть.');
+            await Modal.alert('Реєстрація успішна! Тепер увійдіть.');
             switchTab('login');
         } else {
             const data = await response.json();
-            alert('Помилка реєстрації: ' + (data.message || 'Спробуйте інший email'));
+            await Modal.alert('Помилка реєстрації: ' + (data.message || 'Спробуйте інший email'));
         }
     } catch (error) {
         console.error('Register error', error);
-        alert('Помилка сервера при реєстрації');
+        await Modal.alert('Помилка сервера при реєстрації');
     }
 }
 
