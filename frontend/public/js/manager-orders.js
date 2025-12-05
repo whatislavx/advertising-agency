@@ -64,7 +64,9 @@ import { Modal } from './utils/Modal.js';
             pendingOrdersEl.textContent = pendingCount.toString();
         }
         if (totalRevenueEl) {
-            const totalRevenue = orders.reduce((sum, order) => sum + Number(order.total_cost), 0);
+            const totalRevenue = orders
+                .filter(order => order.status !== 'cancelled')
+                .reduce((sum, order) => sum + Number(order.total_cost), 0);
             totalRevenueEl.textContent = formatCurrency(totalRevenue);
         }
     }
