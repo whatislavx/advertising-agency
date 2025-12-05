@@ -1,6 +1,6 @@
 // Database Access Objects
 import pool from '../config/postgres';
-import { PoolClient } from 'pg';
+import { PoolClient, Pool } from 'pg';
 
 export const UserDB = {
     getAll: () => pool.query('SELECT id, email, role, first_name, last_name, personal_discount FROM users'),
@@ -43,24 +43,37 @@ export const UserDB = {
 };
 
 export const ServiceDB = {
-    getAll: () => pool.query('SELECT * FROM services'),
+    getAll: () => pool.query(`
+        SELECT s.*, 
+               COALESCE((SELECT json_agg(sr.resource_id) 
+                         FROM service_resources sr 
+                         WHERE sr.service_id = s.id), '[]') as allowed_resources
+        FROM services s
+        ORDER BY s.id ASC
+    `),
 
     getById: (client: PoolClient, id: number) => 
         client.query('SELECT base_price FROM services WHERE id = $1', [id]),
 
-    create: (name: string, base_price: number, type: string) => 
-        pool.query(
+    create: (client: PoolClient | Pool, name: string, base_price: number, type: string) => 
+        client.query(
             'INSERT INTO services (name, base_price, type) VALUES ($1, $2, $3) RETURNING *',
             [name, base_price, type || 'other']
         ),
 
-    update: (id: string, name: string, base_price: number, type: string) => 
-        pool.query(
+    update: (client: PoolClient | Pool, id: string, name: string, base_price: number, type: string) => 
+        client.query(
             'UPDATE services SET name = $1, base_price = $2, type = COALESCE($3, type) WHERE id = $4 RETURNING *',
             [name, base_price, type, id]
         ),
 
-    delete: (id: string) => pool.query('DELETE FROM services WHERE id = $1 RETURNING *', [id])
+    delete: (id: string) => pool.query('DELETE FROM services WHERE id = $1 RETURNING *', [id]),
+
+    clearResources: (client: PoolClient | Pool, serviceId: number) =>
+        client.query('DELETE FROM service_resources WHERE service_id = $1', [serviceId]),
+
+    addResource: (client: PoolClient | Pool, serviceId: number, resourceId: number) =>
+        client.query('INSERT INTO service_resources (service_id, resource_id) VALUES ($1, $2)', [serviceId, resourceId])
 };
 
 export const ResourceDB = {

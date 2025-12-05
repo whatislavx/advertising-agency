@@ -119,6 +119,30 @@ import { Modal } from './utils/Modal.js';
         }
         updateSummary();
     }
+    function renderResourcesForService() {
+        const resourceContainer = document.getElementById('resourceContainer');
+        if (!resourceContainer || !currentService)
+            return;
+        resourceContainer.innerHTML = '';
+        // Filter resources based on allowed_resources IDs
+        const allowedIds = currentService.allowed_resources || [];
+        const availableResources = resources.filter(res => allowedIds.includes(res.id));
+        if (availableResources.length === 0) {
+            resourceContainer.innerHTML = `<div class="col-span-full text-center py-8 text-gray-500">Немає доступних ресурсів</div>`;
+            return;
+        }
+        availableResources.forEach(res => {
+            const price = Number(res.cost);
+            const card = document.createElement('div');
+            card.className = 'resource-item';
+            card.innerHTML = `
+                <div class="res-name">${res.name}</div>
+                <div class="res-price">+${formatCurrency(price)} / добу</div>
+            `;
+            card.addEventListener('click', () => toggleResource(card, res.id));
+            resourceContainer.appendChild(card);
+        });
+    }
     function initPage() {
         return __awaiter(this, void 0, void 0, function* () {
             yield fetchData();
@@ -135,22 +159,7 @@ import { Modal } from './utils/Modal.js';
                 if (priceEl)
                     priceEl.innerText = formatCurrency(servicePricePerDay) + ' / добу';
                 updateSummary();
-            }
-            // Рендер ресурсів
-            const resourceContainer = document.getElementById('resourceContainer');
-            if (resourceContainer) {
-                resourceContainer.innerHTML = '';
-                resources.forEach(res => {
-                    const price = Number(res.cost);
-                    const card = document.createElement('div');
-                    card.className = 'resource-item';
-                    card.innerHTML = `
-                    <div class="res-name">${res.name}</div>
-                    <div class="res-price">+${formatCurrency(price)} / добу</div>
-                `;
-                    card.addEventListener('click', () => toggleResource(card, res.id));
-                    resourceContainer.appendChild(card);
-                });
+                renderResourcesForService(); // NEW: Filter and render
             }
         });
     }

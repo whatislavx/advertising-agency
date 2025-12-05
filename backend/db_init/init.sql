@@ -34,6 +34,13 @@ CREATE TABLE resources (
     is_available BOOLEAN DEFAULT TRUE
 );
 
+-- Зв'язок послуг та ресурсів
+CREATE TABLE service_resources (
+    service_id INTEGER REFERENCES services(id) ON DELETE CASCADE,
+    resource_id INTEGER REFERENCES resources(id) ON DELETE CASCADE,
+    PRIMARY KEY (service_id, resource_id)
+);
+
 -- Замовлення
 CREATE TABLE orders (
     id SERIAL PRIMARY KEY,

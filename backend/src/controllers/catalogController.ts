@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { ServiceDB, ResourceDB } from '../db/postgres';
+import { ServiceDB, ResourceDB, runTransaction } from '../db/postgres';
 import redisClient from '../config/redis';
 
 // --- Константи для кешування ---
@@ -73,11 +73,22 @@ export const getResources = async (req: Request, res: Response) => {
 
 // Метод 3: Створення послуги (Інвалідація)
 export const createService = async (req: Request, res: Response) => {
-    const { name, base_price, type } = req.body;
+    const { name, base_price, type, resourceIds } = req.body;
     try {
-        const result = await ServiceDB.create(name, base_price, type);
+        const newService = await runTransaction(async (client) => {
+            const result = await ServiceDB.create(client, name, base_price, type);
+            const serviceId = result.rows[0].id;
+
+            if (resourceIds && Array.isArray(resourceIds)) {
+                for (const resId of resourceIds) {
+                    await ServiceDB.addResource(client, serviceId, resId);
+                }
+            }
+            return result.rows[0];
+        });
+
         await redisClient.del(SERVICES_CACHE_KEY);
-        res.status(201).json(result.rows[0]);
+        res.status(201).json(newService);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
@@ -87,15 +98,26 @@ export const createService = async (req: Request, res: Response) => {
 // Метод 4: Оновлення послуги (Інвалідація)
 export const patchService = async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { name, base_price, type } = req.body;
+    const { name, base_price, type, resourceIds } = req.body;
     try {
-        const result = await ServiceDB.update(id, name, base_price, type);
-        if (result.rowCount === 0) return res.status(404).json({ message: 'Not found' });
+        const updatedService = await runTransaction(async (client) => {
+            const result = await ServiceDB.update(client, id, name, base_price, type);
+            if (result.rowCount === 0) throw new Error('Not found');
+            
+            if (resourceIds !== undefined && Array.isArray(resourceIds)) {
+                await ServiceDB.clearResources(client, parseInt(id));
+                for (const resId of resourceIds) {
+                    await ServiceDB.addResource(client, parseInt(id), resId);
+                }
+            }
+            return result.rows[0];
+        });
         
-        await redisClient.del(SERVICES_CACHE_KEY); // Видалення старого кешу
-        res.json(result.rows[0]);
-    } catch (error) {
+        await redisClient.del(SERVICES_CACHE_KEY); 
+        res.json(updatedService);
+    } catch (error: any) {
         console.error(error);
+        if (error.message === 'Not found') return res.status(404).json({ message: 'Not found' });
         res.status(500).json({ message: 'Server error' });
     }
 };
@@ -104,15 +126,14 @@ export const patchResource = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { name, type, cost, is_available } = req.body;
     try {
-        // Викликаємо наш новий метод DB
         const result = await ResourceDB.update(id, name, type, cost, is_available);
         
         if (result.rowCount === 0) {
             return res.status(404).json({ message: 'Resource not found' });
         }
         
-        // Інвалідуємо кеш ресурсів, щоб користувачі побачили зміни
         await redisClient.del(RESOURCES_CACHE_KEY);
+        await redisClient.del(RESOURCES_AVAILABLE_CACHE_KEY);
         
         res.json(result.rows[0]);
     } catch (error) {
@@ -121,7 +142,6 @@ export const patchResource = async (req: Request, res: Response) => {
     }
 };
 
-// Метод 5: Створення ресурсу (Інвалідація)
 export const createResource = async (req: Request, res: Response) => {
     const { name, type, cost, is_available } = req.body;
     try {
@@ -135,7 +155,6 @@ export const createResource = async (req: Request, res: Response) => {
     }
 };
 
-// DELETE /services/:id
 export const deleteService = async (req: Request, res: Response) => {
     const { id } = req.params;
     try {
@@ -154,7 +173,6 @@ export const deleteService = async (req: Request, res: Response) => {
     }
 };
 
-// DELETE /resources/:id
 export const deleteResource = async (req: Request, res: Response) => {
     const { id } = req.params;
     try {

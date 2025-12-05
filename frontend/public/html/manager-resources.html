@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Послуги</title>
+    <title>Ресурси</title>
     <link rel="stylesheet" href="../css/main.css" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -27,13 +27,13 @@
           </a>
           <a
             href="manager-services.html"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg active"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
           >
             <i data-lucide="settings" class="w-5 h-5"></i> Послуги
           </a>
           <a
             href="manager-resources.html"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg active"
           >
             <i data-lucide="box" class="w-5 h-5"></i> Ресурси
           </a>
@@ -52,16 +52,16 @@
     <main class="flex-1 main-content-offset p-8">
       <div class="mb-8">
         <h2 class="text-3xl font-medium text-primary mb-2">
-          Керування Послугами
+          Керування Ресурсами
         </h2>
-        <p class="text-gray-600">Налаштування прайсу послуг</p>
+        <p class="text-gray-600">Налаштування доступних ресурсів</p>
       </div>
 
-      <div class="mb-12">
+      <div>
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-2xl text-primary font-medium">Послуги</h3>
-          <button id="btn-add-service" class="btn btn-primary">
-            <i data-lucide="plus" class="w-5 h-5"></i> Додати послугу
+          <h3 class="text-2xl text-primary font-medium">Ресурси</h3>
+          <button id="btn-add-resource" class="btn btn-primary">
+            <i data-lucide="plus" class="w-5 h-5"></i> Додати ресурс
           </button>
         </div>
 
@@ -73,125 +73,102 @@
                 <th class="text-left">Назва</th>
                 <th class="text-left">Тип</th>
                 <th class="text-left">Ціна</th>
+                <th class="text-center">Доступність</th>
                 <th class="text-center">Дії</th>
               </tr>
             </thead>
-            <tbody id="services-table-body"></tbody>
+            <tbody id="resources-table-body"></tbody>
           </table>
         </div>
       </div>
     </main>
 
-    <div id="serviceModal" class="modal-overlay hidden">
+    <div id="resourceModal" class="modal-overlay hidden">
       <div class="modal-content">
         <div class="modal-header">
-          <h3>Додати послугу</h3>
-          <button data-modal-target="serviceModal" class="btn-icon">
+          <h3>Додати ресурс</h3>
+          <button data-modal-target="resourceModal" class="btn-icon">
             <i data-lucide="x" class="w-6 h-6"></i>
           </button>
         </div>
         <div class="modal-body">
           <div>
             <label class="block text-sm text-gray-700 mb-2 font-medium"
-              >Назва послуги *</label
+              >Назва ресурсу *</label
             >
             <input
-              id="service-name"
+              id="resource-name"
               type="text"
-              placeholder="Наприклад: Реклама в Facebook"
+              placeholder="Наприклад: Камера"
             />
           </div>
           <div>
             <label class="block text-sm text-gray-700 mb-2 font-medium"
-              >Ціна за добу (грн) *</label
-            >
-            <input id="service-price" type="number" placeholder="0" />
-          </div>
-          <div>
-            <label class="block text-sm text-gray-700 mb-2 font-medium"
-              >Тип реклами *</label
+              >Тип *</label
             >
             <div
               class="relative custom-select-container"
-              id="serviceTypeContainer"
+              id="resourceTypeContainer"
             >
-              <input type="hidden" id="service-type" value="internet" />
+              <input type="hidden" id="resource-type" value="equipment" />
               <button
                 type="button"
                 class="custom-select-trigger w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-left flex items-center justify-between focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
               >
-                <span class="selected-text text-gray-700">Інтернет</span>
+                <span class="selected-text text-gray-700">Обладнання</span>
                 <i
                   data-lucide="chevron-down"
                   class="w-4 h-4 text-gray-400 transition-transform duration-200"
                 ></i>
               </button>
               <div
-                class="custom-select-menu absolute bottom-full left-0 w-full mb-2 bg-white border border-gray-100 rounded-xl shadow-2xl hidden z-50 overflow-hidden ring-1 ring-black/5"
+                class="custom-select-menu absolute top-full left-0 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-2xl hidden z-50 overflow-hidden ring-1 ring-black/5"
               >
                 <div class="p-1.5">
                   <div
                     class="custom-option px-3 py-2.5 rounded-lg hover:bg-blue-50 cursor-pointer flex items-center gap-3 transition-colors"
-                    data-value="internet"
+                    data-value="equipment"
                   >
-                    Інтернет
+                    Обладнання
                   </div>
                   <div
                     class="custom-option px-3 py-2.5 rounded-lg hover:bg-blue-50 cursor-pointer flex items-center gap-3 transition-colors"
-                    data-value="outdoor"
+                    data-value="personnel"
                   >
-                    Зовнішня
-                  </div>
-                  <div
-                    class="custom-option px-3 py-2.5 rounded-lg hover:bg-blue-50 cursor-pointer flex items-center gap-3 transition-colors"
-                    data-value="tv"
-                  >
-                    ТБ
+                    Персонал
                   </div>
                 </div>
               </div>
             </div>
           </div>
-
           <div>
             <label class="block text-sm text-gray-700 mb-2 font-medium"
-              >Доступні ресурси</label
+              >Вартість за добу (грн) *</label
             >
-            <div
-              class="relative custom-select-container"
-              id="resourcesSelectContainer"
+            <input id="resource-cost" type="number" placeholder="0" />
+          </div>
+          <div class="flex items-center gap-2 mt-2">
+            <input
+              type="checkbox"
+              id="resAvailable"
+              class="w-4 h-4 text-brandOrange rounded border-gray-300 focus:ring-brandOrange"
+            />
+            <label for="resAvailable" class="text-sm text-gray-700"
+              >Ресурс доступний</label
             >
-              <button
-                type="button"
-                class="custom-select-trigger w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-left flex items-center justify-between focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-              >
-                <span class="selected-text text-gray-700"
-                  >Обрати ресурси...</span
-                >
-                <i
-                  data-lucide="chevron-down"
-                  class="w-4 h-4 text-gray-400 transition-transform duration-200"
-                ></i>
-              </button>
-              <div
-                class="custom-select-menu absolute bottom-full left-0 w-full mb-2 bg-white border border-gray-100 rounded-xl shadow-2xl hidden z-50 overflow-hidden ring-1 ring-black/5 max-h-48 overflow-y-auto"
-              >
-                <div class="p-1.5" id="resources-options-list"></div>
-              </div>
-            </div>
           </div>
         </div>
         <div class="modal-footer">
-          <button data-modal-target="serviceModal" class="btn btn-secondary">
+          <button data-modal-target="resourceModal" class="btn btn-secondary">
             Скасувати
           </button>
-          <button id="save-service-btn" class="btn btn-primary">
+          <button id="save-resource-btn" class="btn btn-primary">
             <i data-lucide="save" class="w-5 h-5"></i> Зберегти
           </button>
         </div>
       </div>
     </div>
 
-    <script src="../js/manager-services.js" type="module"></script>
+    <script src="../js/manager-resources.js" type="module"></script>
   </body>
 </html>
