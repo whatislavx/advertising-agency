@@ -31,6 +31,7 @@
             case 'tv': return 'https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?w=400&h=300&fit=crop';
             case 'internet': return 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=400&h=300&fit=crop';
             case 'outdoor': return 'https://images.unsplash.com/photo-1541698444083-023c97d3f4b6?w=400&h=300&fit=crop';
+            case 'radio': return 'https://images.unsplash.com/photo-1529154167-6a23e6e7a9c1?w=400&h=300&fit=crop';
             default: return 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=400&h=300&fit=crop';
         }
     }
@@ -40,6 +41,7 @@
             case 'tv': return 'Рекламні ролики на провідних каналах';
             case 'internet': return 'Таргетована реклама в соціальних мережах';
             case 'outdoor': return 'Реклама на білбордах у центрі міста';
+            case 'radio': return 'Аудіореклама на популярних радіостанціях';
             default: return 'Ефективна реклама для вашого бізнесу';
         }
     }
@@ -47,6 +49,7 @@
     function filterAndRender() {
         const searchInput = document.getElementById('searchInput') as HTMLInputElement;
         const typeInputs = document.querySelectorAll('input[name="type"]');
+        const priceInputs = document.querySelectorAll('input[name="price"]');
         
         const searchText = searchInput ? searchInput.value.toLowerCase() : '';
         let selectedType = 'all';
@@ -54,17 +57,54 @@
             if (input.checked) selectedType = input.value;
         });
 
-        console.log('Filtering:', { searchText, selectedType, totalServices: allServices.length });
+        let selectedPrice: string = 'all';
+        priceInputs.forEach((input: any) => {
+            if (input.checked) selectedPrice = input.value;
+        });
+
+        console.log('Filtering:', { searchText, selectedType, selectedPrice, totalServices: allServices.length });
 
         const filtered = allServices.filter(service => {
             const matchesSearch = service.name.toLowerCase().includes(searchText);
             const matchesType = selectedType === 'all' || service.type === selectedType;
-            return matchesSearch && matchesType;
+            const price = Number(service.base_price) || 0;
+            let matchesPrice = true;
+            if (selectedPrice !== 'all') {
+                if (selectedPrice.endsWith('+')) {
+                    const min = Number(selectedPrice.replace('+', ''));
+                    matchesPrice = price >= min;
+                } else {
+                    const [minStr, maxStr] = selectedPrice.split('-');
+                    const min = Number(minStr);
+                    const max = Number(maxStr);
+                    matchesPrice = price >= min && price <= max;
+                }
+            }
+            return matchesSearch && matchesType && matchesPrice;
         });
 
         console.log('Filtered results:', filtered.length);
         renderServices(filtered);
     }
+
+    (window as any).handleOrderClick = async (serviceId: number) => {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+            try {
+                const user = JSON.parse(userStr);
+                // Send tracking request without awaiting to not delay navigation too much
+                fetch('/api/analytics/view', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ serviceId, userId: user.id })
+                }).catch(e => console.error("Tracking error", e));
+            } catch (e) {
+                console.error("Tracking error", e);
+            }
+        }
+        // Navigate immediately
+        window.location.href = `order-form.html?id=${serviceId}`;
+    };
 
     function renderServices(services: Service[]) {
         const grid = document.getElementById('servicesGrid');
@@ -99,12 +139,12 @@
                             <span class="text-sm text-gray-500 block mb-1">Від</span>
                             <p class="text-xl font-medium text-[#1a3a5c] leading-none">${formatCurrency(Number(service.base_price))}</p>
                           </div>
-                          <a
-                            href="order-form.html?id=${service.id}"
+                          <button
+                            onclick="handleOrderClick(${service.id})"
                             class="btn btn-primary px-6 py-2"
                           >
                             <i data-lucide="shopping-cart" class="w-4 h-4"></i> Замовити
-                          </a>
+                          </button>
                         </div>
                     </div>
                 `;
@@ -119,12 +159,17 @@
 
         const searchInput = document.getElementById('searchInput');
         const typeInputs = document.querySelectorAll('input[name="type"]');
+        const priceInputs = document.querySelectorAll('input[name="price"]');
 
         if (searchInput) {
             searchInput.addEventListener('input', filterAndRender);
         }
 
         typeInputs.forEach(input => {
+            input.addEventListener('change', filterAndRender);
+        });
+
+        priceInputs.forEach(input => {
             input.addEventListener('change', filterAndRender);
         });
     }

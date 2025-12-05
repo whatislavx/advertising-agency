@@ -79,14 +79,45 @@ async function handleRegister(e: Event) {
         return;
     }
 
+    const nameVal = nameInput.value.trim();
+    const emailVal = emailInput.value.trim();
+    const passwordVal = passwordInput.value;
+    const phoneVal = phoneInput ? phoneInput.value.trim() : '';
+
+    if (!nameVal || !emailVal || !passwordVal) {
+        await Modal.alert("Будь ласка, заповніть всі поля: ім'я, email, пароль");
+        return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailVal)) {
+        await Modal.alert("Некоректний email");
+        return;
+    }
+
+    if (passwordVal.length < 6) {
+        await Modal.alert("Пароль має містити щонайменше 6 символів");
+        return;
+    }
+
+    // Валідація телефону у форматі +380 XX XXX XX XX (лише цифри, контроль довжини)
+    if (phoneInput && phoneVal) {
+        const digitsOnly = phoneVal.replace(/\D/g, '');
+        // очікуємо 12 цифр включно з кодом країни 380 + 9 цифр
+        if (!(digitsOnly.startsWith('380') && digitsOnly.length === 12)) {
+            await Modal.alert("Телефон має бути у форматі +380XXXXXXXXX");
+            return;
+        }
+    }
+
     // Розбиваємо ім'я на First Name та Last Name
     const nameParts = nameInput.value.trim().split(' ');
     const first_name = nameParts[0];
     const last_name = nameParts.slice(1).join(' ') || '';
     
-    const email = emailInput.value;
-    const password = passwordInput.value;
-    const phone = phoneInput ? phoneInput.value : '';
+    const email = emailVal;
+    const password = passwordVal;
+    const phone = phoneVal;
 
     try {
         const response = await fetch('/api/auth/register', {
@@ -121,6 +152,44 @@ document.addEventListener('DOMContentLoaded', () => {
     // Видаляємо старі обробники, якщо вони були в HTML
     registerForm?.removeAttribute('onsubmit');
     registerForm?.addEventListener('submit', handleRegister);
+
+    // Маска та обмеження для телефону: тільки цифри, автоформат у +380 XX XXX XX XX
+    const regPhone = document.getElementById('reg-phone') as HTMLInputElement | null;
+    function formatUaPhone(value: string): string {
+        const digits = value.replace(/\D/g, '');
+        let normalized = digits;
+        if (!normalized.startsWith('380')) {
+            // якщо користувач вводить без 380, додамо 380 на початок при наявності цифр
+            if (normalized.length > 0) normalized = '380' + normalized;
+        }
+        normalized = normalized.slice(0, 12);
+        // форматувати у +380 XX XXX XX XX
+        const cc = normalized.slice(0, 3); // 380
+        const p1 = normalized.slice(3, 5);
+        const p2 = normalized.slice(5, 8);
+        const p3 = normalized.slice(8, 10);
+        const p4 = normalized.slice(10, 12);
+        let out = '+380';
+        if (p1) out += ` ${p1}`;
+        if (p2) out += ` ${p2}`;
+        if (p3) out += ` ${p3}`;
+        if (p4) out += ` ${p4}`;
+        return out;
+    }
+    function enforceDigitsOnly(e: KeyboardEvent) {
+        const allowed = ['Backspace','Delete','ArrowLeft','ArrowRight','Tab'];
+        if (allowed.includes(e.key)) return;
+        if (!/\d/.test(e.key)) {
+            e.preventDefault();
+        }
+    }
+    if (regPhone) {
+        regPhone.addEventListener('keydown', enforceDigitsOnly);
+        regPhone.addEventListener('input', () => {
+            regPhone.value = formatUaPhone(regPhone.value);
+        });
+        regPhone.setAttribute('placeholder', '+380 XX XXX XX XX');
+    }
 
     // Очищення полів від автозаповнення
     setTimeout(() => {

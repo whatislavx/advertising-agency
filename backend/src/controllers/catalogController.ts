@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { ServiceDB, ResourceDB } from '../db/postgres';
+import { ServiceDB, ResourceDB, ServiceViewsDB } from '../db/postgres';
 import redisClient from '../config/redis';
 
 // --- Константи для кешування ---
@@ -171,5 +171,17 @@ export const deleteResource = async (req: Request, res: Response) => {
             return res.status(400).json({ message: 'Неможливо видалити ресурс, оскільки він використовується в замовленнях.' });
         }
         res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
+
+// Метод 5: Трекінг переглядів
+export const trackView = async (req: Request, res: Response) => {
+    const { serviceId, userId } = req.body;
+    try {
+        await ServiceViewsDB.create(serviceId, userId);
+        res.status(200).json({ message: 'View tracked' });
+    } catch (error) {
+        console.error('Error tracking view:', error);
+        res.status(500).json({ message: 'Server error' });
     }
 };
