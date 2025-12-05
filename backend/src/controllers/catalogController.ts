@@ -5,6 +5,7 @@ import redisClient from '../config/redis';
 // --- Константи для кешування ---
 const SERVICES_CACHE_KEY = 'catalog:services_list';
 const RESOURCES_CACHE_KEY = 'catalog:resources_list';
+const RESOURCES_AVAILABLE_CACHE_KEY = 'catalog:resources_list:available';
 const SERVICES_TTL = 3600; // 1 година 
 const RESOURCES_TTL = 1800; // 30 хвилин
 
@@ -42,19 +43,22 @@ export const getAllServices = async (req: Request, res: Response) => {
 // Метод 2: Отримання ресурсів (Cache-Aside)
 export const getResources = async (req: Request, res: Response) => {
     try {
-        const cachedResources = await redisClient.get(RESOURCES_CACHE_KEY); 
+        const onlyAvailable = req.query.available === 'true';
+        const cacheKey = onlyAvailable ? RESOURCES_AVAILABLE_CACHE_KEY : RESOURCES_CACHE_KEY;
+
+        const cachedResources = await redisClient.get(cacheKey); 
         if (cachedResources) {
-            console.log('Serving resources from Redis cache.');
+            console.log(`Serving resources from Redis cache (${cacheKey}).`);
             return res.json(JSON.parse(cachedResources));
         }
 
-        console.log('Resources cache miss. Querying PostgreSQL.');
-        const result = await ResourceDB.getAll();
+        console.log(`Resources cache miss (${cacheKey}). Querying PostgreSQL.`);
+        const result = onlyAvailable ? await ResourceDB.getAllAvailable() : await ResourceDB.getAll();
         const resources = result.rows;
 
         if (resources.length > 0) {
             await redisClient.setEx(
-                RESOURCES_CACHE_KEY,
+                cacheKey,
                 RESOURCES_TTL,
                 JSON.stringify(resources) 
             ); 
@@ -96,12 +100,34 @@ export const patchService = async (req: Request, res: Response) => {
     }
 };
 
-// Метод 5: Створення ресурсу (Інвалідація)
-export const createResource = async (req: Request, res: Response) => {
+export const patchResource = async (req: Request, res: Response) => {
+    const { id } = req.params;
     const { name, type, cost } = req.body;
     try {
-        const result = await ResourceDB.create(name, type, cost);
+        // Викликаємо наш новий метод DB
+        const result = await ResourceDB.update(id, name, type, cost);
+        
+        if (result.rowCount === 0) {
+            return res.status(404).json({ message: 'Resource not found' });
+        }
+        
+        // Інвалідуємо кеш ресурсів, щоб користувачі побачили зміни
+        await redisClient.del(RESOURCES_CACHE_KEY);
+        
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Error updating resource:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+// Метод 5: Створення ресурсу (Інвалідація)
+export const createResource = async (req: Request, res: Response) => {
+    const { name, type, cost, is_available } = req.body;
+    try {
+        const result = await ResourceDB.create(name, type, cost, is_available !== undefined ? is_available : true);
         await redisClient.del(RESOURCES_CACHE_KEY); 
+        await redisClient.del(RESOURCES_AVAILABLE_CACHE_KEY);
         res.status(201).json(result.rows[0]);
     } catch (error) {
         console.error(error);
@@ -134,6 +160,7 @@ export const deleteResource = async (req: Request, res: Response) => {
             return res.status(404).json({ message: 'Resource not found' });
         }
         await redisClient.del(RESOURCES_CACHE_KEY);
+        await redisClient.del(RESOURCES_AVAILABLE_CACHE_KEY);
         res.json({ message: 'Resource deleted' });
     } catch (error) {
         console.error('Error deleting resource:', error);

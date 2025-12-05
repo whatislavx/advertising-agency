@@ -70,7 +70,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 };
 
 export const rescheduleOrder = async (req: Request, res: Response) => {
-    const { newDate } = req.body;
+    const { newDate, newEndDate } = req.body;
     const { id } = req.params;
 
     try {
@@ -78,7 +78,7 @@ export const rescheduleOrder = async (req: Request, res: Response) => {
         // В реальному проекті тут був би SELECT count(*) ... JOIN order_resources ... WHERE date = newDate
         
         // 2. Оновлення дати
-        const result = await OrderDB.updateDate(id, newDate);
+        const result = await OrderDB.updateDate(id, newDate, newEndDate);
         
         if (result.rowCount === 0) {
              return res.status(404).json({ message: 'Order not found' });

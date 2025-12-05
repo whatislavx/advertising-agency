@@ -30,7 +30,8 @@ CREATE TABLE resources (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     type VARCHAR(50) NOT NULL, -- 'equipment', 'personnel'
-    cost DECIMAL(10, 2) NOT NULL
+    cost DECIMAL(10, 2) NOT NULL,
+    is_available BOOLEAN DEFAULT TRUE
 );
 
 -- Замовлення
