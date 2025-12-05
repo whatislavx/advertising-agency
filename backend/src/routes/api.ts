@@ -39,6 +39,7 @@ router.delete('/services/:id', catalogController.deleteService);
 router.post('/resources', catalogController.createResource);
 router.patch('/resources/:id', catalogController.patchResource);
 router.delete('/resources/:id', catalogController.deleteResource);
+router.post('/analytics/view', catalogController.trackView);
 
 // --- Report Routes (MongoDB) ---
 router.get('/dashboard/stats', reportController.getDashboardStats);

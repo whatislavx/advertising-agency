@@ -1,6 +1,91 @@
 import { Request, Response } from 'express';
 import Report from '../models/Report';
-import { OrderDB } from '../db/postgres';
+import { OrderDB, ServiceDB, ServiceViewsDB } from '../db/postgres';
+
+// Helper to calculate percentage change
+const calculateChange = (current: number, previous: number): string | null => {
+    if (previous === 0) return null; // Return null to indicate "dash"
+    const change = ((current - previous) / previous) * 100;
+    return change.toFixed(1);
+};
+
+// GET /dashboard/stats
+export const getDashboardStats = async (req: Request, res: Response) => {
+    try {
+        const now = new Date();
+        const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+        // 1. Total Stats (All Time)
+        const totalOrdersRes = await OrderDB.countAll();
+        const totalRevenueRes = await OrderDB.getTotalRevenue();
+        const totalViewsRes = await ServiceViewsDB.countAll();
+
+        const totalOrders = parseInt(totalOrdersRes.rows[0].count);
+        const totalRevenue = parseFloat(totalRevenueRes.rows[0].sum || '0');
+        const totalViews = parseInt(totalViewsRes.rows[0].count);
+
+        // 2. Monthly Changes
+        // This Month
+        const thisMonthOrdersRes = await OrderDB.countByDateRange(startOfThisMonth, now);
+        const thisMonthRevenueRes = await OrderDB.getRevenueByDateRange(startOfThisMonth, now);
+        const thisMonthViewsRes = await ServiceViewsDB.countByDateRange(startOfThisMonth, now);
+
+        const thisMonthOrders = parseInt(thisMonthOrdersRes.rows[0].count);
+        const thisMonthRevenue = parseFloat(thisMonthRevenueRes.rows[0].sum || '0');
+        const thisMonthViews = parseInt(thisMonthViewsRes.rows[0].count);
+
+        // Last Month
+        const lastMonthOrdersRes = await OrderDB.countByDateRange(startOfLastMonth, startOfThisMonth);
+        const lastMonthRevenueRes = await OrderDB.getRevenueByDateRange(startOfLastMonth, startOfThisMonth);
+        const lastMonthViewsRes = await ServiceViewsDB.countByDateRange(startOfLastMonth, startOfThisMonth);
+
+        const lastMonthOrders = parseInt(lastMonthOrdersRes.rows[0].count);
+        const lastMonthRevenue = parseFloat(lastMonthRevenueRes.rows[0].sum || '0');
+        const lastMonthViews = parseInt(lastMonthViewsRes.rows[0].count);
+
+        // 3. Efficiency Report (Table Data)
+        const servicesRes = await ServiceDB.getAll();
+        const viewsByServiceRes = await ServiceViewsDB.getViewsCountByService();
+        const ordersByServiceRes = await OrderDB.getOrdersCountByService();
+
+        console.log('Services found:', servicesRes.rows.length);
+        console.log('Views stats:', viewsByServiceRes.rows);
+        console.log('Orders stats:', ordersByServiceRes.rows);
+
+        const services = servicesRes.rows.map(service => {
+            const viewsRow = viewsByServiceRes.rows.find((r: any) => r.service_id == service.id);
+            const ordersRow = ordersByServiceRes.rows.find((r: any) => r.service_id == service.id);
+            
+            const views = viewsRow ? parseInt(viewsRow.count) : 0;
+            const orders = ordersRow ? parseInt(ordersRow.count) : 0;
+            const conversion = views > 0 ? ((orders / views) * 100).toFixed(1) : '0.0';
+
+            return {
+                id: service.id,
+                name: service.name,
+                views,
+                orders,
+                conversion
+            };
+        });
+
+        res.json({
+            totalOrders,
+            totalRevenue,
+            totalViews,
+            changes: {
+                orders: calculateChange(thisMonthOrders, lastMonthOrders),
+                revenue: calculateChange(thisMonthRevenue, lastMonthRevenue),
+                views: calculateChange(thisMonthViews, lastMonthViews)
+            },
+            services
+        });
+    } catch (error) {
+        console.error('Error getting dashboard stats:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
 
 // Метод 1: Створення звіту
 // POST /reports
@@ -59,28 +144,3 @@ export const getReportById = async (req: Request, res: Response) => {
     }
 };
 
-// Метод 4: Dashboard Stats
-// GET /dashboard/stats
-export const getDashboardStats = async (req: Request, res: Response) => {
-    try {
-        // Total Orders
-        const ordersResult = await OrderDB.countAll();
-        const totalOrders = parseInt(ordersResult.rows[0].count);
-
-        // Total Revenue (sum of total_cost of paid/completed orders)
-        const revenueResult = await OrderDB.getTotalRevenue();
-        const totalRevenue = parseFloat(revenueResult.rows[0].sum || '0');
-
-        // Total Views (Mocked for now, or fetch from Mongo if implemented)
-        const totalViews = 254000; // Placeholder
-
-        res.json({
-            totalOrders,
-            totalRevenue,
-            totalViews
-        });
-    } catch (error) {
-        console.error('Error getting dashboard stats:', error);
-        res.status(500).json({ message: 'Internal Server Error' });
-    }
-};
