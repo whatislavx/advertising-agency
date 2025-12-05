@@ -10,7 +10,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    
+
     // No opacity/visibility transition for classic modals
     // They are toggled via .hidden class (display: none)
 }
@@ -25,14 +25,14 @@
     display: flex;
     flex-direction: column;
     padding: 0; // Reset padding to handle borders correctly
-    
+
     .modal-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         padding: 1.25rem 1.5rem;
         border-bottom: 1px solid #e5e7eb; // gray-200
-        
+
         h3 {
             font-size: 1.25rem;
             font-weight: 600;
@@ -43,16 +43,23 @@
         .btn-icon {
             color: #6b7280;
             cursor: pointer;
-            &:hover { color: #111827; background-color: transparent; }
+
+            &:hover {
+                color: #111827;
+                background-color: transparent;
+            }
         }
     }
 
     .modal-body {
         padding: 1.5rem;
-        
-        > div {
+
+        >div {
             margin-bottom: 1.25rem;
-            &:last-child { margin-bottom: 0; }
+
+            &:last-child {
+                margin-bottom: 0;
+            }
         }
 
         label {
@@ -147,7 +154,7 @@
     justify-content: center;
     margin-bottom: 1.5rem;
     position: relative;
-    
+
     svg {
         width: 40px;
         height: 40px;
@@ -168,25 +175,41 @@
 
 .modal-icon-success {
     color: #10b981;
-    &::before { background-color: #10b981; }
+
+    &::before {
+        background-color: #10b981;
+    }
+
     background-color: rgba(16, 185, 129, 0.1);
 }
 
 .modal-icon-error {
     color: #ef4444;
-    &::before { background-color: #ef4444; }
+
+    &::before {
+        background-color: #ef4444;
+    }
+
     background-color: rgba(239, 68, 68, 0.1);
 }
 
 .modal-icon-warning {
     color: #f59e0b;
-    &::before { background-color: #f59e0b; }
+
+    &::before {
+        background-color: #f59e0b;
+    }
+
     background-color: rgba(245, 158, 11, 0.1);
 }
 
 .modal-icon-info {
     color: #3b82f6;
-    &::before { background-color: #3b82f6; }
+
+    &::before {
+        background-color: #3b82f6;
+    }
+
     background-color: rgba(59, 130, 246, 0.1);
 }
 
@@ -196,25 +219,31 @@
     line-height: 1.5;
     margin-bottom: 2rem;
     width: 100%;
-    
+
     // Support for rich HTML content
-    p { margin-bottom: 0.5rem; }
-    strong { color: #111827; font-weight: 600; }
-    
+    p {
+        margin-bottom: 0.5rem;
+    }
+
+    strong {
+        color: #111827;
+        font-weight: 600;
+    }
+
     .order-success-details {
         background: #f3f4f6;
         padding: 1rem;
         border-radius: 0.5rem;
         margin-top: 1rem;
         text-align: left;
-        
+
         p {
             display: flex;
             justify-content: space-between;
             margin: 0.25rem 0;
             font-size: 0.9rem;
         }
-        
+
         .total-price {
             margin-top: 0.5rem;
             padding-top: 0.5rem;
@@ -241,7 +270,7 @@
         transition: all 0.2s;
         cursor: pointer;
         border: none;
-        
+
         &:focus {
             outline: 2px solid offset 2px;
         }
@@ -250,14 +279,18 @@
     .btn-secondary {
         background-color: #f3f4f6;
         color: #374151;
-        &:hover { background-color: #e5e7eb; }
+
+        &:hover {
+            background-color: #e5e7eb;
+        }
     }
 
     .btn-primary {
         background-color: $orange;
         color: white;
         box-shadow: 0 4px 6px -1px rgba(255, 107, 53, 0.3); // Shadow based on brand-orange
-        &:hover { 
+
+        &:hover {
             background-color: $orange-hover;
             transform: translateY(-1px);
         }
@@ -267,7 +300,8 @@
         background-color: #ef4444;
         color: white;
         box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.3);
-        &:hover { 
+
+        &:hover {
             background-color: #dc2626; // Hardcoded darker red
             transform: translateY(-1px);
         }
