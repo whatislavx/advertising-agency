@@ -11,12 +11,27 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 (function () {
     const lucide = window.lucide;
     const flatpickr = window.flatpickr;
+    // Змінні стану
+    let currentOrderId = null;
+    let currentOrderStatus = null;
+    let currentOrderDuration = null; // у днях
+    let rescheduleStartPicker = null;
+    let rescheduleEndPicker = null;
     function formatCurrency(num) {
         return num.toLocaleString('uk-UA') + ' ₴';
     }
     function formatDate(dateStr) {
         const date = new Date(dateStr);
         return date.toLocaleDateString('uk-UA');
+    }
+    // Розрахунок тривалості в днях (включно з початковою датою)
+    function calculateDuration(startStr, endStr) {
+        const start = new Date(startStr);
+        const end = new Date(endStr || startStr);
+        // Різниця в часі / мілісекунд в добі
+        const diffTime = Math.abs(end.getTime() - start.getTime());
+        const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return days + 1;
     }
     function getDisplayStatus(order) {
         if (order.status === 'paid' && order.end_date) {
@@ -49,62 +64,64 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 const response = yield fetch(`/api/orders/user/${user.id}`);
                 if (response.ok) {
                     const orders = yield response.json();
-                    // Оновлюємо статистику
-                    document.getElementById('totalOrders').innerText = orders.length.toString();
-                    document.getElementById('activeCampaigns').innerText = orders.filter((o) => o.status === 'new' || o.status === 'paid').length.toString();
+                    const totalOrdersEl = document.getElementById('totalOrders');
+                    if (totalOrdersEl)
+                        totalOrdersEl.innerText = orders.length.toString();
+                    const activeCampaignsEl = document.getElementById('activeCampaigns');
+                    if (activeCampaignsEl)
+                        activeCampaignsEl.innerText = orders.filter((o) => o.status === 'new' || o.status === 'paid').length.toString();
                     const totalSum = orders.reduce((sum, o) => sum + Number(o.total_cost), 0);
-                    document.getElementById('totalSpent').innerText = formatCurrency(totalSum);
+                    const totalSpentEl = document.getElementById('totalSpent');
+                    if (totalSpentEl)
+                        totalSpentEl.innerText = formatCurrency(totalSum);
                     const tbody = document.getElementById('ordersTableBody');
                     if (tbody) {
                         tbody.innerHTML = '';
                         if (orders.length === 0) {
-                            tbody.innerHTML = `
-                        <tr>
-                            <td colspan="6" class="text-center py-8 text-gray-500">
-                                <div class="flex flex-col items-center justify-center gap-2">
-                                    <i data-lucide="inbox" class="w-8 h-8 text-gray-400"></i>
-                                    <p>У вас ще немає замовлень</p>
-                                    <a href="catalog.html" class="text-blue-600 hover:underline text-sm">Перейти до каталогу</a>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
+                            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500">У вас ще немає замовлень</td></tr>`;
                         }
                         else {
                             orders.forEach((order) => {
                                 const displayStatus = getDisplayStatus(order);
-                                // Main Row
                                 const tr = document.createElement('tr');
                                 tr.className = "hover:bg-gray-50 transition-colors cursor-pointer";
                                 tr.onclick = (e) => {
-                                    // Prevent toggling if clicking on a button
                                     if (e.target.closest('button'))
                                         return;
                                     window.toggleDetails(order.id);
                                 };
-                                tr.innerHTML = `
-                            <td class="text-[#1a3a5c] font-medium">ORD-${order.id}</td>
-                            <td class="text-gray-900">${order.service_name}</td>
-                            <td class="text-gray-600 text-sm">${formatDate(order.event_date)}</td>
-                            <td class="text-right text-[#1a3a5c] font-bold">${formatCurrency(Number(order.total_cost))}</td>
-                            <td class="text-center">${getStatusBadge(displayStatus)}</td>
-                            <td class="text-center flex items-center justify-center gap-2">
-                                ${displayStatus === 'new' ? `<button class="btn btn-primary text-xs py-1 px-3" onclick="payOrder(${order.id}, ${order.total_cost})">Сплатити</button>` : ''}
-                                ${(displayStatus === 'new' || displayStatus === 'paid') ? `
-                                    <button class="btn-icon text-blue-600 hover:bg-blue-50" title="Перенести" onclick="openRescheduleModal(${order.id})">
-                                        <i data-lucide="calendar-clock" class="w-5 h-5"></i>
+                                let actionButtons = '';
+                                if (displayStatus === 'new') {
+                                    actionButtons += `<button class="btn btn-primary text-xs py-1 px-3" onclick="payOrder(${order.id}, ${order.total_cost})">Сплатити</button>`;
+                                }
+                                if (displayStatus === 'new' || displayStatus === 'paid') {
+                                    actionButtons += `
+                                    <button class="btn-icon text-blue-600 hover:bg-blue-50" onclick="openRescheduleModal(${order.id}, '${order.event_date}', '${order.end_date}', '${order.status}')" title="Перенести">
+                                        <i data-lucide="calendar" class="w-4 h-4"></i>
                                     </button>
-                                    <button class="btn-icon text-red-600 hover:bg-red-50" title="Скасувати" onclick="cancelOrder(${order.id})">
-                                        <i data-lucide="x-circle" class="w-5 h-5"></i>
+                                `;
+                                }
+                                if (displayStatus === 'new' || displayStatus === 'paid') {
+                                    actionButtons += `
+                                    <button class="btn-icon text-red-600 hover:bg-red-50" onclick="cancelOrder(${order.id}, '${order.status}')" title="Скасувати">
+                                        <i data-lucide="x-circle" class="w-4 h-4"></i>
                                     </button>
-                                ` : ''}
+                                `;
+                                }
+                                actionButtons += `
                                 <button class="btn-icon text-gray-400 hover:text-gray-600" onclick="toggleDetails(${order.id})">
                                     <i data-lucide="chevron-down" class="w-5 h-5 transition-transform" id="icon-${order.id}"></i>
                                 </button>
-                            </td>
-                        `;
+                            `;
+                                tr.innerHTML = `
+                                <td class="text-[#1a3a5c] font-medium">ORD-${order.id}</td>
+                                <td class="text-gray-900">${order.service_name}</td>
+                                <td class="text-gray-600 text-sm">${formatDate(order.event_date)}</td>
+                                <td class="text-right text-[#1a3a5c] font-bold">${formatCurrency(Number(order.total_cost))}</td>
+                                <td class="text-center">${getStatusBadge(displayStatus)}</td>
+                                <td class="text-center flex items-center justify-center gap-2">${actionButtons}</td>
+                            `;
                                 tbody.appendChild(tr);
-                                // Details Row
                                 const detailsTr = document.createElement('tr');
                                 detailsTr.id = `details-${order.id}`;
                                 detailsTr.className = "hidden bg-gray-50 border-t border-gray-100";
@@ -112,23 +129,23 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                                     ? order.resources.map((r) => `<span class="badge badge-gray bg-white border border-gray-200">${r}</span>`).join('')
                                     : '<span class="text-gray-400 text-sm">Немає додаткових ресурсів</span>';
                                 detailsTr.innerHTML = `
-                            <td colspan="6" class="p-4">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pl-4">
-                                    <div>
-                                        <p class="text-sm text-gray-600 mb-1">Період кампанії:</p>
-                                        <p class="text-gray-900">
-                                            ${formatDate(order.event_date)} ${order.end_date ? '— ' + formatDate(order.end_date) : ''}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm text-gray-600 mb-1">Додаткові ресурси:</p>
-                                        <div class="flex flex-wrap gap-2">
-                                            ${resourcesHtml}
+                                <td colspan="6" class="p-4">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pl-4">
+                                        <div>
+                                            <p class="text-sm text-gray-600 mb-1">Період кампанії:</p>
+                                            <p class="text-gray-900">
+                                                ${formatDate(order.event_date)} ${order.end_date ? '— ' + formatDate(order.end_date) : ''}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm text-gray-600 mb-1">Додаткові ресурси:</p>
+                                            <div class="flex flex-wrap gap-2">
+                                                ${resourcesHtml}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </td>
-                        `;
+                                </td>
+                            `;
                                 tbody.appendChild(detailsTr);
                             });
                         }
@@ -141,7 +158,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             }
         });
     }
-    // Toggle details function
+    // --- Функції дій ---
     window.toggleDetails = (id) => {
         const detailsRow = document.getElementById(`details-${id}`);
         const icon = document.getElementById(`icon-${id}`);
@@ -157,8 +174,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             }
         }
     };
-    // Функція для глобального доступу (викликається з HTML onclick)
     window.payOrder = (orderId, amount) => __awaiter(this, void 0, void 0, function* () {
+        const e = window.event;
+        if (e)
+            e.stopPropagation();
         if (!confirm(`Підтвердити оплату замовлення ORD-${orderId}?`))
             return;
         try {
@@ -168,18 +187,23 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 body: JSON.stringify({ order_id: orderId, amount: amount })
             });
             if (res.ok) {
-                // Одразу підтверджуємо (для демо)
                 yield fetch(`/api/payments/${orderId}/confirm`, { method: 'PATCH' });
                 alert('Оплата пройшла успішно!');
-                loadOrders(); // Перезавантажити таблицю
+                loadOrders();
             }
         }
         catch (e) {
             alert('Помилка оплати');
         }
     });
-    window.cancelOrder = (id) => __awaiter(this, void 0, void 0, function* () {
-        if (!confirm('Ви впевнені, що хочете скасувати це замовлення?'))
+    window.cancelOrder = (id, status) => __awaiter(this, void 0, void 0, function* () {
+        const e = window.event;
+        if (e)
+            e.stopPropagation();
+        const confirmMsg = status === 'paid'
+            ? 'Ви впевнені, що хочете скасувати оплачене замовлення? Кошти будуть повернуті.'
+            : 'Ви впевнені, що хочете скасувати це замовлення?';
+        if (!confirm(confirmMsg))
             return;
         try {
             const res = yield fetch(`/api/orders/${id}/status`, {
@@ -188,6 +212,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 body: JSON.stringify({ status: 'cancelled' })
             });
             if (res.ok) {
+                if (status === 'paid') {
+                    alert('Замовлення скасовано. Кошти будуть повернуті протягом 30 робочих днів.');
+                }
+                else {
+                    alert('Замовлення скасовано.');
+                }
                 loadOrders();
             }
             else {
@@ -199,74 +229,133 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             alert('Помилка з\'єднання');
         }
     });
-    window.openRescheduleModal = (id) => {
-        const modal = document.getElementById('rescheduleModal');
-        const inputId = document.getElementById('rescheduleOrderId');
-        const inputStartDate = document.getElementById('rescheduleStartDate');
-        const inputEndDate = document.getElementById('rescheduleEndDate');
-        if (modal && inputId && inputStartDate && inputEndDate) {
-            inputId.value = id.toString();
-            if (typeof flatpickr !== 'undefined') {
-                flatpickr(inputStartDate, {
-                    locale: 'uk',
-                    dateFormat: "d.m.Y",
-                    minDate: "today",
-                    defaultDate: "",
-                    onChange: function (selectedDates, dateStr) {
-                        if (selectedDates[0]) {
-                            // Set min date for end picker
-                            const endPicker = inputEndDate._flatpickr;
-                            if (endPicker) {
-                                endPicker.set('minDate', selectedDates[0]);
-                            }
-                        }
-                    }
-                });
-                flatpickr(inputEndDate, {
-                    locale: 'uk',
-                    dateFormat: "d.m.Y",
-                    minDate: "today",
-                    defaultDate: ""
-                });
-            }
-            inputStartDate.value = '';
-            inputEndDate.value = '';
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        }
-    };
     window.closeRescheduleModal = () => {
         const modal = document.getElementById('rescheduleModal');
-        if (modal) {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+        modal === null || modal === void 0 ? void 0 : modal.classList.add('hidden');
+        modal === null || modal === void 0 ? void 0 : modal.classList.remove('flex');
+    };
+    // Ініціалізація календарів
+    function initPickers() {
+        if (typeof flatpickr === 'undefined')
+            return;
+        const startEl = document.getElementById('rescheduleStart');
+        const endEl = document.getElementById('rescheduleEnd');
+        if (rescheduleStartPicker && rescheduleEndPicker)
+            return;
+        if (startEl) {
+            rescheduleStartPicker = flatpickr(startEl, {
+                locale: "uk",
+                dateFormat: "d.m.Y",
+                minDate: "today",
+                // Логіка при зміні початкової дати
+                onChange: function (selectedDates) {
+                    if (selectedDates.length > 0 && rescheduleEndPicker) {
+                        const newStartDate = selectedDates[0];
+                        // Якщо замовлення оплачене - ФІКСУЄМО тривалість
+                        if (currentOrderStatus === 'paid' && currentOrderDuration) {
+                            // Рахуємо нову кінцеву дату: start + (duration - 1)
+                            const fixedEndDate = new Date(newStartDate);
+                            fixedEndDate.setDate(newStartDate.getDate() + (currentOrderDuration - 1));
+                            // Встановлюємо цю дату як єдину можливу
+                            rescheduleEndPicker.setDate(fixedEndDate);
+                            rescheduleEndPicker.set('minDate', fixedEndDate);
+                            rescheduleEndPicker.set('maxDate', fixedEndDate);
+                        }
+                        // Якщо не оплачене - просто зсуваємо мінімальну дату
+                        else {
+                            rescheduleEndPicker.set('minDate', newStartDate);
+                            // Знімаємо обмеження maxDate, якщо воно було
+                            rescheduleEndPicker.set('maxDate', undefined);
+                        }
+                    }
+                }
+            });
+        }
+        if (endEl) {
+            rescheduleEndPicker = flatpickr(endEl, {
+                locale: "uk",
+                dateFormat: "d.m.Y",
+                minDate: "today"
+            });
+        }
+    }
+    window.openRescheduleModal = (id, start, end, status) => {
+        const e = window.event;
+        if (e)
+            e.stopPropagation();
+        currentOrderId = id;
+        currentOrderStatus = status;
+        currentOrderDuration = calculateDuration(start, end);
+        const modal = document.getElementById('rescheduleModal');
+        modal === null || modal === void 0 ? void 0 : modal.classList.remove('hidden');
+        modal === null || modal === void 0 ? void 0 : modal.classList.add('flex');
+        initPickers();
+        // Встановлюємо початкові значення
+        if (rescheduleStartPicker) {
+            rescheduleStartPicker.setDate(new Date(start));
+        }
+        if (rescheduleEndPicker) {
+            const endDateObj = end ? new Date(end) : new Date(start);
+            rescheduleEndPicker.setDate(endDateObj);
+            // Якщо статус 'paid', то відразу блокуємо вибір кінцевої дати на поточну
+            if (status === 'paid') {
+                rescheduleEndPicker.set('minDate', endDateObj);
+                rescheduleEndPicker.set('maxDate', endDateObj);
+            }
+            else {
+                // Якщо 'new', то просто мінімум = старт
+                rescheduleEndPicker.set('minDate', new Date(start));
+                rescheduleEndPicker.set('maxDate', undefined);
+            }
         }
     };
     window.submitReschedule = () => __awaiter(this, void 0, void 0, function* () {
-        const id = document.getElementById('rescheduleOrderId').value;
-        const startDate = document.getElementById('rescheduleStartDate').value;
-        const endDate = document.getElementById('rescheduleEndDate').value;
-        if (!startDate || !endDate) {
-            alert('Оберіть дати початку та завершення');
+        const startInput = document.getElementById('rescheduleStart');
+        const endInput = document.getElementById('rescheduleEnd');
+        if (!currentOrderId || !startInput.value || !endInput.value)
+            return;
+        const [d1, m1, y1] = startInput.value.split('.');
+        const [d2, m2, y2] = endInput.value.split('.');
+        const startDateObj = new Date(`${y1}-${m1}-${d1}`);
+        const endDateObj = new Date(`${y2}-${m2}-${d2}`);
+        if (endDateObj < startDateObj) {
+            alert('Дата завершення не може бути раніше дати початку');
             return;
         }
-        // Convert dd.mm.yyyy to yyyy-mm-dd
-        const startParts = startDate.split('.');
-        const formattedStartDate = `${startParts[2]}-${startParts[1]}-${startParts[0]}`;
-        const endParts = endDate.split('.');
-        const formattedEndDate = `${endParts[2]}-${endParts[1]}-${endParts[0]}`;
+        const event_date = `${y1}-${m1}-${d1}`;
+        const end_date = `${y2}-${m2}-${d2}`;
+        // Подвійна перевірка на клієнті (для безпеки)
+        if (currentOrderStatus === 'paid') {
+            const newDuration = calculateDuration(event_date, end_date);
+            if (newDuration !== currentOrderDuration) {
+                alert(`Для оплачених замовлень зміна тривалості заборонена.`);
+                return;
+            }
+        }
         try {
-            const res = yield fetch(`/api/orders/${id}/reschedule`, {
+            const response = yield fetch(`/api/orders/${currentOrderId}/reschedule`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ newDate: formattedStartDate, newEndDate: formattedEndDate })
+                body: JSON.stringify({ event_date, end_date })
             });
-            if (res.ok) {
+            if (response.ok) {
+                const data = yield response.json();
+                let msg = 'Замовлення успішно перенесено!';
+                if (currentOrderStatus !== 'paid') {
+                    msg += ` Нова сума: ${formatCurrency(Number(data.total_cost))}`;
+                }
+                alert(msg);
                 window.closeRescheduleModal();
                 loadOrders();
             }
             else {
-                alert('Помилка при перенесенні');
+                try {
+                    const err = yield response.json();
+                    alert('Помилка: ' + (err.message || 'Невідома помилка'));
+                }
+                catch (_a) {
+                    alert('Помилка при оновленні замовлення (500)');
+                }
             }
         }
         catch (e) {
@@ -275,6 +364,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         }
     });
     document.addEventListener("DOMContentLoaded", () => {
+        var _a, _b, _c;
         loadOrders();
+        initPickers();
+        (_a = document.getElementById('closeRescheduleBtn')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', window.closeRescheduleModal);
+        (_b = document.getElementById('closeRescheduleIcon')) === null || _b === void 0 ? void 0 : _b.addEventListener('click', window.closeRescheduleModal);
+        (_c = document.getElementById('confirmRescheduleBtn')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', window.submitReschedule);
     });
 })();

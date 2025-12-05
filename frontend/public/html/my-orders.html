@@ -12,7 +12,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
   </head>
-  <body class="bg-gray-50 min-h-screen">
+  <body class="bg-gray-50 min-h-screen flex flex-col">
     <header class="header">
       <div class="header-container header-content">
         <h1 class="header-logo">Рекламне Агентство</h1>
@@ -34,7 +34,7 @@
       </div>
     </header>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-1">
       <div class="mb-8">
         <h2 class="text-3xl text-[#1a3a5c] font-medium mb-2">Мої замовлення</h2>
         <p class="text-gray-600">Історія та статус ваших рекламних кампаній</p>
@@ -49,7 +49,9 @@
           </div>
           <div>
             <p class="text-sm text-gray-600">Всього замовлень</p>
-            <p class="text-2xl text-[#1a3a5c] font-bold" id="totalOrders">...</p>
+            <p class="text-2xl text-[#1a3a5c] font-bold" id="totalOrders">
+              ...
+            </p>
           </div>
         </div>
         <div class="card p-6 flex items-center gap-3">
@@ -60,7 +62,9 @@
           </div>
           <div>
             <p class="text-sm text-gray-600">Активних кампаній</p>
-            <p class="text-2xl text-[#1a3a5c] font-bold" id="activeCampaigns">...</p>
+            <p class="text-2xl text-[#1a3a5c] font-bold" id="activeCampaigns">
+              ...
+            </p>
           </div>
         </div>
         <div class="card p-6 flex items-center gap-3">
@@ -89,58 +93,93 @@
                 <th class="text-center">Дії</th>
               </tr>
             </thead>
-            <tbody id="ordersTableBody">
-              <!-- Orders will be loaded here -->
-            </tbody>
+            <tbody id="ordersTableBody"></tbody>
           </table>
         </div>
       </div>
     </div>
 
-    <!-- Reschedule Modal -->
-    <div id="rescheduleModal" class="modal-overlay hidden">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>Перенести замовлення</h3>
-          <button onclick="closeRescheduleModal()" class="btn-icon">
+    <div
+      id="rescheduleModal"
+      class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50"
+    >
+      <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4 relative">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-medium text-[#1a3a5c]">
+            Перенести замовлення
+          </h3>
+          <button
+            id="closeRescheduleIcon"
+            class="text-gray-400 hover:text-gray-600"
+          >
             <i data-lucide="x" class="w-6 h-6"></i>
           </button>
         </div>
-        <div class="modal-body">
-          <p class="text-gray-600 mb-4">Оберіть нові дати кампанії:</p>
-          <input type="hidden" id="rescheduleOrderId">
-          
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div class="input-wrap">
-                <label>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="3" y="6" width="18" height="15" rx="2" fill="none" stroke="#364153" stroke-width="2"/>
-                    <path d="M3 10H21" stroke="#364153" stroke-width="2"/>
-                    <path d="M8 3V6" stroke="#364153" stroke-width="2" stroke-linecap="round"/>
-                    <path d="M16 3V6" stroke="#364153" stroke-width="2" stroke-linecap="round"/>
-                  </svg>
-                  Дата початку
-                </label>
-                <input type="text" id="rescheduleStartDate" class="input-field date-picker" placeholder="Оберіть дату">
-              </div>
 
-              <div class="input-wrap">
-                <label>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="3" y="6" width="18" height="15" rx="2" fill="none" stroke="#364153" stroke-width="2"/>
-                    <path d="M3 10H21" stroke="#364153" stroke-width="2"/>
-                    <path d="M8 3V6" stroke="#364153" stroke-width="2" stroke-linecap="round"/>
-                    <path d="M16 3V6" stroke="#364153" stroke-width="2" stroke-linecap="round"/>
-                  </svg>
-                  Дата завершення
-                </label>
-                <input type="text" id="rescheduleEndDate" class="input-field date-picker" placeholder="Оберіть дату">
-              </div>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm text-gray-700 mb-1"
+              >Нова дата початку</label
+            >
+            <div class="relative">
+              <input
+                type="text"
+                id="rescheduleStart"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-[#ff6b35] bg-white"
+                placeholder="Оберіть дату"
+              />
+              <i
+                data-lucide="calendar"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none"
+              ></i>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm text-gray-700 mb-1"
+              >Нова дата завершення</label
+            >
+            <div class="relative">
+              <input
+                type="text"
+                id="rescheduleEnd"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-[#ff6b35] bg-white"
+                placeholder="Оберіть дату"
+              />
+              <i
+                data-lucide="calendar"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none"
+              ></i>
+            </div>
+          </div>
+
+          <div class="bg-blue-50 p-3 rounded text-sm text-blue-800 flex gap-2">
+            <i data-lucide="info" class="w-4 h-4 mt-0.5 flex-shrink-0"></i>
+            <div>
+              <p class="font-medium mb-1">
+                Увага: Ціна буде перерахована відповідно до нової тривалості.
+              </p>
+              <p>
+                Початкова дата оплачених замовлень може бути перенесена, проте
+                тривалість такої кампанії змінюватися не може. Якщо потрібно
+                змінити тривалість - скасуйте замовлення та створіть нове!
+              </p>
+            </div>
           </div>
         </div>
-        <div class="modal-footer">
-          <button onclick="closeRescheduleModal()" class="btn btn-secondary">Скасувати</button>
-          <button onclick="submitReschedule()" class="btn btn-primary">Зберегти</button>
+
+        <div class="flex justify-end gap-3 mt-6">
+          <button
+            id="closeRescheduleBtn"
+            class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            Скасувати
+          </button>
+          <button
+            id="confirmRescheduleBtn"
+            class="px-4 py-2 bg-[#ff6b35] text-white rounded-lg hover:bg-[#e55a2b] transition-colors"
+          >
+            Зберегти
+          </button>
         </div>
       </div>
     </div>

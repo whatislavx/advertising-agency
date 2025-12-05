@@ -219,6 +219,7 @@ window.toggleModal = toggleModal;
             header.textContent = 'Додати послугу';
         toggleModal('serviceModal');
     }
+    // Експортуємо в global scope, щоб працював onclick з HTML
     window.openAddServiceModal = openAddServiceModal;
     window.editService = function (id) {
         const service = services.find(s => s.id === id);
@@ -232,7 +233,6 @@ window.toggleModal = toggleModal;
         if (typeInput)
             typeInput.value = service.type || 'internet';
         if (typeText) {
-            // Map type to text
             const typeMap = {
                 'internet': 'Інтернет',
                 'outdoor': 'Зовнішня',
@@ -331,6 +331,7 @@ window.toggleModal = toggleModal;
             header.textContent = 'Додати ресурс';
         toggleModal('resourceModal');
     }
+    // Експортуємо в global scope для onclick
     window.openAddResourceModal = openAddResourceModal;
     window.editResource = function (id) {
         const resource = resources.find(r => r.id === id);
@@ -375,7 +376,6 @@ window.toggleModal = toggleModal;
                 let response;
                 if (editingResourceId) {
                     // UPDATE (PATCH)
-                    // Для коректної роботи необхідний роут PATCH /api/resources/:id на бекенді
                     response = yield fetch(`/api/resources/${editingResourceId}`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
@@ -424,6 +424,7 @@ window.toggleModal = toggleModal;
         });
     };
     // --- Ініціалізація ---
+    // --- Ініціалізація ---
     document.addEventListener("DOMContentLoaded", () => {
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
@@ -432,19 +433,6 @@ window.toggleModal = toggleModal;
         setupCustomSelect('resourceTypeContainer');
         fetchServices();
         fetchResources();
-        // 1. Прив'язка статичних кнопок "Додати" за ID
-        const addServiceBtn = document.getElementById('btn-add-service');
-        if (addServiceBtn) {
-            addServiceBtn.addEventListener('click', () => {
-                openAddServiceModal();
-            });
-        }
-        const addResourceBtn = document.getElementById('btn-add-resource');
-        if (addResourceBtn) {
-            addResourceBtn.addEventListener('click', () => {
-                openAddResourceModal();
-            });
-        }
         // 2. Прив'язка кнопок "Зберегти" в модальних вікнах
         const saveServiceBtn = document.getElementById('save-service-btn');
         if (saveServiceBtn) {
@@ -454,7 +442,17 @@ window.toggleModal = toggleModal;
         if (saveResourceBtn) {
             saveResourceBtn.addEventListener('click', handleSaveResource);
         }
-        // 3. Закриття модалок при кліку на Overlay
+        // 3. Обробка кнопок закриття (x та Скасувати), які використовують data-modal-target
+        const modalTriggers = document.querySelectorAll("[data-modal-target]");
+        modalTriggers.forEach(trigger => {
+            trigger.addEventListener("click", () => {
+                const targetId = trigger.getAttribute("data-modal-target");
+                if (targetId) {
+                    toggleModal(targetId);
+                }
+            });
+        });
+        // 4. Закриття модалок при кліку на Overlay
         window.addEventListener("click", (event) => {
             const target = event.target;
             if (target.classList.contains("modal-overlay")) {
@@ -462,13 +460,5 @@ window.toggleModal = toggleModal;
                 document.body.style.overflow = "";
             }
         });
-        const saveServiceBtn = document.getElementById('save-service-btn');
-        if (saveServiceBtn) {
-            saveServiceBtn.addEventListener('click', handleSaveService);
-        }
-        const saveResourceBtn = document.getElementById('save-resource-btn');
-        if (saveResourceBtn) {
-            saveResourceBtn.addEventListener('click', handleSaveResource);
-        }
     });
 })();
