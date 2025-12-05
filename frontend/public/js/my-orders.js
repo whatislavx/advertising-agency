@@ -345,11 +345,14 @@ import { Modal } from './utils/Modal.js';
             });
             if (response.ok) {
                 const data = yield response.json();
-                let msg = 'Замовлення успішно перенесено!';
+                let msg = '<p>Замовлення успішно перенесено!</p>';
                 if (currentOrderStatus !== 'paid') {
-                    msg += ` Нова сума: ${formatCurrency(Number(data.total_cost))}`;
+                    msg += `
+                    <div class="order-success-details">
+                        <p class="total-price"><span>Нова сума:</span> <span>${formatCurrency(Number(data.total_cost))}</span></p>
+                    </div>`;
                 }
-                yield Modal.alert(msg);
+                yield Modal.alert(msg, 'Інформація', 'success');
                 window.closeRescheduleModal();
                 loadOrders();
             }
