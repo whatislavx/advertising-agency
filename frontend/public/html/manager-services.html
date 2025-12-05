@@ -54,7 +54,11 @@
       <div class="mb-12">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-2xl text-primary font-medium">Послуги</h3>
-          <button id="btn-add-service" onclick="openAddServiceModal()" class="btn btn-primary">
+          <button
+            id="btn-add-service"
+            onclick="openAddServiceModal()"
+            class="btn btn-primary"
+          >
             <i data-lucide="plus" class="w-5 h-5"></i> Додати послугу
           </button>
         </div>
@@ -130,7 +134,7 @@
           </div>
           <div>
             <label class="block text-sm text-gray-700 mb-2 font-medium"
-              >Ціна (грн) *</label
+              >Ціна за добу (грн) *</label
             >
             <input id="service-price" type="number" placeholder="0" />
           </div>
@@ -138,17 +142,43 @@
             <label class="block text-sm text-gray-700 mb-2 font-medium"
               >Тип реклами *</label
             >
-            <div class="relative custom-select-container" id="serviceTypeContainer">
-              <input type="hidden" id="service-type" value="internet">
-              <button type="button" class="custom-select-trigger w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-left flex items-center justify-between focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+            <div
+              class="relative custom-select-container"
+              id="serviceTypeContainer"
+            >
+              <input type="hidden" id="service-type" value="internet" />
+              <button
+                type="button"
+                class="custom-select-trigger w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-left flex items-center justify-between focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              >
                 <span class="selected-text text-gray-700">Інтернет</span>
-                <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400 transition-transform duration-200"></i>
+                <i
+                  data-lucide="chevron-down"
+                  class="w-4 h-4 text-gray-400 transition-transform duration-200"
+                ></i>
               </button>
-              <div class="custom-select-menu absolute bottom-full left-0 w-full mb-2 bg-white border border-gray-100 rounded-xl shadow-2xl hidden z-50 overflow-hidden ring-1 ring-black/5">
+              <div
+                class="custom-select-menu absolute bottom-full left-0 w-full mb-2 bg-white border border-gray-100 rounded-xl shadow-2xl hidden z-50 overflow-hidden ring-1 ring-black/5"
+              >
                 <div class="p-1.5">
-                  <div class="custom-option px-3 py-2.5 rounded-lg hover:bg-blue-50 cursor-pointer flex items-center gap-3 transition-colors" data-value="internet">Інтернет</div>
-                  <div class="custom-option px-3 py-2.5 rounded-lg hover:bg-blue-50 cursor-pointer flex items-center gap-3 transition-colors" data-value="outdoor">Зовнішня</div>
-                  <div class="custom-option px-3 py-2.5 rounded-lg hover:bg-blue-50 cursor-pointer flex items-center gap-3 transition-colors" data-value="tv">ТБ</div>
+                  <div
+                    class="custom-option px-3 py-2.5 rounded-lg hover:bg-blue-50 cursor-pointer flex items-center gap-3 transition-colors"
+                    data-value="internet"
+                  >
+                    Інтернет
+                  </div>
+                  <div
+                    class="custom-option px-3 py-2.5 rounded-lg hover:bg-blue-50 cursor-pointer flex items-center gap-3 transition-colors"
+                    data-value="outdoor"
+                  >
+                    Зовнішня
+                  </div>
+                  <div
+                    class="custom-option px-3 py-2.5 rounded-lg hover:bg-blue-50 cursor-pointer flex items-center gap-3 transition-colors"
+                    data-value="tv"
+                  >
+                    ТБ
+                  </div>
                 </div>
               </div>
             </div>
@@ -188,23 +218,44 @@
             <label class="block text-sm text-gray-700 mb-2 font-medium"
               >Тип *</label
             >
-            <div class="relative custom-select-container" id="resourceTypeContainer">
-              <input type="hidden" id="resource-type" value="equipment">
-              <button type="button" class="custom-select-trigger w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-left flex items-center justify-between focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+            <div
+              class="relative custom-select-container"
+              id="resourceTypeContainer"
+            >
+              <input type="hidden" id="resource-type" value="equipment" />
+              <button
+                type="button"
+                class="custom-select-trigger w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-left flex items-center justify-between focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              >
                 <span class="selected-text text-gray-700">Обладнання</span>
-                <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400 transition-transform duration-200"></i>
+                <i
+                  data-lucide="chevron-down"
+                  class="w-4 h-4 text-gray-400 transition-transform duration-200"
+                ></i>
               </button>
-              <div class="custom-select-menu absolute top-full left-0 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-2xl hidden z-50 overflow-hidden ring-1 ring-black/5">
+              <div
+                class="custom-select-menu absolute top-full left-0 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-2xl hidden z-50 overflow-hidden ring-1 ring-black/5"
+              >
                 <div class="p-1.5">
-                  <div class="custom-option px-3 py-2.5 rounded-lg hover:bg-blue-50 cursor-pointer flex items-center gap-3 transition-colors" data-value="equipment">Обладнання</div>
-                  <div class="custom-option px-3 py-2.5 rounded-lg hover:bg-blue-50 cursor-pointer flex items-center gap-3 transition-colors" data-value="personnel">Персонал</div>
+                  <div
+                    class="custom-option px-3 py-2.5 rounded-lg hover:bg-blue-50 cursor-pointer flex items-center gap-3 transition-colors"
+                    data-value="equipment"
+                  >
+                    Обладнання
+                  </div>
+                  <div
+                    class="custom-option px-3 py-2.5 rounded-lg hover:bg-blue-50 cursor-pointer flex items-center gap-3 transition-colors"
+                    data-value="personnel"
+                  >
+                    Персонал
+                  </div>
                 </div>
               </div>
             </div>
           </div>
           <div>
             <label class="block text-sm text-gray-700 mb-2 font-medium"
-              >Вартість (грн) *</label
+              >Вартість за добу (грн) *</label
             >
             <input id="resource-cost" type="number" placeholder="0" />
           </div>

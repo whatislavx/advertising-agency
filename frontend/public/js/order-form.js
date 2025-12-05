@@ -14,8 +14,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     let resources = [];
     let currentService;
     let selectedItems = [];
-    let currentTotal = 0;
-    // Функція завантаження даних з API
+    let servicePricePerDay = 0;
+    let durationInDays = 0;
+    // Функція завантаження даних
     function fetchData() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -42,10 +43,19 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     function formatCurrency(num) {
         return num.toLocaleString('uk-UA') + ' грн';
     }
+    function calculateTotal() {
+        const resourcesPricePerDay = selectedItems.reduce((acc, item) => acc + item.price, 0);
+        const totalPricePerDay = servicePricePerDay + resourcesPricePerDay;
+        return totalPricePerDay * (durationInDays > 0 ? durationInDays : 0);
+    }
     function updateSummary() {
         const listContainer = document.getElementById('selectedResourcesList');
         const dynamicList = document.getElementById('dynamicList');
         const totalEl = document.getElementById('totalPrice');
+        const summaryBaseEl = document.getElementById('summaryBasePrice');
+        if (summaryBaseEl) {
+            summaryBaseEl.innerHTML = `${formatCurrency(servicePricePerDay)} <span class="text-sm text-gray-400">/ доба</span>`;
+        }
         if (dynamicList) {
             dynamicList.innerHTML = '';
             if (selectedItems.length > 0) {
@@ -54,7 +64,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 selectedItems.forEach(item => {
                     const row = document.createElement('div');
                     row.className = 'selected-item';
-                    row.innerHTML = `<span>${item.name}</span> <span class="summary-price-val">+${formatCurrency(item.price)}</span>`;
+                    row.innerHTML = `<span>${item.name}</span> <span class="summary-price-val">+${formatCurrency(item.price)}/доба</span>`;
                     dynamicList.appendChild(row);
                 });
             }
@@ -63,8 +73,36 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                     listContainer.style.display = 'none';
             }
         }
-        if (totalEl)
-            totalEl.innerText = formatCurrency(currentTotal);
+        const total = calculateTotal();
+        if (totalEl) {
+            const daysText = durationInDays > 0 ? `(${durationInDays} днів)` : '(оберіть дати)';
+            totalEl.innerHTML = `${formatCurrency(total)} <span class="text-sm font-normal text-gray-300">${daysText}</span>`;
+        }
+    }
+    function calculateDaysDifference(start, end) {
+        const diffTime = Math.abs(end.getTime() - start.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays + 1;
+    }
+    function handleDateChange() {
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+        if (!startDateInput.value || !endDateInput.value) {
+            durationInDays = 0;
+        }
+        else {
+            const [d1, m1, y1] = startDateInput.value.split('.');
+            const [d2, m2, y2] = endDateInput.value.split('.');
+            const start = new Date(`${y1}-${m1}-${d1}`);
+            const end = new Date(`${y2}-${m2}-${d2}`);
+            if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end >= start) {
+                durationInDays = calculateDaysDifference(start, end);
+            }
+            else {
+                durationInDays = 0;
+            }
+        }
+        updateSummary();
     }
     function toggleResource(element, resId) {
         const resource = resources.find(r => r.id === resId);
@@ -74,11 +112,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         const isSelected = element.classList.contains('selected');
         const price = Number(resource.cost);
         if (isSelected) {
-            currentTotal += price;
             selectedItems.push({ id: resource.id, name: resource.name, price: price });
         }
         else {
-            currentTotal -= price;
             selectedItems = selectedItems.filter(item => item.id !== resource.id);
         }
         updateSummary();
@@ -87,26 +123,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         return __awaiter(this, void 0, void 0, function* () {
             yield fetchData();
             const serviceId = getServiceIdFromUrl();
-            // Знаходимо послугу по ID (важливо: в БД ID може бути number, але з JSON прийти як string, тому ==)
             currentService = services.find(s => s.id == serviceId);
-            // Якщо послугу не знайдено, беремо першу або показуємо помилку
             if (!currentService && services.length > 0)
                 currentService = services[0];
             if (currentService) {
-                const basePrice = Number(currentService.base_price);
-                currentTotal = basePrice;
+                servicePricePerDay = Number(currentService.base_price);
                 const nameEl = document.getElementById('serviceNameDisplay');
                 const priceEl = document.getElementById('basePriceDisplay');
-                const summaryBaseEl = document.getElementById('summaryBasePrice');
                 if (nameEl)
                     nameEl.innerText = currentService.name;
                 if (priceEl)
-                    priceEl.innerText = formatCurrency(basePrice);
-                if (summaryBaseEl)
-                    summaryBaseEl.innerText = formatCurrency(basePrice);
+                    priceEl.innerText = formatCurrency(servicePricePerDay) + ' / добу';
                 updateSummary();
             }
-            // Рендеримо ресурси
+            // Рендер ресурсів
             const resourceContainer = document.getElementById('resourceContainer');
             if (resourceContainer) {
                 resourceContainer.innerHTML = '';
@@ -115,9 +145,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                     const card = document.createElement('div');
                     card.className = 'resource-item';
                     card.innerHTML = `
-                <div class="res-name">${res.name}</div>
-                <div class="res-price">+${formatCurrency(price)}</div>
-            `;
+                    <div class="res-name">${res.name}</div>
+                    <div class="res-price">+${formatCurrency(price)} / добу</div>
+                `;
                     card.addEventListener('click', () => toggleResource(card, res.id));
                     resourceContainer.appendChild(card);
                 });
@@ -135,22 +165,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             const user = JSON.parse(userStr);
             if (!currentService)
                 return;
-            const startDateInput = document.getElementById('startDate');
-            const dateStr = startDateInput.value; // "dd.mm.yyyy"
-            if (!dateStr) {
-                alert('Оберіть дату початку кампанії');
+            if (durationInDays <= 0) {
+                alert('Оберіть коректний період кампанії');
                 return;
             }
+            const startDateInput = document.getElementById('startDate');
             const endDateInput = document.getElementById('endDate');
-            const endDateStr = endDateInput.value; // "dd.mm.yyyy"
-            let end_date = null;
-            if (endDateStr) {
-                const endParts = endDateStr.split('.');
-                end_date = `${endParts[2]}-${endParts[1]}-${endParts[0]}`;
-            }
-            // Convert dd.mm.yyyy to yyyy-mm-dd for Postgres
-            const parts = dateStr.split('.');
-            const event_date = `${parts[2]}-${parts[1]}-${parts[0]}`;
+            const [d1, m1, y1] = startDateInput.value.split('.');
+            const [d2, m2, y2] = endDateInput.value.split('.');
+            const event_date = `${y1}-${m1}-${d1}`;
+            const end_date = `${y2}-${m2}-${d2}`;
             const payload = {
                 user_id: user.id,
                 service_id: currentService.id,
@@ -166,11 +190,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 });
                 if (res.ok) {
                     const data = yield res.json();
-                    alert(`Замовлення #${data.orderId} успішно створено!`);
+                    alert(`Замовлення #${data.orderId} успішно створено! Сума: ${formatCurrency(data.total)}`);
                     window.location.href = 'my-orders.html';
                 }
                 else {
-                    alert('Помилка при створенні замовлення');
+                    const err = yield res.json();
+                    alert('Помилка: ' + (err.message || 'Не вдалося створити замовлення'));
                 }
             }
             catch (e) {
@@ -185,22 +210,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         const endDateInput = document.getElementById('endDate');
         let startPicker;
         let endPicker;
-        // Flatpickr init
         if (startDateInput && typeof flatpickr !== 'undefined') {
             startPicker = flatpickr(startDateInput, {
                 locale: "uk",
                 dateFormat: "d.m.Y",
                 minDate: "today",
-                onChange: function (selectedDates, dateStr, instance) {
-                    if (endPicker && selectedDates.length > 0) {
-                        // Встановлюємо мінімальну дату для кінцевої дати таку ж, як початкова
-                        endPicker.set('minDate', selectedDates[0]);
-                        // Якщо обрана кінцева дата менша за нову початкову, очищаємо її
-                        const currentEndDate = endPicker.selectedDates[0];
-                        if (currentEndDate && currentEndDate < selectedDates[0]) {
-                            endPicker.clear();
-                        }
+                onChange: function (selectedDates) {
+                    if (selectedDates.length > 0) {
+                        if (endPicker)
+                            endPicker.set('minDate', selectedDates[0]);
                     }
+                    handleDateChange();
                 }
             });
         }
@@ -210,6 +230,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 dateFormat: "d.m.Y",
                 minDate: "today",
                 onChange: function () {
+                    handleDateChange();
                 }
             });
         }

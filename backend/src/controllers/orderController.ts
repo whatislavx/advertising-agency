@@ -12,26 +12,32 @@ export const getOrders = async (req: Request, res: Response) => {
 };
 
 export const createOrder = async (req: Request, res: Response) => {
-    const { user_id, service_id, event_date, end_date, resources } = req.body; // resources - масив ID
+    const { user_id, service_id, event_date, end_date, resources } = req.body;
     
     try {
         const result = await runTransaction(async (client) => {
-            // 1. Отримання ціни послуги
             const serviceRes = await ServiceDB.getById(client, service_id);
             if (serviceRes.rows.length === 0) throw new Error('Service not found');
-            let total = Number(serviceRes.rows[0].base_price);
+            const basePricePerDay = Number(serviceRes.rows[0].base_price);
 
-            // 2. Розрахунок вартості ресурсів
+            let resourcesCostPerDay = 0;
             if (resources && resources.length > 0) {
                 const resQuery = await ResourceDB.getByIds(client, resources);
-                resQuery.rows.forEach(r => total += Number(r.cost));
+                resQuery.rows.forEach(r => resourcesCostPerDay += Number(r.cost));
             }
 
-            // 3. Вставка замовлення
+            const start = new Date(event_date);
+            const end = new Date(end_date || event_date);
+            const diffTime = Math.abs(end.getTime() - start.getTime());
+            const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; 
+
+            if (days <= 0) throw new Error('Invalid date range');
+
+            const total = (basePricePerDay + resourcesCostPerDay) * days;
+
             const orderRes = await OrderDB.create(client, user_id, service_id, event_date, end_date, total, 'new');
             const orderId = orderRes.rows[0].id;
 
-            // 4. Вставка зв'язків з ресурсами
             if (resources && resources.length > 0) {
                 for (const resId of resources) {
                     await OrderDB.addResource(client, orderId, resId);
@@ -70,23 +76,67 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 };
 
 export const rescheduleOrder = async (req: Request, res: Response) => {
-    const { newDate, newEndDate } = req.body;
+    const { event_date, end_date } = req.body;
     const { id } = req.params;
 
     try {
-        // 1. Перевірка доступності ресурсів на нову дату (спрощена логіка)
-        // В реальному проекті тут був би SELECT count(*) ... JOIN order_resources ... WHERE date = newDate
-        
-        // 2. Оновлення дати
-        const result = await OrderDB.updateDate(id, newDate, newEndDate);
-        
-        if (result.rowCount === 0) {
-             return res.status(404).json({ message: 'Order not found' });
-        }
+        const updatedOrder = await runTransaction(async (client) => {
+            // 1. Отримуємо поточне замовлення
+            const orderRes = await OrderDB.getById(client, id);
+            if (orderRes.rows.length === 0) throw new Error('Order not found');
+            const order = orderRes.rows[0];
 
-        res.json(result.rows[0]);
-    } catch (error) {
+            // 2. Розрахунок нової тривалості
+            const start = new Date(event_date);
+            const end = new Date(end_date);
+            const diffTime = Math.abs(end.getTime() - start.getTime());
+            const newDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+            if (newDays <= 0) throw new Error('Invalid dates');
+
+            let newTotal = Number(order.total_cost);
+
+            // 3. Логіка перевірки статусу
+            if (order.status === 'paid') {
+                // Для оплачених замовлень тривалість має зберігатися
+                const oldStart = new Date(order.event_date);
+                const oldEnd = new Date(order.end_date || order.event_date);
+                const oldDiff = Math.abs(oldEnd.getTime() - oldStart.getTime());
+                const oldDays = Math.ceil(oldDiff / (1000 * 60 * 60 * 24)) + 1;
+
+                if (newDays !== oldDays) {
+                    throw new Error('Duration change not allowed for paid orders');
+                }
+                // Сума залишається старою, бо тривалість та сама
+            } else {
+                // Для нових замовлень перераховуємо ціну
+                const serviceRes = await ServiceDB.getById(client, order.service_id);
+                const basePricePerDay = Number(serviceRes.rows[0].base_price);
+
+                const resourcesRes = await OrderDB.getResourceIdsByOrderId(client, id);
+                let resourcesCostPerDay = 0;
+                
+                if (resourcesRes.rows.length > 0) {
+                    const resourceIds = resourcesRes.rows.map(r => r.resource_id);
+                    const resourceDetails = await ResourceDB.getByIds(client, resourceIds);
+                    resourceDetails.rows.forEach(r => resourcesCostPerDay += Number(r.cost));
+                }
+
+                newTotal = (basePricePerDay + resourcesCostPerDay) * newDays;
+            }
+
+            // 4. Оновлення в БД
+            const updateRes = await OrderDB.updateOrderDetails(id, event_date, end_date, newTotal);
+            return updateRes.rows[0];
+        });
+
+        res.json(updatedOrder);
+    } catch (error: any) {
         console.error(error);
+        if (error.message === 'Order not found') return res.status(404).json({ message: 'Order not found' });
+        if (error.message === 'Duration change not allowed for paid orders') {
+            return res.status(400).json({ message: 'Зміна тривалості заборонена для оплачених замовлень' });
+        }
         res.status(500).json({ message: 'Server error' });
     }
 };

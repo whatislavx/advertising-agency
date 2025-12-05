@@ -120,6 +120,12 @@ export const OrderDB = {
         ORDER BY o.created_at DESC
     `, [userId]),
 
+    getById: (client: PoolClient, id: string) =>
+        client.query('SELECT * FROM orders WHERE id = $1', [id]),
+
+    getResourceIdsByOrderId: (client: PoolClient, orderId: string) =>
+        client.query('SELECT resource_id FROM order_resources WHERE order_id = $1', [orderId]),
+
     create: (client: PoolClient, user_id: number, service_id: number, event_date: string, end_date: string, total: number, status: string) => 
         client.query(
             'INSERT INTO orders (user_id, service_id, event_date, end_date, total_cost, status) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
@@ -135,8 +141,11 @@ export const OrderDB = {
     updateStatusTx: (client: PoolClient, id: string, status: string) => 
         client.query("UPDATE orders SET status = $1 WHERE id = $2", [status, id]),
 
-    updateDate: (id: string, newDate: string, newEndDate: string) => 
-        pool.query('UPDATE orders SET event_date = $1, end_date = $2 WHERE id = $3 RETURNING *', [newDate, newEndDate, id]),
+    updateOrderDetails: (id: string, event_date: string, end_date: string, total_cost: number) => 
+        pool.query(
+            'UPDATE orders SET event_date = $1, end_date = $2, total_cost = $3 WHERE id = $4 RETURNING *', 
+            [event_date, end_date, total_cost, id]
+        ),
 
     getUserIdByOrderId: (client: PoolClient, id: string) => 
         client.query('SELECT user_id FROM orders WHERE id = $1', [id]),
