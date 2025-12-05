@@ -146,9 +146,21 @@
           <span id="summaryBasePrice">...</span>
         </div>
 
-        <div id="selectedResourcesList" class="selected-resources-list">
-          <div class="resources-title">Додаткові ресурси:</div>
-          <div id="dynamicList"></div>
+        <div id="orderSummaryDetails" class="mt-4 pt-4 border-t border-gray-200">
+            <div class="grid grid-cols-1 gap-4">
+                <div>
+                    <p class="text-xs text-gray-500 mb-1 uppercase font-medium tracking-wider">Період кампанії</p>
+                    <p class="text-gray-900 text-sm flex items-center gap-2" id="summaryDates">
+                        <span class="text-gray-400 italic">Оберіть дату</span>
+                    </p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 mb-1 uppercase font-medium tracking-wider">Додаткові ресурси</p>
+                    <div class="flex flex-wrap gap-2" id="summaryResources">
+                        <span class="text-gray-400 text-sm italic">Немає додаткових ресурсів</span>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="divider"></div>

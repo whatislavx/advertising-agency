@@ -1,15 +1,18 @@
 (function() {
     const lucide = (window as any).lucide;
+
     interface Order {
         id: number;
         user_id: number;
+        user_email: string;
         service_id: number;
+        service_name: string;
         status: string;
         event_date: string;
+        end_date: string | null;
+        created_at: string;
         total_cost: string;
-        // Assuming backend returns these or we need to join.
-        // For now, let's assume simple structure and we might need to fetch user/service details if not provided.
-        // But let's stick to what we have.
+        resources: string[] | null;
     }
 
     function formatCurrency(amount: string | number): string {
@@ -17,7 +20,20 @@
     }
 
     function formatDate(dateString: string): string {
+        if (!dateString) return '';
         return new Date(dateString).toLocaleDateString('uk-UA');
+    }
+
+    function getDisplayStatus(order: Order): string {
+        // Logic: if paid and end_date is passed, show as completed
+        if (order.status === 'paid' && order.end_date) {
+            const endDate = new Date(order.end_date);
+            const now = new Date();
+            if (now > endDate) {
+                return 'completed';
+            }
+        }
+        return order.status;
     }
 
     function getStatusBadge(status: string): string {
@@ -36,8 +52,27 @@
             if (!response.ok) throw new Error('Failed to fetch orders');
             const orders: Order[] = await response.json();
             renderOrders(orders);
+            updateStats(orders);
         } catch (error) {
             console.error('Error fetching orders:', error);
+        }
+    }
+
+    function updateStats(orders: Order[]) {
+        const totalOrdersEl = document.getElementById('statsTotalOrders');
+        const pendingOrdersEl = document.getElementById('statsPendingOrders');
+        const totalRevenueEl = document.getElementById('statsTotalRevenue');
+
+        if (totalOrdersEl) totalOrdersEl.textContent = orders.length.toString();
+        
+        if (pendingOrdersEl) {
+            const pendingCount = orders.filter(o => o.status === 'new').length;
+            pendingOrdersEl.textContent = pendingCount.toString();
+        }
+
+        if (totalRevenueEl) {
+            const totalRevenue = orders.reduce((sum, order) => sum + Number(order.total_cost), 0);
+            totalRevenueEl.textContent = formatCurrency(totalRevenue);
         }
     }
 
@@ -45,30 +80,93 @@
         const tbody = document.getElementById('orders-table-body');
         if (!tbody) return;
 
-        tbody.innerHTML = orders.map(order => `
-            <tr class="order-row">
-                <td class="text-primary font-medium">ORD-${order.id.toString().padStart(3, '0')}</td>
-                <td class="text-gray-900">User #${order.user_id}</td>
-                <td class="text-gray-700">Service #${order.service_id}</td>
-                <td class="text-right text-primary">${formatCurrency(order.total_cost)}</td>
-                <td class="text-sm text-gray-600">${formatDate(order.event_date)}</td>
-                <td class="text-center status-cell">
-                    ${getStatusBadge(order.status)}
+        tbody.innerHTML = '';
+
+        orders.forEach(order => {
+            const displayStatus = getDisplayStatus(order);
+            
+            // Main Row
+            const tr = document.createElement('tr');
+            tr.className = "order-row hover:bg-gray-50 transition-colors border-b border-gray-100";
+            tr.setAttribute('data-status', displayStatus);
+            
+            tr.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">ORD-${order.id.toString().padStart(3, '0')}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${order.user_email || 'User #' + order.user_id}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${order.service_name || 'Service #' + order.service_id}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-left font-medium text-gray-900">${formatCurrency(order.total_cost)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${formatDate(order.created_at)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-center status-cell">
+                    ${getStatusBadge(displayStatus)}
                 </td>
-                <td class="text-center">
-                    <button class="btn-icon">
-                        <i data-lucide="eye" class="w-4 h-4"></i>
-                    </button>
+                <td class="px-6 py-4 whitespace-nowrap text-center">
+                    <div class="flex items-center justify-center gap-2">
+                        ${(displayStatus === 'new' || displayStatus === 'paid') ? `
+                            <button class="btn-icon text-red-400 hover:text-red-600 transition-colors" title="Скасувати" onclick="cancelOrder(${order.id})">
+                                <i data-lucide="x-circle" class="w-5 h-5"></i>
+                            </button>
+                        ` : ''}
+                        <button class="btn-icon text-gray-400 hover:text-blue-600 transition-colors" onclick="toggleDetails(${order.id})">
+                            <i data-lucide="eye" class="w-5 h-5" id="icon-${order.id}"></i>
+                        </button>
+                    </div>
                 </td>
-            </tr>
-        `).join('');
+            `;
+            tbody.appendChild(tr);
+
+            // Details Row
+            const detailsTr = document.createElement('tr');
+            detailsTr.id = `details-${order.id}`;
+            detailsTr.className = "hidden bg-gray-50 border-t border-gray-100";
+            
+            const resourcesHtml = order.resources && order.resources.length > 0 
+                ? order.resources.map(r => `<span class="badge badge-gray bg-white border border-gray-200">${r}</span>`).join('')
+                : '<span class="text-gray-400 text-sm">Немає додаткових ресурсів</span>';
+
+            detailsTr.innerHTML = `
+                <td colspan="7" class="p-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pl-4">
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Період кампанії:</p>
+                            <p class="text-gray-900">
+                                ${formatDate(order.event_date)} ${order.end_date ? '— ' + formatDate(order.end_date) : ''}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Додаткові ресурси:</p>
+                            <div class="flex flex-wrap gap-2">
+                                ${resourcesHtml}
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(detailsTr);
+        });
 
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
         }
     }
 
-    function filterOrders() {
+    // Make toggleDetails global
+    (window as any).toggleDetails = (id: number) => {
+        const detailsRow = document.getElementById(`details-${id}`);
+        const icon = document.getElementById(`icon-${id}`);
+        
+        if (detailsRow) {
+            detailsRow.classList.toggle('hidden');
+            if (icon) {
+                if (detailsRow.classList.contains('hidden')) {
+                    icon.classList.remove('text-blue-600');
+                } else {
+                    icon.classList.add('text-blue-600');
+                }
+            }
+        }
+    };
+
+    (window as any).filterOrders = () => {
         const searchInput = document.getElementById("searchOrders") as HTMLInputElement;
         const statusFilter = document.getElementById("statusFilter") as HTMLSelectElement;
         
@@ -82,34 +180,115 @@
         rows.forEach((row) => {
             const htmlRow = row as HTMLElement;
             const text = htmlRow.textContent?.toLowerCase() || "";
-            const statusCell = htmlRow.querySelector(".status-cell")?.textContent?.trim() || "";
-            
-            // Map UI status text to filter value if needed, or just check includes
-            // Filter value is "Новий", "Оплачено" etc.
-            // Status cell text contains "Новий", "Оплачено" etc.
+            const status = htmlRow.getAttribute('data-status') || "";
             
             const matchesSearch = text.includes(searchValue);
-            const matchesStatus = filterValue === "all" || statusCell.includes(filterValue);
+            const matchesStatus = filterValue === "all" || status === filterValue;
 
             if (matchesSearch && matchesStatus) {
                 htmlRow.style.display = "";
+                const nextRow = htmlRow.nextElementSibling as HTMLElement;
+                if (nextRow && nextRow.id.startsWith('details-')) {
+                    if (!matchesSearch || !matchesStatus) {
+                        nextRow.classList.add('hidden');
+                    }
+                }
             } else {
                 htmlRow.style.display = "none";
+                const nextRow = htmlRow.nextElementSibling as HTMLElement;
+                if (nextRow && nextRow.id.startsWith('details-')) {
+                    nextRow.style.display = "none";
+                }
             }
         });
-    }
+        
+        if (filterValue === 'all' && searchValue === '') {
+             document.querySelectorAll('[id^="details-"]').forEach(el => {
+                 el.classList.add('hidden');
+                 (el as HTMLElement).style.display = '';
+             });
+             document.querySelectorAll('.order-row').forEach(el => {
+                 (el as HTMLElement).style.display = '';
+             });
+        }
+    };
+
+    (window as any).cancelOrder = async (id: number) => {
+        if(!confirm('Ви впевнені, що хочете скасувати це замовлення?')) return;
+        try {
+            const res = await fetch(`/api/orders/${id}/status`, {
+                method: 'PATCH',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ status: 'cancelled' })
+            });
+            if(res.ok) {
+                fetchOrders();
+            } else {
+                alert('Помилка при скасуванні');
+            }
+        } catch(e) {
+            console.error(e);
+            alert('Помилка з\'єднання');
+        }
+    };
 
     document.addEventListener("DOMContentLoaded", () => {
-        if (typeof lucide !== 'undefined') {
-            lucide.createIcons();
-        }
-
         fetchOrders();
 
         const searchInput = document.getElementById("searchOrders");
-        const statusFilter = document.getElementById("statusFilter");
+        
+        // Custom Select Logic
+        const selectContainer = document.getElementById('customSelectContainer');
+        const selectTrigger = document.getElementById('customSelectTrigger');
+        const selectMenu = document.getElementById('customSelectMenu');
+        const selectArrow = document.getElementById('customSelectArrow');
+        const hiddenInput = document.getElementById('statusFilter') as HTMLInputElement;
+        const selectedText = document.getElementById('selectedStatusText');
+        const options = document.querySelectorAll('.custom-option');
 
-        searchInput?.addEventListener("input", filterOrders);
-        statusFilter?.addEventListener("change", filterOrders);
+        if (selectTrigger && selectMenu && selectArrow && hiddenInput && selectedText) {
+            // Toggle dropdown
+            selectTrigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isHidden = selectMenu.classList.contains('hidden');
+                if (isHidden) {
+                    selectMenu.classList.remove('hidden');
+                    selectArrow.style.transform = 'rotate(180deg)';
+                } else {
+                    selectMenu.classList.add('hidden');
+                    selectArrow.style.transform = 'rotate(0deg)';
+                }
+            });
+
+            // Close when clicking outside
+            document.addEventListener('click', (e) => {
+                if (selectContainer && !selectContainer.contains(e.target as Node)) {
+                    selectMenu.classList.add('hidden');
+                    selectArrow.style.transform = 'rotate(0deg)';
+                }
+            });
+
+            // Select option
+            options.forEach(option => {
+                option.addEventListener('click', () => {
+                    const value = option.getAttribute('data-value');
+                    const text = option.querySelector('span:last-child')?.textContent;
+                    
+                    if (value && text) {
+                        hiddenInput.value = value;
+                        selectedText.textContent = text;
+                        
+                        // Update UI
+                        selectMenu.classList.add('hidden');
+                        selectArrow.style.transform = 'rotate(0deg)';
+                        
+                        // Trigger filter
+                        (window as any).filterOrders();
+                    }
+                });
+            });
+        }
+
+        searchInput?.addEventListener("input", (window as any).filterOrders);
     });
 })();

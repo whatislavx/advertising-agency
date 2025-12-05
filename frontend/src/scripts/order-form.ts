@@ -31,7 +31,7 @@ async function fetchData() {
     try {
         const [servicesRes, resourcesRes] = await Promise.all([
             fetch('/api/services'),
-            fetch('/api/resources')
+            fetch('/api/resources?available=true')
         ]);
 
         if (servicesRes.ok) services = await servicesRes.json();
@@ -54,26 +54,41 @@ function formatCurrency(num: number): string {
 }
 
 function updateSummary() {
-    const listContainer = document.getElementById('selectedResourcesList');
-    const dynamicList = document.getElementById('dynamicList');
+    const summaryResources = document.getElementById('summaryResources');
     const totalEl = document.getElementById('totalPrice');
 
-    if (dynamicList) {
-        dynamicList.innerHTML = '';
+    if (summaryResources) {
         if (selectedItems.length > 0) {
-            if (listContainer) listContainer.style.display = 'block';
-            selectedItems.forEach(item => {
-                const row = document.createElement('div');
-                row.className = 'selected-item';
-                row.innerHTML = `<span>${item.name}</span> <span class="summary-price-val">+${formatCurrency(item.price)}</span>`;
-                dynamicList.appendChild(row);
-            });
+            summaryResources.innerHTML = selectedItems.map(item => 
+                `<span class="badge badge-gray bg-white border border-gray-200 text-xs px-2 py-1 rounded">${item.name}</span>`
+            ).join('');
         } else {
-            if (listContainer) listContainer.style.display = 'none';
+            summaryResources.innerHTML = '<span class="text-gray-400 text-sm italic">Немає додаткових ресурсів</span>';
         }
     }
 
     if (totalEl) totalEl.innerText = formatCurrency(currentTotal);
+}
+
+function updateDateSummary() {
+    const startDateInput = document.getElementById('startDate') as HTMLInputElement;
+    const endDateInput = document.getElementById('endDate') as HTMLInputElement;
+    const summaryDates = document.getElementById('summaryDates');
+    
+    if (summaryDates) {
+        const start = startDateInput.value;
+        const end = endDateInput.value;
+        
+        if (start) {
+            summaryDates.innerHTML = `
+                <i data-lucide="calendar" class="w-4 h-4 text-gray-400"></i>
+                <span>${start} ${end ? '→ ' + end : ''}</span>
+            `;
+            if ((window as any).lucide) (window as any).lucide.createIcons();
+        } else {
+            summaryDates.innerHTML = '<span class="text-gray-400 italic">Оберіть дату</span>';
+        }
+    }
 }
 
 function toggleResource(element: HTMLElement, resId: number) {
@@ -224,6 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         endPicker.clear();
                     }
                 }
+                updateDateSummary();
             }
         });
     }
@@ -231,7 +247,10 @@ document.addEventListener('DOMContentLoaded', () => {
         endPicker = flatpickr(endDateInput, {
             locale: "uk",
             dateFormat: "d.m.Y",
-            minDate: "today"
+            minDate: "today",
+            onChange: function() {
+                updateDateSummary();
+            }
         });
     }
 

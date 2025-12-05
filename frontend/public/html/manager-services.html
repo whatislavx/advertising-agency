@@ -63,10 +63,10 @@
           <table class="w-full">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Назва</th>
-                <th>Тип</th>
-                <th class="text-right">Ціна</th>
+                <th class="text-left">ID</th>
+                <th class="text-left">Назва</th>
+                <th class="text-left">Тип</th>
+                <th class="text-left">Ціна</th>
                 <th class="text-center">Дії</th>
               </tr>
             </thead>
@@ -92,10 +92,10 @@
           <table class="w-full">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Назва</th>
-                <th>Тип</th>
-                <th class="text-right">Ціна</th>
+                <th class="text-left">ID</th>
+                <th class="text-left">Назва</th>
+                <th class="text-left">Тип</th>
+                <th class="text-left">Ціна</th>
                 <th class="text-center">Доступність</th>
                 <th class="text-center">Дії</th>
               </tr>
@@ -133,11 +133,20 @@
             <label class="block text-sm text-gray-700 mb-2 font-medium"
               >Тип реклами *</label
             >
-            <select id="service-type">
-              <option value="internet">Інтернет</option>
-              <option value="outdoor">Зовнішня</option>
-              <option value="tv">ТБ</option>
-            </select>
+            <div class="relative custom-select-container" id="serviceTypeContainer">
+              <input type="hidden" id="service-type" value="internet">
+              <button type="button" class="custom-select-trigger w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-left flex items-center justify-between focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                <span class="selected-text text-gray-700">Інтернет</span>
+                <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400 transition-transform duration-200"></i>
+              </button>
+              <div class="custom-select-menu absolute bottom-full left-0 w-full mb-2 bg-white border border-gray-100 rounded-xl shadow-2xl hidden z-50 overflow-hidden ring-1 ring-black/5">
+                <div class="p-1.5">
+                  <div class="custom-option px-3 py-2.5 rounded-lg hover:bg-blue-50 cursor-pointer flex items-center gap-3 transition-colors" data-value="internet">Інтернет</div>
+                  <div class="custom-option px-3 py-2.5 rounded-lg hover:bg-blue-50 cursor-pointer flex items-center gap-3 transition-colors" data-value="outdoor">Зовнішня</div>
+                  <div class="custom-option px-3 py-2.5 rounded-lg hover:bg-blue-50 cursor-pointer flex items-center gap-3 transition-colors" data-value="tv">ТБ</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <div class="modal-footer">
@@ -170,10 +179,19 @@
             <label class="block text-sm text-gray-700 mb-2 font-medium"
               >Тип *</label
             >
-            <select id="resource-type">
-              <option value="equipment">Обладнання</option>
-              <option value="personnel">Персонал</option>
-            </select>
+            <div class="relative custom-select-container" id="resourceTypeContainer">
+              <input type="hidden" id="resource-type" value="equipment">
+              <button type="button" class="custom-select-trigger w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-left flex items-center justify-between focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                <span class="selected-text text-gray-700">Обладнання</span>
+                <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400 transition-transform duration-200"></i>
+              </button>
+              <div class="custom-select-menu absolute top-full left-0 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-2xl hidden z-50 overflow-hidden ring-1 ring-black/5">
+                <div class="p-1.5">
+                  <div class="custom-option px-3 py-2.5 rounded-lg hover:bg-blue-50 cursor-pointer flex items-center gap-3 transition-colors" data-value="equipment">Обладнання</div>
+                  <div class="custom-option px-3 py-2.5 rounded-lg hover:bg-blue-50 cursor-pointer flex items-center gap-3 transition-colors" data-value="personnel">Персонал</div>
+                </div>
+              </div>
+            </div>
           </div>
           <div>
             <label class="block text-sm text-gray-700 mb-2 font-medium"
