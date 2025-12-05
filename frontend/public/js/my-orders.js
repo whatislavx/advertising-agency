@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,6 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+import { Modal } from './utils/Modal.js';
 (function () {
     const lucide = window.lucide;
     const flatpickr = window.flatpickr;
@@ -70,7 +70,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                     const activeCampaignsEl = document.getElementById('activeCampaigns');
                     if (activeCampaignsEl)
                         activeCampaignsEl.innerText = orders.filter((o) => o.status === 'new' || o.status === 'paid').length.toString();
-                    const totalSum = orders.reduce((sum, o) => sum + Number(o.total_cost), 0);
+                    const totalSum = orders.reduce((sum, o) => {
+                        if (o.status === 'paid' || o.status === 'completed') {
+                            return sum + Number(o.total_cost);
+                        }
+                        return sum;
+                    }, 0);
                     const totalSpentEl = document.getElementById('totalSpent');
                     if (totalSpentEl)
                         totalSpentEl.innerText = formatCurrency(totalSum);
@@ -178,7 +183,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         const e = window.event;
         if (e)
             e.stopPropagation();
-        if (!confirm(`Підтвердити оплату замовлення ORD-${orderId}?`))
+        if (!(yield Modal.confirm(`Підтвердити оплату замовлення ORD-${orderId}?`, 'Підтвердження оплати', 'info')))
             return;
         try {
             const res = yield fetch('/api/payments', {
@@ -188,12 +193,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             });
             if (res.ok) {
                 yield fetch(`/api/payments/${orderId}/confirm`, { method: 'PATCH' });
-                alert('Оплата пройшла успішно!');
+                yield Modal.alert('Оплата пройшла успішно!', 'Успіх', 'success');
                 loadOrders();
             }
         }
         catch (e) {
-            alert('Помилка оплати');
+            yield Modal.alert('Помилка оплати', 'Помилка', 'error');
         }
     });
     window.cancelOrder = (id, status) => __awaiter(this, void 0, void 0, function* () {
@@ -203,7 +208,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         const confirmMsg = status === 'paid'
             ? 'Ви впевнені, що хочете скасувати оплачене замовлення? Кошти будуть повернуті.'
             : 'Ви впевнені, що хочете скасувати це замовлення?';
-        if (!confirm(confirmMsg))
+        if (!(yield Modal.confirm(confirmMsg)))
             return;
         try {
             const res = yield fetch(`/api/orders/${id}/status`, {
@@ -213,20 +218,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             });
             if (res.ok) {
                 if (status === 'paid') {
-                    alert('Замовлення скасовано. Кошти будуть повернуті протягом 30 робочих днів.');
+                    yield Modal.alert('Замовлення скасовано. Кошти будуть повернуті протягом 30 робочих днів.');
                 }
                 else {
-                    alert('Замовлення скасовано.');
+                    yield Modal.alert('Замовлення скасовано.');
                 }
                 loadOrders();
             }
             else {
-                alert('Помилка при скасуванні');
+                yield Modal.alert('Помилка при скасуванні');
             }
         }
         catch (e) {
             console.error(e);
-            alert('Помилка з\'єднання');
+            yield Modal.alert('Помилка з\'єднання');
         }
     });
     window.closeRescheduleModal = () => {
@@ -319,7 +324,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         const startDateObj = new Date(`${y1}-${m1}-${d1}`);
         const endDateObj = new Date(`${y2}-${m2}-${d2}`);
         if (endDateObj < startDateObj) {
-            alert('Дата завершення не може бути раніше дати початку');
+            yield Modal.alert('Дата завершення не може бути раніше дати початку');
             return;
         }
         const event_date = `${y1}-${m1}-${d1}`;
@@ -328,7 +333,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         if (currentOrderStatus === 'paid') {
             const newDuration = calculateDuration(event_date, end_date);
             if (newDuration !== currentOrderDuration) {
-                alert(`Для оплачених замовлень зміна тривалості заборонена.`);
+                yield Modal.alert(`Для оплачених замовлень зміна тривалості заборонена.`);
                 return;
             }
         }
@@ -344,23 +349,23 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 if (currentOrderStatus !== 'paid') {
                     msg += ` Нова сума: ${formatCurrency(Number(data.total_cost))}`;
                 }
-                alert(msg);
+                yield Modal.alert(msg);
                 window.closeRescheduleModal();
                 loadOrders();
             }
             else {
                 try {
                     const err = yield response.json();
-                    alert('Помилка: ' + (err.message || 'Невідома помилка'));
+                    yield Modal.alert('Помилка: ' + (err.message || 'Невідома помилка'));
                 }
                 catch (_a) {
-                    alert('Помилка при оновленні замовлення (500)');
+                    yield Modal.alert('Помилка при оновленні замовлення (500)');
                 }
             }
         }
         catch (e) {
             console.error(e);
-            alert('Помилка з\'єднання');
+            yield Modal.alert('Помилка з\'єднання');
         }
     });
     document.addEventListener("DOMContentLoaded", () => {

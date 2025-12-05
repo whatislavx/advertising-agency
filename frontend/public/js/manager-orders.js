@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,6 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+import { Modal } from './utils/Modal.js';
 (function () {
     const lucide = window.lucide;
     function formatCurrency(amount) {
@@ -164,20 +164,19 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             const status = htmlRow.getAttribute('data-status') || "";
             const matchesSearch = text.includes(searchValue);
             const matchesStatus = filterValue === "all" || status === filterValue;
+            const nextRow = htmlRow.nextElementSibling;
+            const isDetailsRow = nextRow && nextRow.id.startsWith('details-');
             if (matchesSearch && matchesStatus) {
                 htmlRow.style.display = "";
-                const nextRow = htmlRow.nextElementSibling;
-                if (nextRow && nextRow.id.startsWith('details-')) {
-                    if (!matchesSearch || !matchesStatus) {
-                        nextRow.classList.add('hidden');
-                    }
+                if (isDetailsRow) {
+                    nextRow.style.display = ""; // Reset inline display to allow class-based toggling
                 }
             }
             else {
                 htmlRow.style.display = "none";
-                const nextRow = htmlRow.nextElementSibling;
-                if (nextRow && nextRow.id.startsWith('details-')) {
+                if (isDetailsRow) {
                     nextRow.style.display = "none";
+                    nextRow.classList.add('hidden'); // Reset to collapsed state
                 }
             }
         });
@@ -192,7 +191,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         }
     };
     window.cancelOrder = (id) => __awaiter(this, void 0, void 0, function* () {
-        if (!confirm('Ви впевнені, що хочете скасувати це замовлення?'))
+        if (!(yield Modal.confirm('Ви впевнені, що хочете скасувати це замовлення?')))
             return;
         try {
             const res = yield fetch(`/api/orders/${id}/status`, {
@@ -204,12 +203,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 fetchOrders();
             }
             else {
-                alert('Помилка при скасуванні');
+                yield Modal.alert('Помилка при скасуванні');
             }
         }
         catch (e) {
             console.error(e);
-            alert('Помилка з\'єднання');
+            yield Modal.alert('Помилка з\'єднання');
         }
     });
     document.addEventListener("DOMContentLoaded", () => {

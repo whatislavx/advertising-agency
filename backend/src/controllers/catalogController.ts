@@ -145,8 +145,11 @@ export const deleteService = async (req: Request, res: Response) => {
         }
         await redisClient.del(SERVICES_CACHE_KEY);
         res.json({ message: 'Service deleted' });
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error deleting service:', error);
+        if (error.code === '23503') {
+            return res.status(400).json({ message: 'Неможливо видалити послугу, оскільки вона використовується в замовленнях.' });
+        }
         res.status(500).json({ message: 'Internal Server Error' });
     }
 };
@@ -162,8 +165,11 @@ export const deleteResource = async (req: Request, res: Response) => {
         await redisClient.del(RESOURCES_CACHE_KEY);
         await redisClient.del(RESOURCES_AVAILABLE_CACHE_KEY);
         res.json({ message: 'Resource deleted' });
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error deleting resource:', error);
+        if (error.code === '23503') {
+            return res.status(400).json({ message: 'Неможливо видалити ресурс, оскільки він використовується в замовленнях.' });
+        }
         res.status(500).json({ message: 'Internal Server Error' });
     }
 };

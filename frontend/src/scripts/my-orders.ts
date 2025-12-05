@@ -1,3 +1,5 @@
+import { Modal } from './utils/Modal.js';
+
 (function() {
     const lucide = (window as any).lucide;
     const flatpickr = (window as any).flatpickr;
@@ -69,7 +71,12 @@
                 const activeCampaignsEl = document.getElementById('activeCampaigns');
                 if (activeCampaignsEl) activeCampaignsEl.innerText = orders.filter((o: any) => o.status === 'new' || o.status === 'paid').length.toString();
 
-                const totalSum = orders.reduce((sum: number, o: any) => sum + Number(o.total_cost), 0);
+                const totalSum = orders.reduce((sum: number, o: any) => {
+                    if (o.status === 'paid' || o.status === 'completed') {
+                        return sum + Number(o.total_cost);
+                    }
+                    return sum;
+                }, 0);
                 const totalSpentEl = document.getElementById('totalSpent');
                 if (totalSpentEl) totalSpentEl.innerText = formatCurrency(totalSum);
 
@@ -185,7 +192,7 @@
         const e = window.event;
         if(e) e.stopPropagation();
         
-        if(!confirm(`Підтвердити оплату замовлення ORD-${orderId}?`)) return;
+        if(!(await Modal.confirm(`Підтвердити оплату замовлення ORD-${orderId}?`, 'Підтвердження оплати', 'info'))) return;
         
         try {
             const res = await fetch('/api/payments', {
@@ -196,11 +203,11 @@
             
             if (res.ok) {
                 await fetch(`/api/payments/${orderId}/confirm`, { method: 'PATCH' });
-                alert('Оплата пройшла успішно!');
+                await Modal.alert('Оплата пройшла успішно!', 'Успіх', 'success');
                 loadOrders(); 
             }
         } catch (e) {
-            alert('Помилка оплати');
+            await Modal.alert('Помилка оплати', 'Помилка', 'error');
         }
     };
 
@@ -212,7 +219,7 @@
             ? 'Ви впевнені, що хочете скасувати оплачене замовлення? Кошти будуть повернуті.' 
             : 'Ви впевнені, що хочете скасувати це замовлення?';
 
-        if(!confirm(confirmMsg)) return;
+        if(!(await Modal.confirm(confirmMsg))) return;
 
         try {
             const res = await fetch(`/api/orders/${id}/status`, {
@@ -222,17 +229,17 @@
             });
             if(res.ok) {
                 if (status === 'paid') {
-                    alert('Замовлення скасовано. Кошти будуть повернуті протягом 30 робочих днів.');
+                    await Modal.alert('Замовлення скасовано. Кошти будуть повернуті протягом 30 робочих днів.');
                 } else {
-                    alert('Замовлення скасовано.');
+                    await Modal.alert('Замовлення скасовано.');
                 }
                 loadOrders();
             } else {
-                alert('Помилка при скасуванні');
+                await Modal.alert('Помилка при скасуванні');
             }
         } catch(e) {
             console.error(e);
-            alert('Помилка з\'єднання');
+            await Modal.alert('Помилка з\'єднання');
         }
     };
 
@@ -338,7 +345,7 @@
         const endDateObj = new Date(`${y2}-${m2}-${d2}`);
         
         if (endDateObj < startDateObj) {
-            alert('Дата завершення не може бути раніше дати початку');
+            await Modal.alert('Дата завершення не може бути раніше дати початку');
             return;
         }
 
@@ -349,7 +356,7 @@
         if (currentOrderStatus === 'paid') {
             const newDuration = calculateDuration(event_date, end_date);
             if (newDuration !== currentOrderDuration) {
-                alert(`Для оплачених замовлень зміна тривалості заборонена.`);
+                await Modal.alert(`Для оплачених замовлень зміна тривалості заборонена.`);
                 return;
             }
         }
@@ -368,21 +375,21 @@
                 if (currentOrderStatus !== 'paid') {
                     msg += ` Нова сума: ${formatCurrency(Number(data.total_cost))}`;
                 }
-                alert(msg);
+                await Modal.alert(msg);
                 
                 (window as any).closeRescheduleModal();
                 loadOrders(); 
             } else {
                 try {
                     const err = await response.json();
-                    alert('Помилка: ' + (err.message || 'Невідома помилка'));
+                    await Modal.alert('Помилка: ' + (err.message || 'Невідома помилка'));
                 } catch {
-                    alert('Помилка при оновленні замовлення (500)');
+                    await Modal.alert('Помилка при оновленні замовлення (500)');
                 }
             }
         } catch (e) {
             console.error(e);
-            alert('Помилка з\'єднання');
+            await Modal.alert('Помилка з\'єднання');
         }
     };
 
