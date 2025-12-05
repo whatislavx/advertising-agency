@@ -38,19 +38,92 @@ window.toggleModal = toggleModal;
         name: string;
         type: string;
         cost: string | number;
+        is_available: boolean;
     }
 
-    // --- Глобальні змінні стану ---
     let services: Service[] = [];
     let resources: Resource[] = [];
-    
-    // Зберігаємо ID елемента, який редагуємо. Якщо null — створюємо новий.
     let editingServiceId: number | null = null;
     let editingResourceId: number | null = null;
 
-    // --- Утиліти ---
     function formatCurrency(amount: string | number): string {
         return Number(amount).toLocaleString('uk-UA', { style: 'currency', currency: 'UAH' }).replace('UAH', '₴').replace(',', '.');
+    }
+
+    const typeTranslations: { [key: string]: string } = {
+        'equipment': 'Обладнання',
+        'personnel': 'Персонал',
+        'internet': 'Інтернет',
+        'outdoor': 'Зовнішня реклама',
+        'tv': 'Телебачення',
+        'radio': 'Радіо',
+        'print': 'Друкована реклама',
+        'other': 'Інше'
+    };
+
+    function translateType(type: string): string {
+        return typeTranslations[type] || type;
+    }
+
+    // --- Custom Select Logic ---
+    function setupCustomSelect(containerId: string) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        const trigger = container.querySelector('.custom-select-trigger') as HTMLElement;
+        const menu = container.querySelector('.custom-select-menu') as HTMLElement;
+        const arrow = container.querySelector('[data-lucide="chevron-down"]') as HTMLElement;
+        const hiddenInput = container.querySelector('input[type="hidden"]') as HTMLInputElement;
+        const selectedText = container.querySelector('.selected-text') as HTMLElement;
+        const options = container.querySelectorAll('.custom-option');
+
+        if (!trigger || !menu || !hiddenInput || !selectedText) return;
+
+        // Toggle dropdown
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isHidden = menu.classList.contains('hidden');
+            
+            // Close all other open dropdowns
+            document.querySelectorAll('.custom-select-menu').forEach(m => {
+                if (m !== menu) m.classList.add('hidden');
+            });
+            document.querySelectorAll('[data-lucide="chevron-down"]').forEach(a => {
+                if (a !== arrow) (a as HTMLElement).style.transform = 'rotate(0deg)';
+            });
+
+            if (isHidden) {
+                menu.classList.remove('hidden');
+                if (arrow) arrow.style.transform = 'rotate(180deg)';
+            } else {
+                menu.classList.add('hidden');
+                if (arrow) arrow.style.transform = 'rotate(0deg)';
+            }
+        });
+
+        // Select option
+        options.forEach(option => {
+            option.addEventListener('click', () => {
+                const value = option.getAttribute('data-value');
+                const text = option.textContent;
+                
+                if (value && text) {
+                    hiddenInput.value = value;
+                    selectedText.textContent = text;
+                    
+                    menu.classList.add('hidden');
+                    if (arrow) arrow.style.transform = 'rotate(0deg)';
+                }
+            });
+        });
+
+        // Close when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!container.contains(e.target as Node)) {
+                menu.classList.add('hidden');
+                if (arrow) arrow.style.transform = 'rotate(0deg)';
+            }
+        });
     }
 
     // --- API запити ---
@@ -88,10 +161,10 @@ window.toggleModal = toggleModal;
 
         tbody.innerHTML = servicesData.map(service => `
             <tr>
-                <td class="text-gray-600 text-sm">SRV-${service.id.toString().padStart(3, '0')}</td>
-                <td class="text-primary font-medium">${service.name}</td>
-                <td><span class="badge badge-blue">${service.type || 'other'}</span></td>
-                <td class="text-right text-primary font-bold">${formatCurrency(service.base_price)}</td>
+                <td class="text-gray-600 text-sm text-left">SRV-${service.id.toString().padStart(3, '0')}</td>
+                <td class="text-primary font-medium text-left">${service.name}</td>
+                <td class="text-left"><span class="badge badge-blue">${translateType(service.type || 'other')}</span></td>
+                <td class="text-left text-primary font-bold">${formatCurrency(service.base_price)}</td>
                 <td class="text-center">
                     <div class="flex justify-center gap-2">
                         <button class="btn-icon text-blue-600 hover:bg-blue-50" onclick="editService(${service.id})">
@@ -119,12 +192,14 @@ window.toggleModal = toggleModal;
 
         tbody.innerHTML = resourcesData.map(resource => `
             <tr>
-                <td class="text-gray-600 text-sm">RES-${resource.id.toString().padStart(3, '0')}</td>
-                <td class="text-primary font-medium">${resource.name}</td>
-                <td><span class="badge badge-gray">${resource.type}</span></td>
-                <td class="text-right text-primary font-bold">${formatCurrency(resource.cost)}</td>
+                <td class="text-gray-600 text-sm text-left">RES-${resource.id.toString().padStart(3, '0')}</td>
+                <td class="text-primary font-medium text-left">${resource.name}</td>
+                <td class="text-left"><span class="badge badge-gray">${translateType(resource.type)}</span></td>
+                <td class="text-left text-primary font-bold">${formatCurrency(resource.cost)}</td>
                 <td class="text-center">
-                    <span class="badge badge-green">Доступний</span>
+                    <span class="badge ${resource.is_available ? 'badge-green' : 'badge-red'}">
+                        ${resource.is_available ? 'Доступний' : 'Не доступний'}
+                    </span>
                 </td>
                 <td class="text-center">
                     <div class="flex justify-center gap-2">
@@ -149,6 +224,28 @@ window.toggleModal = toggleModal;
         
         const nameInput = document.getElementById('service-name') as HTMLInputElement;
         const priceInput = document.getElementById('service-price') as HTMLInputElement;
+        const typeInput = document.getElementById('service-type') as HTMLInputElement;
+        const typeText = document.querySelector('#serviceTypeContainer .selected-text');
+
+        if(nameInput) nameInput.value = '';
+        if(priceInput) priceInput.value = '';
+        if(typeInput) typeInput.value = 'internet';
+        if(typeText) typeText.textContent = 'Інтернет';
+
+        const header = document.querySelector('#serviceModal h3');
+        if (header) header.textContent = 'Додати послугу';
+
+        toggleModal('serviceModal');
+    }
+    (window as any).openAddServiceModal = openAddServiceModal;
+
+    // --- Логіка Послуг (Service) ---
+
+    function openAddServiceModal() {
+        editingServiceId = null;
+        
+        const nameInput = document.getElementById('service-name') as HTMLInputElement;
+        const priceInput = document.getElementById('service-price') as HTMLInputElement;
         const typeInput = document.getElementById('service-type') as HTMLSelectElement;
 
         if(nameInput) nameInput.value = '';
@@ -161,7 +258,7 @@ window.toggleModal = toggleModal;
         toggleModal('serviceModal');
     }
 
-    window.editService = function(id: number) {
+    (window as any).editService = function(id: number) {
         const service = services.find(s => s.id === id);
         if (!service) return;
 
@@ -169,7 +266,20 @@ window.toggleModal = toggleModal;
 
         (document.getElementById('service-name') as HTMLInputElement).value = service.name;
         (document.getElementById('service-price') as HTMLInputElement).value = service.base_price.toString();
-        (document.getElementById('service-type') as HTMLSelectElement).value = service.type || 'internet';
+        
+        const typeInput = document.getElementById('service-type') as HTMLInputElement;
+        const typeText = document.querySelector('#serviceTypeContainer .selected-text');
+        
+        if (typeInput) typeInput.value = service.type || 'internet';
+        if (typeText) {
+            // Map type to text
+            const typeMap: {[key: string]: string} = {
+                'internet': 'Інтернет',
+                'outdoor': 'Зовнішня',
+                'tv': 'ТБ'
+            };
+            typeText.textContent = typeMap[service.type || 'internet'] || 'Інтернет';
+        }
 
         const header = document.querySelector('#serviceModal h3');
         if (header) header.textContent = 'Редагувати послугу';
@@ -180,7 +290,7 @@ window.toggleModal = toggleModal;
     async function handleSaveService() {
         const nameInput = document.getElementById('service-name') as HTMLInputElement;
         const priceInput = document.getElementById('service-price') as HTMLInputElement;
-        const typeInput = document.getElementById('service-type') as HTMLSelectElement;
+        const typeInput = document.getElementById('service-type') as HTMLInputElement;
 
         const name = nameInput.value.trim();
         const base_price = parseFloat(priceInput.value);
@@ -223,7 +333,7 @@ window.toggleModal = toggleModal;
         }
     }
 
-    window.deleteService = async function(id: number) {
+    (window as any).deleteService = async function(id: number) {
         if(confirm('Ви впевнені, що хочете видалити цю послугу?')) {
             try {
                 const response = await fetch(`/api/services/${id}`, { method: 'DELETE' });
@@ -245,19 +355,24 @@ window.toggleModal = toggleModal;
         
         const nameInput = document.getElementById('resource-name') as HTMLInputElement;
         const costInput = document.getElementById('resource-cost') as HTMLInputElement;
-        const typeInput = document.getElementById('resource-type') as HTMLSelectElement;
+        const typeInput = document.getElementById('resource-type') as HTMLInputElement;
+        const typeText = document.querySelector('#resourceTypeContainer .selected-text');
+        const availableInput = document.getElementById('resAvailable') as HTMLInputElement;
 
         if(nameInput) nameInput.value = '';
         if(costInput) costInput.value = '';
         if(typeInput) typeInput.value = 'equipment';
+        if(typeText) typeText.textContent = 'Обладнання';
+        if(availableInput) availableInput.checked = true;
         
         const header = document.querySelector('#resourceModal h3');
         if (header) header.textContent = 'Додати ресурс';
 
         toggleModal('resourceModal');
     }
+    (window as any).openAddResourceModal = openAddResourceModal;
 
-    window.editResource = function(id: number) {
+    (window as any).editResource = function(id: number) {
         const resource = resources.find(r => r.id === id);
         if (!resource) return;
 
@@ -265,7 +380,20 @@ window.toggleModal = toggleModal;
 
         (document.getElementById('resource-name') as HTMLInputElement).value = resource.name;
         (document.getElementById('resource-cost') as HTMLInputElement).value = resource.cost.toString();
-        (document.getElementById('resource-type') as HTMLSelectElement).value = resource.type;
+        
+        const typeInput = document.getElementById('resource-type') as HTMLInputElement;
+        const typeText = document.querySelector('#resourceTypeContainer .selected-text');
+        
+        if (typeInput) typeInput.value = resource.type;
+        if (typeText) {
+             const typeMap: {[key: string]: string} = {
+                'equipment': 'Обладнання',
+                'personnel': 'Персонал'
+            };
+            typeText.textContent = typeMap[resource.type] || 'Обладнання';
+        }
+
+        (document.getElementById('resAvailable') as HTMLInputElement).checked = resource.is_available;
 
         const header = document.querySelector('#resourceModal h3');
         if (header) header.textContent = 'Редагувати ресурс';
@@ -276,18 +404,20 @@ window.toggleModal = toggleModal;
     async function handleSaveResource() {
         const nameInput = document.getElementById('resource-name') as HTMLInputElement;
         const costInput = document.getElementById('resource-cost') as HTMLInputElement;
-        const typeInput = document.getElementById('resource-type') as HTMLSelectElement;
+        const typeInput = document.getElementById('resource-type') as HTMLInputElement;
+        const availableInput = document.getElementById('resAvailable') as HTMLInputElement;
 
         const name = nameInput.value.trim();
         const cost = parseFloat(costInput.value);
         const type = typeInput.value;
+        const is_available = availableInput.checked;
 
         if (!name || isNaN(cost)) {
             alert('Будь ласка, заповніть всі поля коректно');
             return;
         }
 
-        const payload = { name, cost, type };
+        const payload = { name, cost, type, is_available };
 
         try {
             let response;
@@ -321,7 +451,7 @@ window.toggleModal = toggleModal;
         }
     }
 
-    window.deleteResource = async function(id: number) {
+    (window as any).deleteResource = async function(id: number) {
         if(confirm('Ви впевнені, що хочете видалити цей ресурс?')) {
             try {
                 const response = await fetch(`/api/resources/${id}`, { method: 'DELETE' });
@@ -341,6 +471,9 @@ window.toggleModal = toggleModal;
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
         }
+
+        setupCustomSelect('serviceTypeContainer');
+        setupCustomSelect('resourceTypeContainer');
 
         fetchServices();
         fetchResources();
@@ -379,17 +512,15 @@ window.toggleModal = toggleModal;
                 document.body.style.overflow = "";
             }
         });
-        
-        // 4. Закриття модалок (кнопка Скасувати та хрестики)
-        const closeButtons = document.querySelectorAll('.modal-header button, .modal-footer .btn-secondary');
-        closeButtons.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const modal = (e.target as HTMLElement).closest('.modal-overlay');
-                if (modal) {
-                    modal.classList.add('hidden');
-                    document.body.style.overflow = "";
-                }
-            });
-        });
+
+        const saveServiceBtn = document.getElementById('save-service-btn');
+        if (saveServiceBtn) {
+            saveServiceBtn.addEventListener('click', handleSaveService);
+        }
+
+        const saveResourceBtn = document.getElementById('save-resource-btn');
+        if (saveResourceBtn) {
+            saveResourceBtn.addEventListener('click', handleSaveResource);
+        }
     });
 })();

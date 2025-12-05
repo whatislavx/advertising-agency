@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 (function () {
     const lucide = window.lucide;
+    const flatpickr = window.flatpickr;
     function formatCurrency(num) {
         return num.toLocaleString('uk-UA') + ' ₴';
     }
@@ -17,11 +18,21 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         const date = new Date(dateStr);
         return date.toLocaleDateString('uk-UA');
     }
+    function getDisplayStatus(order) {
+        if (order.status === 'paid' && order.end_date) {
+            const endDate = new Date(order.end_date);
+            const now = new Date();
+            if (now > endDate) {
+                return 'completed';
+            }
+        }
+        return order.status;
+    }
     function getStatusBadge(status) {
         switch (status) {
             case 'paid': return `<span class="badge badge-green"><i data-lucide="check-circle" class="w-3 h-3"></i> Оплачено</span>`;
             case 'new': return `<span class="badge badge-yellow"><i data-lucide="clock" class="w-3 h-3"></i> Нове</span>`;
-            case 'completed': return `<span class="badge badge-gray"><i data-lucide="check" class="w-3 h-3"></i> Виконано</span>`;
+            case 'completed': return `<span class="badge badge-blue"><i data-lucide="check" class="w-3 h-3"></i> Виконано</span>`;
             case 'cancelled': return `<span class="badge badge-red"><i data-lucide="x-circle" class="w-3 h-3"></i> Скасовано</span>`;
             default: return `<span class="badge badge-gray">${status}</span>`;
         }
@@ -61,6 +72,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                         }
                         else {
                             orders.forEach((order) => {
+                                const displayStatus = getDisplayStatus(order);
                                 // Main Row
                                 const tr = document.createElement('tr');
                                 tr.className = "hover:bg-gray-50 transition-colors cursor-pointer";
@@ -75,9 +87,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                             <td class="text-gray-900">${order.service_name}</td>
                             <td class="text-gray-600 text-sm">${formatDate(order.event_date)}</td>
                             <td class="text-right text-[#1a3a5c] font-bold">${formatCurrency(Number(order.total_cost))}</td>
-                            <td class="text-center">${getStatusBadge(order.status)}</td>
+                            <td class="text-center">${getStatusBadge(displayStatus)}</td>
                             <td class="text-center flex items-center justify-center gap-2">
-                                ${order.status === 'new' ? `<button class="btn btn-primary text-xs py-1 px-3" onclick="payOrder(${order.id}, ${order.total_cost})">Сплатити</button>` : ''}
+                                ${displayStatus === 'new' ? `<button class="btn btn-primary text-xs py-1 px-3" onclick="payOrder(${order.id}, ${order.total_cost})">Сплатити</button>` : ''}
+                                ${(displayStatus === 'new' || displayStatus === 'paid') ? `
+                                    <button class="btn-icon text-blue-600 hover:bg-blue-50" title="Перенести" onclick="openRescheduleModal(${order.id})">
+                                        <i data-lucide="calendar-clock" class="w-5 h-5"></i>
+                                    </button>
+                                    <button class="btn-icon text-red-600 hover:bg-red-50" title="Скасувати" onclick="cancelOrder(${order.id})">
+                                        <i data-lucide="x-circle" class="w-5 h-5"></i>
+                                    </button>
+                                ` : ''}
                                 <button class="btn-icon text-gray-400 hover:text-gray-600" onclick="toggleDetails(${order.id})">
                                     <i data-lucide="chevron-down" class="w-5 h-5 transition-transform" id="icon-${order.id}"></i>
                                 </button>
@@ -156,6 +176,102 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         }
         catch (e) {
             alert('Помилка оплати');
+        }
+    });
+    window.cancelOrder = (id) => __awaiter(this, void 0, void 0, function* () {
+        if (!confirm('Ви впевнені, що хочете скасувати це замовлення?'))
+            return;
+        try {
+            const res = yield fetch(`/api/orders/${id}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'cancelled' })
+            });
+            if (res.ok) {
+                loadOrders();
+            }
+            else {
+                alert('Помилка при скасуванні');
+            }
+        }
+        catch (e) {
+            console.error(e);
+            alert('Помилка з\'єднання');
+        }
+    });
+    window.openRescheduleModal = (id) => {
+        const modal = document.getElementById('rescheduleModal');
+        const inputId = document.getElementById('rescheduleOrderId');
+        const inputStartDate = document.getElementById('rescheduleStartDate');
+        const inputEndDate = document.getElementById('rescheduleEndDate');
+        if (modal && inputId && inputStartDate && inputEndDate) {
+            inputId.value = id.toString();
+            if (typeof flatpickr !== 'undefined') {
+                flatpickr(inputStartDate, {
+                    locale: 'uk',
+                    dateFormat: "d.m.Y",
+                    minDate: "today",
+                    defaultDate: "",
+                    onChange: function (selectedDates, dateStr) {
+                        if (selectedDates[0]) {
+                            // Set min date for end picker
+                            const endPicker = inputEndDate._flatpickr;
+                            if (endPicker) {
+                                endPicker.set('minDate', selectedDates[0]);
+                            }
+                        }
+                    }
+                });
+                flatpickr(inputEndDate, {
+                    locale: 'uk',
+                    dateFormat: "d.m.Y",
+                    minDate: "today",
+                    defaultDate: ""
+                });
+            }
+            inputStartDate.value = '';
+            inputEndDate.value = '';
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+    };
+    window.closeRescheduleModal = () => {
+        const modal = document.getElementById('rescheduleModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    };
+    window.submitReschedule = () => __awaiter(this, void 0, void 0, function* () {
+        const id = document.getElementById('rescheduleOrderId').value;
+        const startDate = document.getElementById('rescheduleStartDate').value;
+        const endDate = document.getElementById('rescheduleEndDate').value;
+        if (!startDate || !endDate) {
+            alert('Оберіть дати початку та завершення');
+            return;
+        }
+        // Convert dd.mm.yyyy to yyyy-mm-dd
+        const startParts = startDate.split('.');
+        const formattedStartDate = `${startParts[2]}-${startParts[1]}-${startParts[0]}`;
+        const endParts = endDate.split('.');
+        const formattedEndDate = `${endParts[2]}-${endParts[1]}-${endParts[0]}`;
+        try {
+            const res = yield fetch(`/api/orders/${id}/reschedule`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ newDate: formattedStartDate, newEndDate: formattedEndDate })
+            });
+            if (res.ok) {
+                window.closeRescheduleModal();
+                loadOrders();
+            }
+            else {
+                alert('Помилка при перенесенні');
+            }
+        }
+        catch (e) {
+            console.error(e);
+            alert('Помилка з\'єднання');
         }
     });
     document.addEventListener("DOMContentLoaded", () => {

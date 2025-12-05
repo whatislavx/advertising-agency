@@ -21,7 +21,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             try {
                 const [servicesRes, resourcesRes] = yield Promise.all([
                     fetch('/api/services'),
-                    fetch('/api/resources')
+                    fetch('/api/resources?available=true')
                 ]);
                 if (servicesRes.ok)
                     services = yield servicesRes.json();
@@ -208,7 +208,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             endPicker = flatpickr(endDateInput, {
                 locale: "uk",
                 dateFormat: "d.m.Y",
-                minDate: "today"
+                minDate: "today",
+                onChange: function () {
+                }
             });
         }
         const payBtn = document.getElementById('submitOrderBtn');

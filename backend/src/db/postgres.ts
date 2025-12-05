@@ -1,3 +1,4 @@
+// Database Access Objects
 import pool from '../config/postgres';
 import { PoolClient } from 'pg';
 
@@ -63,21 +64,23 @@ export const ServiceDB = {
 };
 
 export const ResourceDB = {
-    getAll: () => pool.query('SELECT * FROM resources'),
+    getAll: () => pool.query('SELECT * FROM resources ORDER BY id ASC'),
+
+    getAllAvailable: () => pool.query('SELECT * FROM resources WHERE is_available = TRUE ORDER BY id ASC'),
 
     getByIds: (client: PoolClient, ids: number[]) => 
-        client.query('SELECT id, cost FROM resources WHERE id = ANY($1)', [ids]),
+        client.query('SELECT id, cost FROM resources WHERE id = ANY($1) AND is_available = TRUE', [ids]),
 
-    create: (name: string, type: string, cost: number) => 
+    create: (name: string, type: string, cost: number, is_available: boolean) => 
         pool.query(
-            'INSERT INTO resources (name, type, cost) VALUES ($1, $2, $3) RETURNING *',
-            [name, type, cost]
+            'INSERT INTO resources (name, type, cost, is_available) VALUES ($1, $2, $3, $4) RETURNING *',
+            [name, type, cost, is_available]
         ),
     
-    update: (id: string, name: string, type: string, cost: number) => 
+    update: (id: string, name: string, type: string, cost: number, is_available: boolean) => 
         pool.query(
-            'UPDATE resources SET name = $1, type = $2, cost = $3 WHERE id = $4 RETURNING *',
-            [name, type, cost, id]
+            'UPDATE resources SET name = $1, type = $2, cost = $3, is_available = $4 WHERE id = $5 RETURNING *',
+            [name, type, cost, is_available, id]
         ),
     
     delete: (id: string) => pool.query('DELETE FROM resources WHERE id = $1 RETURNING *', [id])
@@ -85,7 +88,16 @@ export const ResourceDB = {
 
 export const OrderDB = {
     getAll: () => pool.query(`
-        SELECT o.*, u.email as user_email, s.name as service_name 
+        SELECT 
+            o.*, 
+            u.email as user_email, 
+            s.name as service_name,
+            (
+                SELECT json_agg(r.name)
+                FROM order_resources or_link
+                JOIN resources r ON or_link.resource_id = r.id
+                WHERE or_link.order_id = o.id
+            ) as resources
         FROM orders o
         JOIN users u ON o.user_id = u.id
         JOIN services s ON o.service_id = s.id
@@ -123,8 +135,8 @@ export const OrderDB = {
     updateStatusTx: (client: PoolClient, id: string, status: string) => 
         client.query("UPDATE orders SET status = $1 WHERE id = $2", [status, id]),
 
-    updateDate: (id: string, newDate: string) => 
-        pool.query('UPDATE orders SET event_date = $1 WHERE id = $2 RETURNING *', [newDate, id]),
+    updateDate: (id: string, newDate: string, newEndDate: string) => 
+        pool.query('UPDATE orders SET event_date = $1, end_date = $2 WHERE id = $3 RETURNING *', [newDate, newEndDate, id]),
 
     getUserIdByOrderId: (client: PoolClient, id: string) => 
         client.query('SELECT user_id FROM orders WHERE id = $1', [id]),

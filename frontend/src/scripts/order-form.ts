@@ -31,7 +31,7 @@ async function fetchData() {
     try {
         const [servicesRes, resourcesRes] = await Promise.all([
             fetch('/api/services'),
-            fetch('/api/resources')
+            fetch('/api/resources?available=true')
         ]);
 
         if (servicesRes.ok) services = await servicesRes.json();
@@ -231,7 +231,9 @@ document.addEventListener('DOMContentLoaded', () => {
         endPicker = flatpickr(endDateInput, {
             locale: "uk",
             dateFormat: "d.m.Y",
-            minDate: "today"
+            minDate: "today",
+            onChange: function() {
+            }
         });
     }
 
