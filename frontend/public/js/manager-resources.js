@@ -124,7 +124,7 @@ function renderResources(resourcesData) {
             <td class="text-left text-primary font-bold">${formatCurrency(resource.cost)}</td>
             <td class="text-center">
                 <span class="badge ${resource.is_available ? 'badge-green' : 'badge-red'}">
-                    ${resource.is_available ? 'Доступний' : 'Не доступний'}
+                    ${resource.is_available ? 'Доступний' : 'Недоступний'}
                 </span>
             </td>
             <td class="text-center">

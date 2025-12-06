@@ -31,9 +31,18 @@ exports.ServiceDB = {
         FROM services s
         ORDER BY s.id ASC
     `),
+    getAllAvailable: () => postgres_1.default.query(`
+        SELECT s.*, 
+               COALESCE((SELECT json_agg(sr.resource_id) 
+                         FROM service_resources sr 
+                         WHERE sr.service_id = s.id), '[]') as allowed_resources
+        FROM services s
+        WHERE s.is_available = TRUE
+        ORDER BY s.id ASC
+    `),
     getById: (client, id) => client.query('SELECT base_price FROM services WHERE id = $1', [id]),
-    create: (client, name, base_price, type, description, imagePath) => client.query('INSERT INTO services (name, base_price, type, description, image_path) VALUES ($1, $2, $3, $4, $5) RETURNING *', [name, base_price, type || 'other', description, imagePath]),
-    update: (client, id, name, base_price, type, description, imagePath) => client.query('UPDATE services SET name = $1, base_price = $2, type = COALESCE($3, type), description = COALESCE($4, description), image_path = COALESCE($5, image_path) WHERE id = $6 RETURNING *', [name, base_price, type, description, imagePath, id]),
+    create: (client, name, base_price, type, description, imagePath, is_available) => client.query('INSERT INTO services (name, base_price, type, description, image_path, is_available) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *', [name, base_price, type || 'other', description, imagePath, is_available]),
+    update: (client, id, name, base_price, type, description, imagePath, is_available) => client.query('UPDATE services SET name = $1, base_price = $2, type = COALESCE($3, type), description = COALESCE($4, description), image_path = COALESCE($5, image_path), is_available = $6 WHERE id = $7 RETURNING *', [name, base_price, type, description, imagePath, is_available, id]),
     delete: (id) => postgres_1.default.query('DELETE FROM services WHERE id = $1 RETURNING *', [id]),
     clearResources: (client, serviceId) => client.query('DELETE FROM service_resources WHERE service_id = $1', [serviceId]),
     addResource: (client, serviceId, resourceId) => client.query('INSERT INTO service_resources (service_id, resource_id) VALUES ($1, $2)', [serviceId, resourceId])
@@ -90,7 +99,55 @@ exports.OrderDB = {
     countByDateRange: (startDate, endDate) => postgres_1.default.query('SELECT COUNT(*) FROM orders WHERE created_at >= $1 AND created_at < $2', [startDate, endDate]),
     getTotalRevenue: () => postgres_1.default.query("SELECT SUM(total_cost) FROM orders WHERE status IN ('paid', 'completed')"),
     getRevenueByDateRange: (startDate, endDate) => postgres_1.default.query("SELECT SUM(total_cost) FROM orders WHERE status IN ('paid', 'completed') AND created_at >= $1 AND created_at < $2", [startDate, endDate]),
-    getOrdersCountByService: () => postgres_1.default.query('SELECT service_id, COUNT(*) as count FROM orders GROUP BY service_id')
+    getOrdersCountByService: () => postgres_1.default.query('SELECT service_id, COUNT(*) as count FROM orders GROUP BY service_id'),
+    // Топ-5 послуг за доходом
+    getTopServicesByRevenue: (startDate, endDate) => postgres_1.default.query(`
+        SELECT s.name, SUM(o.total_cost) as revenue, COUNT(o.id) as count
+        FROM orders o
+        JOIN services s ON o.service_id = s.id
+        WHERE o.status IN ('paid', 'completed') AND o.created_at >= $1 AND o.created_at < $2
+        GROUP BY s.name
+        ORDER BY revenue DESC
+        LIMIT 5
+    `, [startDate, endDate]),
+    // Розподіл доходу за типом (для діаграми)
+    getRevenueByType: (startDate, endDate) => postgres_1.default.query(`
+        SELECT s.type, SUM(o.total_cost) as revenue
+        FROM orders o
+        JOIN services s ON o.service_id = s.id
+        WHERE o.status IN ('paid', 'completed') AND o.created_at >= $1 AND o.created_at < $2
+        GROUP BY s.type
+    `, [startDate, endDate]),
+    // Топ-5 клієнтів
+    getTopClients: (startDate, endDate) => postgres_1.default.query(`
+        SELECT u.first_name, u.last_name, u.email, SUM(o.total_cost) as total_spent, COUNT(o.id) as orders_count
+        FROM orders o
+        JOIN users u ON o.user_id = u.id
+        WHERE o.status IN ('paid', 'completed') AND o.created_at >= $1 AND o.created_at < $2
+        GROUP BY u.id
+        ORDER BY total_spent DESC
+        LIMIT 5
+    `, [startDate, endDate]),
+    // Найпопулярніші ресурси
+    getTopResources: (startDate, endDate) => postgres_1.default.query(`
+        SELECT r.name, r.type, COUNT(orr.resource_id) as usage_count
+        FROM order_resources orr
+        JOIN orders o ON orr.order_id = o.id
+        JOIN resources r ON orr.resource_id = r.id
+        WHERE o.created_at >= $1 AND o.created_at < $2
+        GROUP BY r.id, r.name, r.type
+        ORDER BY usage_count DESC
+        LIMIT 5
+    `, [startDate, endDate]),
+    // инаміка доходу по днях (якщо знадобиться для графіка)
+    getDailyRevenue: (startDate, endDate) => postgres_1.default.query(`
+        SELECT DATE(created_at) as date, SUM(total_cost) as revenue
+        FROM orders
+        WHERE status IN ('paid', 'completed') AND created_at >= $1 AND created_at < $2
+        GROUP BY DATE(created_at)
+        ORDER BY date ASC
+    `, [startDate, endDate]),
+    getFirstOrderDate: () => postgres_1.default.query('SELECT MIN(created_at) as first_date FROM orders')
 };
 exports.ServiceViewsDB = {
     create: (serviceId, userId) => postgres_1.default.query('INSERT INTO service_views (service_id, user_id) VALUES ($1, $2)', [serviceId, userId]),

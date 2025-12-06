@@ -14,7 +14,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     function fetchServices() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const response = yield fetch('/api/services');
+                // Додаємо ?available=true
+                const response = yield fetch('/api/services?available=true');
                 if (response.ok) {
                     allServices = yield response.json();
                     filterAndRender();
@@ -36,11 +37,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         }
         // 2. Інакше повертаємо старі заглушки (fallback) залежно від типу
         switch (service.type) {
-            case 'tv': return 'https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?w=400&h=300&fit=crop';
-            case 'internet': return 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=400&h=300&fit=crop';
-            case 'outdoor': return 'https://images.unsplash.com/photo-1541698444083-023c97d3f4b6?w=400&h=300&fit=crop';
-            case 'radio': return 'https://images.unsplash.com/photo-1529154167-6a23e6e7a9c1?w=400&h=300&fit=crop';
-            default: return 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=400&h=300&fit=crop';
+            case 'tv': return 'https://images.unsplash.com/photo-1593784991188-c899ca07263b?w=400&h=300&fit=crop';
+            case 'internet': return 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=400&h=300&fit=crop';
+            case 'outdoor': return 'https://images.unsplash.com/photo-1559588512-cae70b7dd3d7?w=400&h=300&fit=crop';
+            case 'radio': return 'https://images.unsplash.com/photo-1588889727331-a88083d04017?w=400&h=300&fit=crop';
+            default: return 'https://images.unsplash.com/photo-1569513601276-6a7bb2237cf4?w=400&h=300&fit=crop';
         }
     }
     function getServiceDescription(type) {

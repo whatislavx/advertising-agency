@@ -24,7 +24,8 @@ CREATE TABLE services (
     type VARCHAR(50) NOT NULL DEFAULT 'other', -- 'tv', 'internet', 'outdoor'
     description TEXT,
     base_price DECIMAL(10, 2) NOT NULL,
-    image_path VARCHAR(255)
+    image_path VARCHAR(255),
+    is_available BOOLEAN DEFAULT TRUE
 );
 
 -- Ресурси
