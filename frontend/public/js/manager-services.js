@@ -172,7 +172,7 @@ function renderServices(servicesData) {
     if (!tbody)
         return;
     if (servicesData.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-500">Послуг не знайдено</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-gray-500">Послуг не знайдено</td></tr>`;
         return;
     }
     tbody.innerHTML = servicesData.map(service => `
@@ -184,6 +184,13 @@ function renderServices(servicesData) {
             </td>
             <td class="text-left"><span class="badge badge-blue">${translateType(service.type || 'other')}</span></td>
             <td class="text-left text-primary font-bold">${formatCurrency(service.base_price)}</td>
+
+            <td class="text-center">
+                <span class="badge ${service.is_available ? 'badge-green' : 'badge-red'}">
+                    ${service.is_available ? 'Активна' : 'Недоступна'}
+                </span>
+            </td>
+
             <td class="text-center">
                 <div class="flex justify-center gap-2">
                     <button class="btn-icon text-blue-600 hover:bg-blue-50" onclick="editService(${service.id})">
@@ -209,6 +216,7 @@ function openAddServiceModal() {
     const preview = document.getElementById('service-image-preview');
     const placeholder = document.getElementById('service-image-placeholder');
     const descriptionInput = document.getElementById('service-description');
+    const availableInput = document.getElementById('serviceAvailable');
     // Reset inputs
     if (nameInput)
         nameInput.value = '';
@@ -220,6 +228,8 @@ function openAddServiceModal() {
         typeText.textContent = 'Інтернет';
     if (descriptionInput)
         descriptionInput.value = '';
+    if (availableInput)
+        availableInput.checked = true;
     // Reset image inputs
     if (fileInput)
         fileInput.value = '';
@@ -248,9 +258,12 @@ window.editService = function (id) {
     document.getElementById('service-price').value = service.base_price.toString();
     const typeInput = document.getElementById('service-type');
     const typeText = document.querySelector('#serviceTypeContainer .selected-text');
+    const availableInput = document.getElementById('serviceAvailable');
     const descriptionInput = document.getElementById('service-description');
     if (descriptionInput)
         descriptionInput.value = service.description || '';
+    if (availableInput)
+        availableInput.checked = service.is_available;
     if (typeInput)
         typeInput.value = service.type || 'internet';
     if (typeText) {
@@ -308,7 +321,9 @@ function handleSaveService() {
         const typeInput = document.getElementById('service-type');
         const fileInput = document.getElementById('service-image-input'); // Отримуємо input файлу
         const descriptionInput = document.getElementById('service-description');
+        const availableInput = document.getElementById('serviceAvailable');
         const description = descriptionInput ? descriptionInput.value.trim() : '';
+        const is_available = availableInput ? availableInput.checked : true;
         const name = nameInput.value.trim();
         const base_price = priceInput.value; // Беремо як рядок
         const type = typeInput.value;
@@ -327,6 +342,7 @@ function handleSaveService() {
         formData.append('type', type);
         formData.append('description', description);
         formData.append('resourceIds', JSON.stringify(selectedResources));
+        formData.append('is_available', is_available.toString());
         // Якщо файл обрано, додаємо його
         if (fileInput.files && fileInput.files[0]) {
             formData.append('image', fileInput.files[0]);

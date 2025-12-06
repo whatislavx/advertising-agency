@@ -10,6 +10,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 (function () {
     const lucide = window.lucide;
+    const flatpickr = window.flatpickr;
+    let globalFirstOrderDate = null;
     function formatCurrency(amount) {
         return amount.toLocaleString('uk-UA', { style: 'currency', currency: 'UAH' }).replace('UAH', '₴').replace(',', '.');
     }
@@ -39,7 +41,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                     throw new Error('Failed to fetch dashboard stats');
                 const stats = yield response.json();
                 console.log('Dashboard stats received:', stats);
-                // 1. Update Cards
+                if (stats.firstOrderDate) {
+                    globalFirstOrderDate = new Date(stats.firstOrderDate);
+                }
                 const totalOrdersEl = document.getElementById('total-orders');
                 const totalRevenueEl = document.getElementById('total-revenue');
                 const totalViewsEl = document.getElementById('total-views');
@@ -49,11 +53,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                     totalRevenueEl.textContent = formatCurrency(stats.totalRevenue);
                 if (totalViewsEl)
                     totalViewsEl.textContent = stats.totalViews.toLocaleString();
-                // 2. Update Changes (Percentages)
                 renderChange('orders-change', stats.changes.orders);
                 renderChange('revenue-change', stats.changes.revenue);
                 renderChange('views-change', stats.changes.views);
-                // 3. Render Efficiency Table
                 const tbody = document.querySelector('tbody');
                 if (tbody) {
                     tbody.innerHTML = stats.services.map(service => `
@@ -83,5 +85,105 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             lucide.createIcons();
         }
         fetchDashboardStats();
+        // --- Report Modal Logic ---
+        const reportModal = document.getElementById('reportModal');
+        const openReportBtn = document.getElementById('btn-export-report');
+        const closeReportBtn = document.getElementById('closeReportModal');
+        const cancelReportBtn = document.getElementById('cancelReportBtn');
+        const generateReportBtn = document.getElementById('generateReportBtn');
+        const startDateInput = document.getElementById('reportStartDate');
+        const endDateInput = document.getElementById('reportEndDate');
+        let startPicker;
+        let endPicker;
+        // Ініціалізація Flatpickr з правильним форматуванням
+        if (typeof flatpickr !== 'undefined' && startDateInput && endDateInput) {
+            const config = {
+                locale: "uk",
+                dateFormat: "Y-m-d", // Формат значення (для коду/бекенду)
+                altInput: true, // Вмикаємо альтернативне поле вводу
+                altFormat: "d.m.Y", // Формат відображення (для користувача)
+                allowInput: true
+            };
+            startPicker = flatpickr(startDateInput, config);
+            endPicker = flatpickr(endDateInput, config);
+        }
+        // Відкриття модалки
+        if (openReportBtn && reportModal) {
+            openReportBtn.addEventListener('click', () => {
+                reportModal.classList.remove('hidden');
+                reportModal.classList.add('flex');
+                // За замовчуванням - поточний місяць
+                const now = new Date();
+                const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+                if (startPicker)
+                    startPicker.setDate(firstDay);
+                if (endPicker)
+                    endPicker.setDate(now);
+            });
+        }
+        const closeReport = () => {
+            if (reportModal) {
+                reportModal.classList.add('hidden');
+                reportModal.classList.remove('flex');
+            }
+        };
+        if (closeReportBtn)
+            closeReportBtn.addEventListener('click', closeReport);
+        if (cancelReportBtn)
+            cancelReportBtn.addEventListener('click', closeReport);
+        // Кнопки швидкого вибору (Presets)
+        document.querySelectorAll('[data-preset]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const preset = e.target.getAttribute('data-preset');
+                const now = new Date();
+                let start, end;
+                switch (preset) {
+                    case 'today':
+                        start = now;
+                        end = now;
+                        break;
+                    case 'month':
+                        start = new Date(now.getFullYear(), now.getMonth(), 1);
+                        end = new Date(now.getFullYear(), now.getMonth() + 1, 0); // Останній день місяця
+                        break;
+                    case 'year':
+                        start = new Date(now.getFullYear(), 0, 1);
+                        end = new Date(now.getFullYear(), 11, 31);
+                        break;
+                    case 'all':
+                        start = globalFirstOrderDate || new Date(2020, 0, 1);
+                        end = now;
+                        break;
+                }
+                if (start && end && startPicker && endPicker) {
+                    startPicker.setDate(start);
+                    endPicker.setDate(end);
+                }
+            });
+        });
+        // Генерація звіту
+        if (generateReportBtn) {
+            generateReportBtn.addEventListener('click', () => {
+                // Flatpickr зберігає значення в input.value у форматі dateFormat ("Y-m-d")
+                const start = startDateInput.value;
+                const end = endDateInput.value;
+                if (!start || !end) {
+                    alert("Будь ласка, оберіть дати");
+                    return;
+                }
+                const btn = generateReportBtn;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = 'Завантаження...';
+                btn.disabled = true;
+                // Надсилаємо формат YYYY-MM-DD, який бекенд легко зрозуміє
+                const url = `/api/reports/export/pdf?startDate=${start}&endDate=${end}`;
+                window.open(url, '_blank');
+                setTimeout(() => {
+                    closeReport();
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }, 1000);
+            });
+        }
     });
 })();

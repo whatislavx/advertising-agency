@@ -12,25 +12,32 @@ const RESOURCES_TTL = 1800; // 30 хвилин
 // Метод 1: Отримання послуг (Cache-Aside)
 export const getAllServices = async (req: Request, res: Response) => {
     try {
+        // Перевіряємо, чи це запит від менеджера (all) чи клієнта (only available)
+        // Припустимо, клієнтський скрипт буде слати ?available=true
+        const onlyAvailable = req.query.available === 'true';
+
+        // Ключі кешу мають бути різні
+        const cacheKey = onlyAvailable ? 'catalog:services_list:available' : 'catalog:services_list:all';
+
         // 1. Redis
-        const cachedServices = await redisClient.get(SERVICES_CACHE_KEY);
+        const cachedServices = await redisClient.get(cacheKey);
         if (cachedServices) {
-            console.log('Serving services from Redis cache.');
             return res.json(JSON.parse(cachedServices)); 
         }
 
         // 2. PostgreSQL
-        console.log('Services cache miss. Querying PostgreSQL.');
-        const result = await ServiceDB.getAll();
+        let result;
+        if (onlyAvailable) {
+            result = await ServiceDB.getAllAvailable();
+        } else {
+            result = await ServiceDB.getAll();
+        }
+
         const services = result.rows;
 
         // 3. Запис в Redis
         if (services.length > 0) {
-            await redisClient.setEx(
-                SERVICES_CACHE_KEY,
-                SERVICES_TTL,
-                JSON.stringify(services) 
-            ); 
+            await redisClient.setEx(cacheKey, SERVICES_TTL, JSON.stringify(services)); 
         }
 
         res.json(services);
@@ -73,8 +80,12 @@ export const getResources = async (req: Request, res: Response) => {
 
 // Метод 3: Створення послуги (Інвалідація)
 export const createService = async (req: Request, res: Response) => {
-    const { name, base_price, type, resourceIds, description } = req.body; // Додано description
+    // Отримуємо is_available (прийде як рядок 'true'/'false' через FormData)
+    const { name, base_price, type, resourceIds, description, is_available } = req.body;
     const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+
+    // Конвертуємо рядок у булеве значення
+    const isAvailableBool = is_available === 'true';
 
     let parsedResourceIds: number[] = [];
     if (resourceIds) {
@@ -85,8 +96,8 @@ export const createService = async (req: Request, res: Response) => {
 
     try {
         const newService = await runTransaction(async (client) => {
-            // Передаємо description у create
-            const result = await ServiceDB.create(client, name, base_price, type, description, imagePath);
+            // Передаємо isAvailableBool
+            const result = await ServiceDB.create(client, name, base_price, type, description, imagePath, isAvailableBool);
             const serviceId = result.rows[0].id;
 
             if (parsedResourceIds && Array.isArray(parsedResourceIds)) {
@@ -97,7 +108,9 @@ export const createService = async (req: Request, res: Response) => {
             return result.rows[0];
         });
 
-        await redisClient.del(SERVICES_CACHE_KEY);
+        // Чистимо обидва кеші
+        await redisClient.del('catalog:services_list:all');
+        await redisClient.del('catalog:services_list:available');
         res.status(201).json(newService);
     } catch (error) {
         console.error(error);
@@ -108,8 +121,10 @@ export const createService = async (req: Request, res: Response) => {
 // Метод 4: Оновлення послуги (Інвалідація)
 export const patchService = async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { name, base_price, type, resourceIds, description } = req.body; // Додано description
+    const { name, base_price, type, resourceIds, description, is_available } = req.body;
     const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+
+    const isAvailableBool = is_available === 'true';
 
     let parsedResourceIds: number[] | undefined = undefined;
     if (resourceIds) {
@@ -120,10 +135,10 @@ export const patchService = async (req: Request, res: Response) => {
 
     try {
         const updatedService = await runTransaction(async (client) => {
-            // Передаємо description у update
-            const result = await ServiceDB.update(client, id, name, base_price, type, description, imagePath);
+            // Передаємо isAvailableBool
+            const result = await ServiceDB.update(client, id, name, base_price, type, description, imagePath, isAvailableBool);
             if (result.rowCount === 0) throw new Error('Not found');
-            
+
             if (parsedResourceIds !== undefined && Array.isArray(parsedResourceIds)) {
                 await ServiceDB.clearResources(client, parseInt(id));
                 for (const resId of parsedResourceIds) {
@@ -132,8 +147,9 @@ export const patchService = async (req: Request, res: Response) => {
             }
             return result.rows[0];
         });
-        
-        await redisClient.del(SERVICES_CACHE_KEY); 
+
+        await redisClient.del('catalog:services_list:all');
+        await redisClient.del('catalog:services_list:available');
         res.json(updatedService);
     } catch (error: any) {
         console.error(error);

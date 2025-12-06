@@ -26,6 +26,12 @@ services:
     networks:
       - app-network
 
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    container_name: ag_gotenberg
+    networks:
+      - app-network
+
   backend:
     build:
       context: ./backend
@@ -45,11 +51,13 @@ services:
       PGPORT: 5432
       MONGO_URI: mongodb://mongo:27017/advertising_agency
       REDIS_URL: redis://redis:6379
+      GOTENBERG_URL: http://gotenberg:3000
       PORT: 3000
     depends_on:
       - postgres
       - mongo
       - redis
+      - gotenberg
     networks:
       - app-network
     command: npm run dev

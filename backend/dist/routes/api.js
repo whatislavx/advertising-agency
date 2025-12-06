@@ -97,4 +97,5 @@ router.get('/dashboard/stats', reportController.getDashboardStats);
 router.get('/reports', reportController.getReports); // Список (полегшений)
 router.post('/reports', reportController.createReport); // Створення (з mixed data)
 router.get('/reports/:id', reportController.getReportById); // Деталі (повний JSON)
+router.get('/reports/export/pdf', reportController.exportPdfReport);
 exports.default = router;

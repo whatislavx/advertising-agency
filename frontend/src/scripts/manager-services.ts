@@ -35,6 +35,7 @@ interface Service {
     description?: string;
     image_path?: string;
     allowed_resources?: number[];
+    is_available: boolean;
 }
 
 interface Resource {
@@ -190,7 +191,7 @@ function renderServices(servicesData: Service[]) {
     if (!tbody) return;
 
     if (servicesData.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-500">Послуг не знайдено</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-gray-500">Послуг не знайдено</td></tr>`;
         return;
     }
 
@@ -203,6 +204,13 @@ function renderServices(servicesData: Service[]) {
             </td>
             <td class="text-left"><span class="badge badge-blue">${translateType(service.type || 'other')}</span></td>
             <td class="text-left text-primary font-bold">${formatCurrency(service.base_price)}</td>
+
+            <td class="text-center">
+                <span class="badge ${service.is_available ? 'badge-green' : 'badge-red'}">
+                    ${service.is_available ? 'Активна' : 'Недоступна'}
+                </span>
+            </td>
+
             <td class="text-center">
                 <div class="flex justify-center gap-2">
                     <button class="btn-icon text-blue-600 hover:bg-blue-50" onclick="editService(${service.id})">
@@ -215,7 +223,7 @@ function renderServices(servicesData: Service[]) {
             </td>
         </tr>
     `).join('');
-    
+
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
@@ -231,6 +239,7 @@ function openAddServiceModal() {
     const preview = document.getElementById('service-image-preview') as HTMLImageElement;
     const placeholder = document.getElementById('service-image-placeholder');
     const descriptionInput = document.getElementById('service-description') as HTMLTextAreaElement;
+    const availableInput = document.getElementById('serviceAvailable') as HTMLInputElement;
     
     // Reset inputs
     if(nameInput) nameInput.value = '';
@@ -238,6 +247,7 @@ function openAddServiceModal() {
     if(typeInput) typeInput.value = 'internet';
     if(typeText) typeText.textContent = 'Інтернет';
     if (descriptionInput) descriptionInput.value = '';
+    if(availableInput) availableInput.checked = true;
 
     // Reset image inputs
     if (fileInput) fileInput.value = '';
@@ -270,9 +280,11 @@ function openAddServiceModal() {
     
     const typeInput = document.getElementById('service-type') as HTMLInputElement;
     const typeText = document.querySelector('#serviceTypeContainer .selected-text');
+    const availableInput = document.getElementById('serviceAvailable') as HTMLInputElement;
     
     const descriptionInput = document.getElementById('service-description') as HTMLTextAreaElement;
     if (descriptionInput) descriptionInput.value = service.description || '';
+    if(availableInput) availableInput.checked = service.is_available;
     
     if (typeInput) typeInput.value = service.type || 'internet';
     if (typeText) {
@@ -331,7 +343,10 @@ async function handleSaveService() {
     const typeInput = document.getElementById('service-type') as HTMLInputElement;
     const fileInput = document.getElementById('service-image-input') as HTMLInputElement; // Отримуємо input файлу
     const descriptionInput = document.getElementById('service-description') as HTMLTextAreaElement;
+    const availableInput = document.getElementById('serviceAvailable') as HTMLInputElement;
+
     const description = descriptionInput ? descriptionInput.value.trim() : '';
+    const is_available = availableInput ? availableInput.checked : true;
 
     const name = nameInput.value.trim();
     const base_price = priceInput.value; // Беремо як рядок
@@ -354,6 +369,7 @@ async function handleSaveService() {
     formData.append('type', type);
     formData.append('description', description);
     formData.append('resourceIds', JSON.stringify(selectedResources));
+    formData.append('is_available', is_available.toString());
 
     // Якщо файл обрано, додаємо його
     if (fileInput.files && fileInput.files[0]) {
