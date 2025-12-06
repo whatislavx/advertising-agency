@@ -8,7 +8,7 @@ coverage/
 
 # Production build
 build/
-dist/
+!backend/dist/
 
 # Environment variables
 .env

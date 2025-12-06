@@ -74,20 +74,49 @@ async function handleRegister(e: Event) {
     const emailInput = document.getElementById("reg-email") as HTMLInputElement;
     const passwordInput = document.getElementById("reg-password") as HTMLInputElement;
 
-    if (!nameInput || !emailInput || !passwordInput) {
-        await Modal.alert("Заповніть обов'язкові поля");
+    // Визначаємо поля та їх назви для перевірки
+    const fields = [
+        { input: nameInput, label: "Ім'я" },
+        { input: phoneInput, label: "Телефон" },
+        { input: emailInput, label: "Email" },
+        { input: passwordInput, label: "Пароль" }
+    ];
+
+    // Знаходимо незаповнені поля
+    const emptyFields = fields.filter(field => !field.input || !field.input.value.trim());
+
+    if (emptyFields.length > 0) {
+        // Формуємо текст повідомлення
+        const emptyLabels = emptyFields.map(f => f.label).join(', ');
+        
+        // Показуємо модальне вікно (чекаємо, поки користувач натисне "Зрозуміло")
+        await Modal.alert(`Будь ласка, заповніть наступні поля: ${emptyLabels}`);
+
+        // Після закриття модалки підсвічуємо поля
+        emptyFields.forEach(field => {
+            if (field.input) {
+                // Встановлюємо червоний бордер
+                field.input.style.borderColor = 'red';
+
+                // Функція для очищення стилю при вводі
+                const removeErrorStyle = () => {
+                    field.input.style.borderColor = ''; // Повертаємо стандартний стиль
+                    field.input.removeEventListener('input', removeErrorStyle);
+                };
+
+                // Додаємо слухач події
+                field.input.addEventListener('input', removeErrorStyle);
+            }
+        });
         return;
     }
 
+    // --- Далі йде стандартна логіка валідації (email regex, довжина пароля тощо) ---
+    
     const nameVal = nameInput.value.trim();
     const emailVal = emailInput.value.trim();
     const passwordVal = passwordInput.value;
-    const phoneVal = phoneInput ? phoneInput.value.trim() : '';
-
-    if (!nameVal || !emailVal || !passwordVal) {
-        await Modal.alert("Будь ласка, заповніть всі поля: ім'я, email, пароль");
-        return;
-    }
+    const phoneVal = phoneInput.value.trim();
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(emailVal)) {
@@ -100,35 +129,29 @@ async function handleRegister(e: Event) {
         return;
     }
 
-    // Валідація телефону у форматі +380 XX XXX XX XX (лише цифри, контроль довжини)
-    if (phoneInput && phoneVal) {
-        const digitsOnly = phoneVal.replace(/\D/g, '');
-        // очікуємо 12 цифр включно з кодом країни 380 + 9 цифр
-        if (!(digitsOnly.startsWith('380') && digitsOnly.length === 12)) {
-            await Modal.alert("Телефон має бути у форматі +380XXXXXXXXX");
-            return;
-        }
+    // Валідація телефону
+    const digitsOnly = phoneVal.replace(/\D/g, '');
+    if (!(digitsOnly.startsWith('380') && digitsOnly.length === 12)) {
+        await Modal.alert("Телефон має бути у форматі +380XXXXXXXXX");
+        return;
     }
 
-    // Розбиваємо ім'я на First Name та Last Name
-    const nameParts = nameInput.value.trim().split(' ');
+    const nameParts = nameVal.split(' ');
     const first_name = nameParts[0];
     const last_name = nameParts.slice(1).join(' ') || '';
-    
-    const email = emailVal;
-    const password = passwordVal;
-    const phone = phoneVal;
 
     try {
         const response = await fetch('/api/auth/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password, first_name, last_name, phone })
+            body: JSON.stringify({ email: emailVal, password: passwordVal, first_name, last_name, phone: phoneVal })
         });
 
         if (response.ok) {
             await Modal.alert('Реєстрація успішна! Тепер увійдіть.');
-            switchTab('login');
+            // Тут потрібно викликати вашу функцію switchTab('login'), 
+            // але оскільки вона не експортована, можливо доведеться клікнути по кнопці:
+            document.getElementById("tab-login")?.click(); 
         } else {
             const data = await response.json();
             await Modal.alert('Помилка реєстрації: ' + (data.message || 'Спробуйте інший email'));

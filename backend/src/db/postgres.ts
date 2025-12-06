@@ -55,16 +55,16 @@ export const ServiceDB = {
     getById: (client: PoolClient, id: number) => 
         client.query('SELECT base_price FROM services WHERE id = $1', [id]),
 
-    create: (client: PoolClient | Pool, name: string, base_price: number, type: string) => 
+    create: (client: PoolClient | Pool, name: string, base_price: number, type: string, description: string, imagePath: string | null) => 
         client.query(
-            'INSERT INTO services (name, base_price, type) VALUES ($1, $2, $3) RETURNING *',
-            [name, base_price, type || 'other']
+            'INSERT INTO services (name, base_price, type, description, image_path) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+            [name, base_price, type || 'other', description, imagePath]
         ),
 
-    update: (client: PoolClient | Pool, id: string, name: string, base_price: number, type: string) => 
+    update: (client: PoolClient | Pool, id: string, name: string, base_price: number, type: string, description: string, imagePath: string | null) => 
         client.query(
-            'UPDATE services SET name = $1, base_price = $2, type = COALESCE($3, type) WHERE id = $4 RETURNING *',
-            [name, base_price, type, id]
+            'UPDATE services SET name = $1, base_price = $2, type = COALESCE($3, type), description = COALESCE($4, description), image_path = COALESCE($5, image_path) WHERE id = $6 RETURNING *',
+            [name, base_price, type, description, imagePath, id]
         ),
 
     delete: (id: string) => pool.query('DELETE FROM services WHERE id = $1 RETURNING *', [id]),

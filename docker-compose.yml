@@ -27,15 +27,16 @@ services:
       - app-network
 
   backend:
-    build: 
+    build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: ag_backend
     ports:
-      - "3000:3000" 
+      - "3000:3000"
     volumes:
       - ./backend:/app
-      - /app/node_modules 
+      - /app/node_modules
+      - ./backend/uploads:/app/uploads
     environment:
       PGHOST: postgres
       PGUSER: user
@@ -51,7 +52,7 @@ services:
       - redis
     networks:
       - app-network
-    command: npm run dev 
+    command: npm run dev
 
   frontend:
     build:
@@ -59,7 +60,7 @@ services:
       dockerfile: Dockerfile
     container_name: ag_frontend
     ports:
-      - "80:80" 
+      - "80:80"
     volumes:
       - ./frontend/public:/usr/share/nginx/html:ro
       # - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro

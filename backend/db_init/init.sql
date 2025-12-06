@@ -22,7 +22,9 @@ CREATE TABLE services (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     type VARCHAR(50) NOT NULL DEFAULT 'other', -- 'tv', 'internet', 'outdoor'
-    base_price DECIMAL(10, 2) NOT NULL
+    description TEXT,
+    base_price DECIMAL(10, 2) NOT NULL,
+    image_path VARCHAR(255)
 );
 
 -- Ресурси
@@ -94,3 +96,11 @@ INSERT INTO resources (name, type, cost) VALUES
 INSERT INTO users (email, password_hash, role, first_name, last_name) VALUES
     ('client@example.com', '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8', 'client', 'Іван', 'Клієнтович'),
     ('manager@example.com', '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8', 'manager', 'Петро', 'Менеджеренко');
+
+INSERT INTO service_views (service_id, user_id, viewed_at) VALUES
+    (1, 1, NOW() - INTERVAL '1 month'), (1, 1, NOW() - INTERVAL '1 month'), 
+    (1, 1, NOW() - INTERVAL '1 month'), (1, 1, NOW() - INTERVAL '1 month'), 
+    (1, 1, NOW() - INTERVAL '1 month');
+
+INSERT INTO orders (service_id, user_id, status, total_cost, event_date, created_at) VALUES
+    (1, 1, 'paid', 5000, CURRENT_DATE, NOW() - INTERVAL '1 month');

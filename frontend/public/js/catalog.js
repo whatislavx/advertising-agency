@@ -28,8 +28,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     function formatCurrency(num) {
         return num.toLocaleString('uk-UA') + ' грн';
     }
-    function getServiceImage(type) {
-        switch (type) {
+    // Оновлена функція: приймає об'єкт Service, а не рядок type
+    function getServiceImage(service) {
+        // 1. Якщо є завантажене фото - повертаємо шлях до нього
+        if (service.image_path) {
+            return service.image_path;
+        }
+        // 2. Інакше повертаємо старі заглушки (fallback) залежно від типу
+        switch (service.type) {
             case 'tv': return 'https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?w=400&h=300&fit=crop';
             case 'internet': return 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=400&h=300&fit=crop';
             case 'outdoor': return 'https://images.unsplash.com/photo-1541698444083-023c97d3f4b6?w=400&h=300&fit=crop';
@@ -114,10 +120,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             services.forEach(service => {
                 const card = document.createElement('div');
                 card.className = 'card flex flex-col';
+                // ЗМІНА 1: Просто беремо опис з об'єкта. Якщо його немає — буде undefined/порожній рядок.
+                // Ми більше не викликаємо getServiceDescription(service.type)
+                const descriptionText = service.description;
                 card.innerHTML = `
                     <div class="relative h-48 overflow-hidden bg-gray-200">
                         <img
-                          src="${getServiceImage(service.type)}"
+                          src="${getServiceImage(service)}"
                           alt="${service.name}"
                           class="w-full h-full object-cover"
                         />
@@ -126,9 +135,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                         <h3 class="text-lg font-medium text-[#1a3a5c] mb-2">
                           ${service.name}
                         </h3>
-                        <p class="text-sm text-gray-600 mb-4 flex-1">
-                          ${getServiceDescription(service.type)}
-                        </p>
+                        
+                        ${descriptionText ? `
+                            <p class="text-sm text-gray-600 mb-4 flex-1 line-clamp-3">
+                                ${descriptionText}
+                            </p>
+                        ` : '<div class="flex-1 mb-4"></div>'}
+
                         <div class="flex items-end justify-between mt-auto">
                           <div>
                             <span class="text-sm text-gray-500 block mb-1">Від</span>

@@ -1,190 +1,180 @@
-import { Request, Response } from 'express';
-import { ServiceDB, ResourceDB, ServiceViewsDB, runTransaction } from '../db/postgres';
-import redisClient from '../config/redis';
-
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.trackView = exports.deleteResource = exports.deleteService = exports.createResource = exports.patchResource = exports.patchService = exports.createService = exports.getResources = exports.getAllServices = void 0;
+const postgres_1 = require("../db/postgres");
+const redis_1 = __importDefault(require("../config/redis"));
 // --- Константи для кешування ---
 const SERVICES_CACHE_KEY = 'catalog:services_list';
 const RESOURCES_CACHE_KEY = 'catalog:resources_list';
 const RESOURCES_AVAILABLE_CACHE_KEY = 'catalog:resources_list:available';
 const SERVICES_TTL = 3600; // 1 година 
 const RESOURCES_TTL = 1800; // 30 хвилин
-
 // Метод 1: Отримання послуг (Cache-Aside)
-export const getAllServices = async (req: Request, res: Response) => {
+const getAllServices = async (req, res) => {
     try {
         // 1. Redis
-        const cachedServices = await redisClient.get(SERVICES_CACHE_KEY);
+        const cachedServices = await redis_1.default.get(SERVICES_CACHE_KEY);
         if (cachedServices) {
             console.log('Serving services from Redis cache.');
-            return res.json(JSON.parse(cachedServices)); 
+            return res.json(JSON.parse(cachedServices));
         }
-
         // 2. PostgreSQL
         console.log('Services cache miss. Querying PostgreSQL.');
-        const result = await ServiceDB.getAll();
+        const result = await postgres_1.ServiceDB.getAll();
         const services = result.rows;
-
         // 3. Запис в Redis
         if (services.length > 0) {
-            await redisClient.setEx(
-                SERVICES_CACHE_KEY,
-                SERVICES_TTL,
-                JSON.stringify(services) 
-            ); 
+            await redis_1.default.setEx(SERVICES_CACHE_KEY, SERVICES_TTL, JSON.stringify(services));
         }
-
         res.json(services);
-    } catch (error) {
+    }
+    catch (error) {
         console.error('Error getting services:', error);
         res.status(500).json({ message: 'Server error' });
     }
 };
-
+exports.getAllServices = getAllServices;
 // Метод 2: Отримання ресурсів (Cache-Aside)
-export const getResources = async (req: Request, res: Response) => {
+const getResources = async (req, res) => {
     try {
         const onlyAvailable = req.query.available === 'true';
         const cacheKey = onlyAvailable ? RESOURCES_AVAILABLE_CACHE_KEY : RESOURCES_CACHE_KEY;
-
-        const cachedResources = await redisClient.get(cacheKey); 
+        const cachedResources = await redis_1.default.get(cacheKey);
         if (cachedResources) {
             console.log(`Serving resources from Redis cache (${cacheKey}).`);
             return res.json(JSON.parse(cachedResources));
         }
-
         console.log(`Resources cache miss (${cacheKey}). Querying PostgreSQL.`);
-        const result = onlyAvailable ? await ResourceDB.getAllAvailable() : await ResourceDB.getAll();
+        const result = onlyAvailable ? await postgres_1.ResourceDB.getAllAvailable() : await postgres_1.ResourceDB.getAll();
         const resources = result.rows;
-
         if (resources.length > 0) {
-            await redisClient.setEx(
-                cacheKey,
-                RESOURCES_TTL,
-                JSON.stringify(resources) 
-            ); 
+            await redis_1.default.setEx(cacheKey, RESOURCES_TTL, JSON.stringify(resources));
         }
-
         res.json(resources);
-    } catch (error) {
+    }
+    catch (error) {
         console.error('Error getting resources:', error);
         res.status(500).json({ message: 'Server error' });
     }
 };
-
+exports.getResources = getResources;
 // Метод 3: Створення послуги (Інвалідація)
-export const createService = async (req: Request, res: Response) => {
+const createService = async (req, res) => {
     const { name, base_price, type, resourceIds, description } = req.body; // Додано description
     const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
-
-    let parsedResourceIds: number[] = [];
+    let parsedResourceIds = [];
     if (resourceIds) {
         try {
             parsedResourceIds = JSON.parse(resourceIds);
-        } catch (e) { parsedResourceIds = []; }
+        }
+        catch (e) {
+            parsedResourceIds = [];
+        }
     }
-
     try {
-        const newService = await runTransaction(async (client) => {
+        const newService = await (0, postgres_1.runTransaction)(async (client) => {
             // Передаємо description у create
-            const result = await ServiceDB.create(client, name, base_price, type, description, imagePath);
+            const result = await postgres_1.ServiceDB.create(client, name, base_price, type, description, imagePath);
             const serviceId = result.rows[0].id;
-
             if (parsedResourceIds && Array.isArray(parsedResourceIds)) {
                 for (const resId of parsedResourceIds) {
-                    await ServiceDB.addResource(client, serviceId, resId);
+                    await postgres_1.ServiceDB.addResource(client, serviceId, resId);
                 }
             }
             return result.rows[0];
         });
-
-        await redisClient.del(SERVICES_CACHE_KEY);
+        await redis_1.default.del(SERVICES_CACHE_KEY);
         res.status(201).json(newService);
-    } catch (error) {
+    }
+    catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
     }
 };
-
+exports.createService = createService;
 // Метод 4: Оновлення послуги (Інвалідація)
-export const patchService = async (req: Request, res: Response) => {
+const patchService = async (req, res) => {
     const { id } = req.params;
     const { name, base_price, type, resourceIds, description } = req.body; // Додано description
     const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
-
-    let parsedResourceIds: number[] | undefined = undefined;
+    let parsedResourceIds = undefined;
     if (resourceIds) {
         try {
             parsedResourceIds = JSON.parse(resourceIds);
-        } catch (e) { }
+        }
+        catch (e) { }
     }
-
     try {
-        const updatedService = await runTransaction(async (client) => {
+        const updatedService = await (0, postgres_1.runTransaction)(async (client) => {
             // Передаємо description у update
-            const result = await ServiceDB.update(client, id, name, base_price, type, description, imagePath);
-            if (result.rowCount === 0) throw new Error('Not found');
-            
+            const result = await postgres_1.ServiceDB.update(client, id, name, base_price, type, description, imagePath);
+            if (result.rowCount === 0)
+                throw new Error('Not found');
             if (parsedResourceIds !== undefined && Array.isArray(parsedResourceIds)) {
-                await ServiceDB.clearResources(client, parseInt(id));
+                await postgres_1.ServiceDB.clearResources(client, parseInt(id));
                 for (const resId of parsedResourceIds) {
-                    await ServiceDB.addResource(client, parseInt(id), resId);
+                    await postgres_1.ServiceDB.addResource(client, parseInt(id), resId);
                 }
             }
             return result.rows[0];
         });
-        
-        await redisClient.del(SERVICES_CACHE_KEY); 
+        await redis_1.default.del(SERVICES_CACHE_KEY);
         res.json(updatedService);
-    } catch (error: any) {
+    }
+    catch (error) {
         console.error(error);
-        if (error.message === 'Not found') return res.status(404).json({ message: 'Not found' });
+        if (error.message === 'Not found')
+            return res.status(404).json({ message: 'Not found' });
         res.status(500).json({ message: 'Server error' });
     }
 };
-
-export const patchResource = async (req: Request, res: Response) => {
+exports.patchService = patchService;
+const patchResource = async (req, res) => {
     const { id } = req.params;
     const { name, type, cost, is_available } = req.body;
     try {
-        const result = await ResourceDB.update(id, name, type, cost, is_available);
-        
+        const result = await postgres_1.ResourceDB.update(id, name, type, cost, is_available);
         if (result.rowCount === 0) {
             return res.status(404).json({ message: 'Resource not found' });
         }
-        
-        await redisClient.del(RESOURCES_CACHE_KEY);
-        await redisClient.del(RESOURCES_AVAILABLE_CACHE_KEY);
-        
+        await redis_1.default.del(RESOURCES_CACHE_KEY);
+        await redis_1.default.del(RESOURCES_AVAILABLE_CACHE_KEY);
         res.json(result.rows[0]);
-    } catch (error) {
+    }
+    catch (error) {
         console.error('Error updating resource:', error);
         res.status(500).json({ message: 'Server error' });
     }
 };
-
-export const createResource = async (req: Request, res: Response) => {
+exports.patchResource = patchResource;
+const createResource = async (req, res) => {
     const { name, type, cost, is_available } = req.body;
     try {
-        const result = await ResourceDB.create(name, type, cost, is_available !== undefined ? is_available : true);
-        await redisClient.del(RESOURCES_CACHE_KEY); 
-        await redisClient.del(RESOURCES_AVAILABLE_CACHE_KEY);
+        const result = await postgres_1.ResourceDB.create(name, type, cost, is_available !== undefined ? is_available : true);
+        await redis_1.default.del(RESOURCES_CACHE_KEY);
+        await redis_1.default.del(RESOURCES_AVAILABLE_CACHE_KEY);
         res.status(201).json(result.rows[0]);
-    } catch (error) {
+    }
+    catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
     }
 };
-
-export const deleteService = async (req: Request, res: Response) => {
+exports.createResource = createResource;
+const deleteService = async (req, res) => {
     const { id } = req.params;
     try {
-        const result = await ServiceDB.delete(id);
+        const result = await postgres_1.ServiceDB.delete(id);
         if (result.rowCount === 0) {
             return res.status(404).json({ message: 'Service not found' });
         }
-        await redisClient.del(SERVICES_CACHE_KEY);
+        await redis_1.default.del(SERVICES_CACHE_KEY);
         res.json({ message: 'Service deleted' });
-    } catch (error: any) {
+    }
+    catch (error) {
         console.error('Error deleting service:', error);
         if (error.code === '23503') {
             return res.status(400).json({ message: 'Неможливо видалити послугу, оскільки вона використовується в замовленнях.' });
@@ -192,18 +182,19 @@ export const deleteService = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Internal Server Error' });
     }
 };
-
-export const deleteResource = async (req: Request, res: Response) => {
+exports.deleteService = deleteService;
+const deleteResource = async (req, res) => {
     const { id } = req.params;
     try {
-        const result = await ResourceDB.delete(id);
+        const result = await postgres_1.ResourceDB.delete(id);
         if (result.rowCount === 0) {
             return res.status(404).json({ message: 'Resource not found' });
         }
-        await redisClient.del(RESOURCES_CACHE_KEY);
-        await redisClient.del(RESOURCES_AVAILABLE_CACHE_KEY);
+        await redis_1.default.del(RESOURCES_CACHE_KEY);
+        await redis_1.default.del(RESOURCES_AVAILABLE_CACHE_KEY);
         res.json({ message: 'Resource deleted' });
-    } catch (error: any) {
+    }
+    catch (error) {
         console.error('Error deleting resource:', error);
         if (error.code === '23503') {
             return res.status(400).json({ message: 'Неможливо видалити ресурс, оскільки він використовується в замовленнях.' });
@@ -211,15 +202,17 @@ export const deleteResource = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Internal Server Error' });
     }
 };
-
+exports.deleteResource = deleteResource;
 // Метод 5: Трекінг переглядів
-export const trackView = async (req: Request, res: Response) => {
+const trackView = async (req, res) => {
     const { serviceId, userId } = req.body;
     try {
-        await ServiceViewsDB.create(serviceId, userId);
+        await postgres_1.ServiceViewsDB.create(serviceId, userId);
         res.status(200).json({ message: 'View tracked' });
-    } catch (error) {
+    }
+    catch (error) {
         console.error('Error tracking view:', error);
         res.status(500).json({ message: 'Server error' });
     }
 };
+exports.trackView = trackView;
