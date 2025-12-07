@@ -48,10 +48,8 @@ import { Modal } from './utils/Modal.js';
                 });
                 const data = yield response.json();
                 if (response.ok) {
-
                     localStorage.setItem('user', JSON.stringify(data.user));
-
-                    if (data.user.role === 'manager' || data.user.role === 'director') {
+                    if (data.user.role === 'manager') {
                         window.location.href = "manager-dashboard.html";
                     }
                     else {
@@ -76,38 +74,28 @@ import { Modal } from './utils/Modal.js';
             const phoneInput = document.getElementById("reg-phone");
             const emailInput = document.getElementById("reg-email");
             const passwordInput = document.getElementById("reg-password");
-
             const fields = [
                 { input: nameInput, label: "Ім'я" },
                 { input: phoneInput, label: "Телефон" },
                 { input: emailInput, label: "Email" },
                 { input: passwordInput, label: "Пароль" }
             ];
-
             const emptyFields = fields.filter(field => !field.input || !field.input.value.trim());
             if (emptyFields.length > 0) {
-
                 const emptyLabels = emptyFields.map(f => f.label).join(', ');
-
                 yield Modal.alert(`Будь ласка, заповніть наступні поля: ${emptyLabels}`);
-
                 emptyFields.forEach(field => {
                     if (field.input) {
-
                         field.input.style.borderColor = 'red';
-
                         const removeErrorStyle = () => {
-                            field.input.style.borderColor = ''; 
-
+                            field.input.style.borderColor = '';
                             field.input.removeEventListener('input', removeErrorStyle);
                         };
-
                         field.input.addEventListener('input', removeErrorStyle);
                     }
                 });
                 return;
             }
-
             const nameVal = nameInput.value.trim();
             const emailVal = emailInput.value.trim();
             const passwordVal = passwordInput.value;
@@ -121,7 +109,6 @@ import { Modal } from './utils/Modal.js';
                 yield Modal.alert("Пароль має містити щонайменше 6 символів");
                 return;
             }
-
             const digitsOnly = phoneVal.replace(/\D/g, '');
             if (!(digitsOnly.startsWith('380') && digitsOnly.length === 12)) {
                 yield Modal.alert("Телефон має бути у форматі +380XXXXXXXXX");
@@ -138,7 +125,6 @@ import { Modal } from './utils/Modal.js';
                 });
                 if (response.ok) {
                     yield Modal.alert('Реєстрація успішна! Тепер увійдіть.');
-
                     (_a = document.getElementById("tab-login")) === null || _a === void 0 ? void 0 : _a.click();
                 }
                 else {
@@ -160,23 +146,18 @@ import { Modal } from './utils/Modal.js';
         loginTabBtn === null || loginTabBtn === void 0 ? void 0 : loginTabBtn.addEventListener('click', () => switchTab('login'));
         registerTabBtn === null || registerTabBtn === void 0 ? void 0 : registerTabBtn.addEventListener('click', () => switchTab('register'));
         loginForm === null || loginForm === void 0 ? void 0 : loginForm.addEventListener('submit', handleLogin);
-
         registerForm === null || registerForm === void 0 ? void 0 : registerForm.removeAttribute('onsubmit');
         registerForm === null || registerForm === void 0 ? void 0 : registerForm.addEventListener('submit', handleRegister);
-
         const regPhone = document.getElementById('reg-phone');
         function formatUaPhone(value) {
             const digits = value.replace(/\D/g, '');
             let normalized = digits;
             if (!normalized.startsWith('380')) {
-
                 if (normalized.length > 0)
                     normalized = '380' + normalized;
             }
             normalized = normalized.slice(0, 12);
-
-            const cc = normalized.slice(0, 3); 
-
+            const cc = normalized.slice(0, 3);
             const p1 = normalized.slice(3, 5);
             const p2 = normalized.slice(5, 8);
             const p3 = normalized.slice(8, 10);
@@ -207,11 +188,9 @@ import { Modal } from './utils/Modal.js';
             });
             regPhone.setAttribute('placeholder', '+380 XX XXX XX XX');
         }
-
         setTimeout(() => {
             const inputs = document.querySelectorAll('input');
             inputs.forEach(input => input.value = '');
         }, 100);
     });
 })();
-

@@ -17,6 +17,8 @@
       href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
     />
     <link rel="stylesheet" href="../css/main.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
   </head>
   <body class="order-form-page">
     <header class="header">
@@ -153,9 +155,17 @@
 
         <div class="divider"></div>
 
+        <div class="summary-row" id="discountRow" style="display: none;">
+          <span>Знижка:</span>
+          <span id="discountValue" class="discount-highlight">0%</span>
+        </div>
+
         <div class="total-row">
           <span class="total-label">Загальна вартість:</span>
-          <span class="total-val" id="totalPrice">...</span>
+          <div class="total-price-container">
+             <span id="oldPrice" class="old-price" style="display: none;">...</span>
+             <span class="total-val" id="totalPrice">...</span>
+          </div>
         </div>
         <button id="submitOrderBtn" class="btn-pay">
           <svg

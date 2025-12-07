@@ -6,7 +6,7 @@ export const UserDB = {
 
     getById: (id: string) => pool.query(`
         SELECT u.id, u.email, u.role, u.first_name, u.last_name, u.phone, u.personal_discount, u.registration_date,
-        (SELECT COUNT(*) FROM orders o WHERE o.user_id = u.id) as order_count
+        (SELECT COUNT(*) FROM orders o WHERE o.user_id = u.id AND o.status IN ('paid', 'completed')) as order_count
         FROM users u 
         WHERE u.id = $1
     `, [id]),
@@ -28,8 +28,8 @@ export const UserDB = {
     updatePassword: (id: string, passwordHash: string) => 
         pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [passwordHash, id]),
 
-    updateDiscount: (id: string, discount: number) => 
-        pool.query(
+    updateDiscount: (client: PoolClient | Pool, id: string | number, discount: number) => 
+        client.query(
             'UPDATE users SET personal_discount = $1 WHERE id = $2 RETURNING personal_discount',
             [discount, id]
         ),
@@ -38,7 +38,39 @@ export const UserDB = {
         client.query("UPDATE users SET order_count = order_count + 1 WHERE id = $1", [id]),
 
     getPasswordHashById: (id: string) => 
-        pool.query('SELECT password_hash FROM users WHERE id = $1', [id])
+        pool.query('SELECT password_hash FROM users WHERE id = $1', [id]),
+
+    checkAndApplyDiscount: async (client: PoolClient | Pool, userId: string | number) => {
+        const res = await client.query(`
+            SELECT personal_discount, 
+            (SELECT COUNT(*) FROM orders 
+             WHERE user_id = $1 
+             AND status IN ('paid', 'completed')
+             AND date_trunc('month', created_at) = date_trunc('month', CURRENT_DATE)
+            ) as monthly_order_count
+            FROM users WHERE id = $1
+        `, [userId]);
+        
+        if (res.rows.length === 0) return;
+        
+        const { personal_discount, monthly_order_count } = res.rows[0];
+        const currentDiscount = Number(personal_discount);
+        const count = Number(monthly_order_count);
+        
+        let newDiscount = 0;
+        
+        if (count > 20) {
+            newDiscount = 20;
+        } else if (count > 10) {
+            newDiscount = 10;
+        } else if (count > 3) {
+            newDiscount = 5;
+        }
+        
+        if (newDiscount !== currentDiscount) {
+            await client.query('UPDATE users SET personal_discount = $1 WHERE id = $2', [newDiscount, userId]);
+        }
+    }
 };
 
 export const ServiceDB = {

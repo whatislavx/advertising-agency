@@ -28,6 +28,9 @@ export const confirmPayment = async (req: Request, res: Response) => {
             if (orderRes.rows.length > 0) {
                 const userId = orderRes.rows[0].user_id;
                 await UserDB.incrementOrderCount(client, userId);
+                
+                // Check for automatic discount upgrade
+                await UserDB.checkAndApplyDiscount(client, userId);
             }
         });
 

@@ -1,4 +1,4 @@
-CREATE TYPE user_role AS ENUM ('client', 'manager', 'director');
+CREATE TYPE user_role AS ENUM ('client', 'manager');
 CREATE TYPE order_status AS ENUM ('new', 'paid', 'completed', 'cancelled');
 CREATE TYPE payment_status AS ENUM ('pending', 'success', 'failed');
 

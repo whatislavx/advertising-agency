@@ -36,7 +36,6 @@ import { Modal } from './utils/Modal.js';
                     const nameInput = document.getElementById("inputName");
                     const emailInput = document.getElementById("inputEmail");
                     const phoneInput = document.getElementById("inputPhone");
-
                     const displayHeaderName = document.querySelector('.card h3');
                     const displayHeaderEmail = document.querySelector('.card p');
                     const displayRegDate = document.getElementById('profile-registration-date');
@@ -121,8 +120,7 @@ import { Modal } from './utils/Modal.js';
                 });
                 if (response.ok) {
                     yield Modal.alert("Профіль успішно оновлено!", "Успіх", "success");
-                    yield loadProfileData(); 
-    
+                    yield loadProfileData();
                     const actionButtons = document.getElementById("actionButtons");
                     const editButtons = document.getElementById("editButtons");
                     if (actionButtons && editButtons) {
@@ -158,7 +156,6 @@ import { Modal } from './utils/Modal.js';
         editBtn === null || editBtn === void 0 ? void 0 : editBtn.addEventListener("click", enableEditing);
         saveBtn === null || saveBtn === void 0 ? void 0 : saveBtn.addEventListener("click", saveProfile);
         cancelBtn === null || cancelBtn === void 0 ? void 0 : cancelBtn.addEventListener("click", cancelEditing);
-        
         const changePasswordBtn = document.getElementById('changePasswordBtn');
         const passwordModal = document.getElementById('passwordModal');
         const cancelPasswordBtn = document.getElementById('cancelPasswordBtn');
@@ -185,7 +182,6 @@ import { Modal } from './utils/Modal.js';
             if (e.target === passwordModal)
                 toggleModal(false);
         });
-        
         const phoneInput = document.getElementById('inputPhone');
         function formatUaPhone(value) {
             const digits = value.replace(/\D/g, '');

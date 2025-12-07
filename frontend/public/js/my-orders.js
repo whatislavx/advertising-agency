@@ -11,10 +11,9 @@ import { Modal } from './utils/Modal.js';
 (function () {
     const lucide = window.lucide;
     const flatpickr = window.flatpickr;
-    
     let currentOrderId = null;
     let currentOrderStatus = null;
-    let currentOrderDuration = null; 
+    let currentOrderDuration = null;
     let rescheduleStartPicker = null;
     let rescheduleEndPicker = null;
     function formatCurrency(num) {
@@ -24,18 +23,15 @@ import { Modal } from './utils/Modal.js';
         const date = new Date(dateStr);
         return date.toLocaleDateString('uk-UA');
     }
-    
     function calculateDuration(startStr, endStr) {
         const start = new Date(startStr);
         const end = new Date(endStr || startStr);
-        
         const diffTime = Math.abs(end.getTime() - start.getTime());
         const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         return days + 1;
     }
     function getDisplayStatus(order) {
         if (order.status === 'paid' && order.end_date) {
-            
             const parts = order.end_date.split('-');
             const localEndDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), 23, 59, 59, 999);
             const now = new Date();
@@ -177,7 +173,6 @@ import { Modal } from './utils/Modal.js';
             }
         });
     }
-    
     window.toggleDetails = (id) => {
         const detailsRow = document.getElementById(`details-${id}`);
         const icon = document.getElementById(`icon-${id}`);

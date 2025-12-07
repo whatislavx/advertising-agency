@@ -85,7 +85,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             lucide.createIcons();
         }
         fetchDashboardStats();
-
         const reportModal = document.getElementById('reportModal');
         const openReportBtn = document.getElementById('btn-export-report');
         const closeReportBtn = document.getElementById('closeReportModal');
@@ -95,7 +94,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         const endDateInput = document.getElementById('reportEndDate');
         let startPicker;
         let endPicker;
-
         if (typeof flatpickr !== 'undefined' && startDateInput && endDateInput) {
             const removeActivePresets = () => {
                 document.querySelectorAll('[data-preset]').forEach(b => b.classList.remove('active'));
@@ -121,12 +119,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                     }
                 } }));
         }
-
         if (openReportBtn && reportModal) {
             openReportBtn.addEventListener('click', () => {
                 reportModal.classList.remove('hidden');
                 reportModal.classList.add('flex');
-
                 const now = new Date();
                 now.setHours(0, 0, 0, 0);
                 const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -134,7 +130,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                     startPicker.setDate(firstDay);
                 if (endPicker)
                     endPicker.setDate(now);
-
                 document.querySelectorAll('[data-preset]').forEach(b => b.classList.remove('active'));
             });
         }
@@ -148,18 +143,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             closeReportBtn.addEventListener('click', closeReport);
         if (cancelReportBtn)
             cancelReportBtn.addEventListener('click', closeReport);
-
         const presetBtns = document.querySelectorAll('[data-preset]');
         presetBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 console.log('Preset clicked:', btn.getAttribute('data-preset'));
-
                 presetBtns.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 const preset = btn.getAttribute('data-preset');
                 const now = new Date();
-                now.setHours(0, 0, 0, 0); 
-
+                now.setHours(0, 0, 0, 0);
                 let start, end;
                 switch (preset) {
                     case 'today':
@@ -168,18 +160,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                         break;
                     case 'month':
                         start = new Date(now.getFullYear(), now.getMonth(), 1);
-                        end = new Date(now.getFullYear(), now.getMonth() + 1, 0); 
-
+                        end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
                         if (end > now)
-                            end = now; 
-
+                            end = now;
                         break;
                     case 'year':
                         start = new Date(now.getFullYear(), 0, 1);
                         end = new Date(now.getFullYear(), 11, 31);
                         if (end > now)
-                            end = now; 
-
+                            end = now;
                         break;
                     case 'all':
                         start = globalFirstOrderDate || new Date(2020, 0, 1);
@@ -192,10 +181,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 }
             });
         });
-
         if (generateReportBtn) {
             generateReportBtn.addEventListener('click', () => {
-
                 const start = startDateInput.value;
                 const end = endDateInput.value;
                 if (!start || !end) {
@@ -210,7 +197,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 const originalText = btn.innerHTML;
                 btn.innerHTML = 'Завантаження...';
                 btn.disabled = true;
-
                 const url = `/api/reports/export/pdf?startDate=${start}&endDate=${end}`;
                 window.open(url, '_blank');
                 setTimeout(() => {
@@ -222,4 +208,3 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         }
     });
 })();
-

@@ -1,0 +1,112 @@
+.price-summary-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 25px;
+    padding-top: 10px;
+
+    .total-label {
+        font-size: 16px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.9);
+        margin-top: 5px;
+    }
+
+    .price-display {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 4px;
+    }
+
+    .price-row-top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .original-price {
+        font-family: 'Inter', sans-serif;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.6);
+        text-decoration: line-through;
+    }
+
+    .discount-badge {
+        background: rgba(34, 197, 94, 0.2);
+        color: #4ade80;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 12px;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .final-price {
+        font-family: 'Inter', sans-serif;
+        font-size: 28px;
+        font-weight: 700;
+        color: #ffffff;
+        line-height: 1.2;
+        
+        span {
+            font-size: 14px;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.6);
+            margin-left: 4px;
+        }
+    }
+}
+
+.modal-price-summary {
+    background-color: #f8fafc;
+    border-radius: 12px;
+    padding: 16px;
+    margin: 16px 0;
+    border: 1px solid #e2e8f0;
+
+    .row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 14px;
+        color: #64748b;
+
+        &.total {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e2e8f0;
+            margin-bottom: 0;
+            align-items: center;
+            
+            .label {
+                font-weight: 600;
+                color: #0f172a;
+                font-size: 16px;
+            }
+            
+            .value {
+                font-size: 20px;
+                font-weight: 700;
+                color: #0f172a;
+            }
+        }
+    }
+
+    .discount-tag {
+        color: #16a34a;
+        background: #dcfce7;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+        margin-left: 6px;
+    }
+    
+    .strikethrough {
+        text-decoration: line-through;
+        color: #94a3b8;
+        margin-right: 8px;
+        font-size: 14px;
+    }
+}
