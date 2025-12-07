@@ -85,7 +85,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             lucide.createIcons();
         }
         fetchDashboardStats();
-        // --- Report Modal Logic ---
+
         const reportModal = document.getElementById('reportModal');
         const openReportBtn = document.getElementById('btn-export-report');
         const closeReportBtn = document.getElementById('closeReportModal');
@@ -95,7 +95,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         const endDateInput = document.getElementById('reportEndDate');
         let startPicker;
         let endPicker;
-        // Ініціалізація Flatpickr з правильним форматуванням
+
         if (typeof flatpickr !== 'undefined' && startDateInput && endDateInput) {
             const removeActivePresets = () => {
                 document.querySelectorAll('[data-preset]').forEach(b => b.classList.remove('active'));
@@ -121,12 +121,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                     }
                 } }));
         }
-        // Відкриття модалки
+
         if (openReportBtn && reportModal) {
             openReportBtn.addEventListener('click', () => {
                 reportModal.classList.remove('hidden');
                 reportModal.classList.add('flex');
-                // За замовчуванням - поточний місяць
+
                 const now = new Date();
                 now.setHours(0, 0, 0, 0);
                 const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -134,7 +134,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                     startPicker.setDate(firstDay);
                 if (endPicker)
                     endPicker.setDate(now);
-                // Скидаємо активний клас з усіх кнопок
+
                 document.querySelectorAll('[data-preset]').forEach(b => b.classList.remove('active'));
             });
         }
@@ -148,17 +148,18 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             closeReportBtn.addEventListener('click', closeReport);
         if (cancelReportBtn)
             cancelReportBtn.addEventListener('click', closeReport);
-        // Кнопки швидкого вибору (Presets)
+
         const presetBtns = document.querySelectorAll('[data-preset]');
         presetBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 console.log('Preset clicked:', btn.getAttribute('data-preset'));
-                // Visual feedback
+
                 presetBtns.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 const preset = btn.getAttribute('data-preset');
                 const now = new Date();
-                now.setHours(0, 0, 0, 0); // Скидаємо час, щоб уникнути проблем з maxDate="today"
+                now.setHours(0, 0, 0, 0); 
+
                 let start, end;
                 switch (preset) {
                     case 'today':
@@ -167,15 +168,18 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                         break;
                     case 'month':
                         start = new Date(now.getFullYear(), now.getMonth(), 1);
-                        end = new Date(now.getFullYear(), now.getMonth() + 1, 0); // Останній день місяця
+                        end = new Date(now.getFullYear(), now.getMonth() + 1, 0); 
+
                         if (end > now)
-                            end = now; // Обмежуємо поточною датою
+                            end = now; 
+
                         break;
                     case 'year':
                         start = new Date(now.getFullYear(), 0, 1);
                         end = new Date(now.getFullYear(), 11, 31);
                         if (end > now)
-                            end = now; // Обмежуємо поточною датою
+                            end = now; 
+
                         break;
                     case 'all':
                         start = globalFirstOrderDate || new Date(2020, 0, 1);
@@ -188,10 +192,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 }
             });
         });
-        // Генерація звіту
+
         if (generateReportBtn) {
             generateReportBtn.addEventListener('click', () => {
-                // Flatpickr зберігає значення в input.value у форматі dateFormat ("Y-m-d")
+
                 const start = startDateInput.value;
                 const end = endDateInput.value;
                 if (!start || !end) {
@@ -206,7 +210,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 const originalText = btn.innerHTML;
                 btn.innerHTML = 'Завантаження...';
                 btn.disabled = true;
-                // Надсилаємо формат YYYY-MM-DD, який бекенд легко зрозуміє
+
                 const url = `/api/reports/export/pdf?startDate=${start}&endDate=${end}`;
                 window.open(url, '_blank');
                 setTimeout(() => {
@@ -218,3 +222,4 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         }
     });
 })();
+

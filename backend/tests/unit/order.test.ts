@@ -11,7 +11,7 @@ describe('Unit Test: OrderController Logic', () => {
 
     beforeEach(() => {
         jest.spyOn(console, 'error').mockImplementation(() => {}); 
-        
+
         mockRequest = {
             body: {
                 user_id: 1,
@@ -36,26 +36,21 @@ describe('Unit Test: OrderController Logic', () => {
     });
 
     it('should calculate total cost correctly and create order', async () => {
-        // Базова ціна послуги = 10000 грн
+
         (ServiceDB.getById as jest.Mock).mockResolvedValue({ 
             rows: [{ base_price: 10000 }] 
         });
 
-        // Ціни ресурсів: 2000 + 3000 = 5000 грн
         (ResourceDB.getByIds as jest.Mock).mockResolvedValue({ 
             rows: [{ cost: 2000 }, { cost: 3000 }] 
         });
 
-        // Створення замовлення
         (OrderDB.create as jest.Mock).mockResolvedValue({ 
             rows: [{ id: 101 }] 
         });
 
-        // Виконання методу
         await createOrder(mockRequest as Request, mockResponse as Response);
 
-        // Перевірка 
-        // Розрахунок: (10000 послуга + 5000 ресурси) * 5 днів = 75000
         const expectedTotal = 75000;
 
         expect(OrderDB.create).toHaveBeenCalledWith(
@@ -85,3 +80,4 @@ describe('Unit Test: OrderController Logic', () => {
         expect(mockResponse.status).toHaveBeenCalledWith(500); 
     });
 });
+

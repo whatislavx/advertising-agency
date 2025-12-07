@@ -8,26 +8,26 @@ const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const postgres_1 = require("../db/postgres");
 const redis_1 = __importDefault(require("../config/redis"));
-// --- Константи для кешування ---
+
 const SERVICES_CACHE_KEY = 'catalog:services_list';
 const RESOURCES_CACHE_KEY = 'catalog:resources_list';
 const RESOURCES_AVAILABLE_CACHE_KEY = 'catalog:resources_list:available';
-const SERVICES_TTL = 3600; // 1 година 
-const RESOURCES_TTL = 1800; // 30 хвилин
-// Метод 1: Отримання послуг (Cache-Aside)
+const SERVICES_TTL = 3600; 
+
+const RESOURCES_TTL = 1800; 
+
 const getAllServices = async (req, res) => {
     try {
-        // Перевіряємо, чи це запит від менеджера (all) чи клієнта (only available)
-        // Припустимо, клієнтський скрипт буде слати ?available=true
+
         const onlyAvailable = req.query.available === 'true';
-        // Ключі кешу мають бути різні
+
         const cacheKey = onlyAvailable ? 'catalog:services_list:available' : 'catalog:services_list:all';
-        // 1. Redis
+
         const cachedServices = await redis_1.default.get(cacheKey);
         if (cachedServices) {
             return res.json(JSON.parse(cachedServices));
         }
-        // 2. PostgreSQL
+
         let result;
         if (onlyAvailable) {
             result = await postgres_1.ServiceDB.getAllAvailable();
@@ -36,7 +36,7 @@ const getAllServices = async (req, res) => {
             result = await postgres_1.ServiceDB.getAll();
         }
         const services = result.rows;
-        // 3. Запис в Redis
+
         if (services.length > 0) {
             await redis_1.default.setEx(cacheKey, SERVICES_TTL, JSON.stringify(services));
         }
@@ -48,7 +48,7 @@ const getAllServices = async (req, res) => {
     }
 };
 exports.getAllServices = getAllServices;
-// Метод 2: Отримання ресурсів (Cache-Aside)
+
 const getResources = async (req, res) => {
     try {
         const onlyAvailable = req.query.available === 'true';
@@ -72,12 +72,12 @@ const getResources = async (req, res) => {
     }
 };
 exports.getResources = getResources;
-// Метод 3: Створення послуги (Інвалідація)
+
 const createService = async (req, res) => {
-    // Отримуємо is_available (прийде як рядок 'true'/'false' через FormData)
+
     const { name, base_price, type, resourceIds, description, is_available } = req.body;
     const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
-    // Конвертуємо рядок у булеве значення
+
     const isAvailableBool = is_available === 'true';
     let parsedResourceIds = [];
     if (resourceIds) {
@@ -90,7 +90,7 @@ const createService = async (req, res) => {
     }
     try {
         const newService = await (0, postgres_1.runTransaction)(async (client) => {
-            // Передаємо isAvailableBool
+
             const result = await postgres_1.ServiceDB.create(client, name, base_price, type, description, imagePath, isAvailableBool);
             const serviceId = result.rows[0].id;
             if (parsedResourceIds && Array.isArray(parsedResourceIds)) {
@@ -100,7 +100,7 @@ const createService = async (req, res) => {
             }
             return result.rows[0];
         });
-        // Чистимо обидва кеші
+
         await redis_1.default.del('catalog:services_list:all');
         await redis_1.default.del('catalog:services_list:available');
         res.status(201).json(newService);
@@ -111,7 +111,7 @@ const createService = async (req, res) => {
     }
 };
 exports.createService = createService;
-// Метод 4: Оновлення послуги (Інвалідація)
+
 const patchService = async (req, res) => {
     const { id } = req.params;
     const { name, base_price, type, resourceIds, description, is_available } = req.body;
@@ -126,7 +126,7 @@ const patchService = async (req, res) => {
     }
     try {
         const updatedService = await (0, postgres_1.runTransaction)(async (client) => {
-            // Передаємо isAvailableBool
+
             const result = await postgres_1.ServiceDB.update(client, id, name, base_price, type, description, imagePath, isAvailableBool);
             if (result.rowCount === 0)
                 throw new Error('Not found');
@@ -189,11 +189,10 @@ const deleteService = async (req, res) => {
         if (result.rowCount === 0) {
             return res.status(404).json({ message: 'Послугу не знайдено' });
         }
-        // Видалення файлу зображення
+
         const deletedService = result.rows[0];
         if (deletedService.image_path) {
-            // image_path зберігається як "/uploads/filename.ext"
-            // Видаляємо перший слеш, щоб шлях був відносним до кореня проекту
+
             const relativePath = deletedService.image_path.startsWith('/')
                 ? deletedService.image_path.substring(1)
                 : deletedService.image_path;
@@ -240,7 +239,7 @@ const deleteResource = async (req, res) => {
     }
 };
 exports.deleteResource = deleteResource;
-// Метод 5: Трекінг переглядів
+
 const trackView = async (req, res) => {
     const { serviceId, userId } = req.body;
     try {
@@ -253,3 +252,4 @@ const trackView = async (req, res) => {
     }
 };
 exports.trackView = trackView;
+

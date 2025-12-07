@@ -16,7 +16,7 @@ import { Modal } from './utils/Modal.js';
     let selectedItems = [];
     let servicePricePerDay = 0;
     let durationInDays = 0;
-    // Функція завантаження даних
+    
     function fetchData() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -124,7 +124,7 @@ import { Modal } from './utils/Modal.js';
         if (!resourceContainer || !currentService)
             return;
         resourceContainer.innerHTML = '';
-        // Filter resources based on allowed_resources IDs
+        
         const allowedIds = currentService.allowed_resources || [];
         const availableResources = resources.filter(res => allowedIds.includes(res.id));
         if (availableResources.length === 0) {
@@ -159,7 +159,7 @@ import { Modal } from './utils/Modal.js';
                 if (priceEl)
                     priceEl.innerText = formatCurrency(servicePricePerDay) + ' / добу';
                 updateSummary();
-                renderResourcesForService(); // NEW: Filter and render
+                renderResourcesForService();
             }
         });
     }

@@ -9,7 +9,6 @@ declare global {
     }
 }
 
-// Допоміжна функція для відкриття/закриття модалок
 function toggleModal(modalId: string) {
     const modal = document.getElementById(modalId);
     if (!modal) return;
@@ -50,7 +49,6 @@ function translateType(type: string): string {
     return typeTranslations[type] || type;
 }
 
-// --- Custom Select Logic ---
 function setupCustomSelect(containerId: string) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -106,7 +104,6 @@ function setupCustomSelect(containerId: string) {
     });
 }
 
-// --- API запити ---
 async function fetchResources() {
     try {
         const response = await fetch('/api/resources');
@@ -118,7 +115,6 @@ async function fetchResources() {
     }
 }
 
-// --- Рендеринг ---
 function renderResources(resourcesData: Resource[]) {
     const tbody = document.getElementById('resources-table-body');
     if (!tbody) return;
@@ -155,7 +151,6 @@ function renderResources(resourcesData: Resource[]) {
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
-// --- Логіка Ресурсів (Resource) ---
 
 function openAddResourceModal() {
     editingResourceId = null;

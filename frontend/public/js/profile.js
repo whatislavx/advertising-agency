@@ -10,7 +10,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import { Modal } from './utils/Modal.js';
 (function () {
     const lucide = window.lucide;
-    // Отримання поточного юзера з localStorage
     function getCurrentUser() {
         const userStr = localStorage.getItem('user');
         if (!userStr)
@@ -22,7 +21,6 @@ import { Modal } from './utils/Modal.js';
             return '—';
         return new Date(dateStr).toLocaleDateString('uk-UA');
     }
-    // Завантаження актуальних даних з сервера
     function loadProfileData() {
         return __awaiter(this, void 0, void 0, function* () {
             const user = getCurrentUser();
@@ -35,11 +33,10 @@ import { Modal } from './utils/Modal.js';
                 if (response.ok) {
                     const userData = yield response.json();
                     console.log('User Data from API:', userData);
-                    // Оновлюємо поля вводу
                     const nameInput = document.getElementById("inputName");
                     const emailInput = document.getElementById("inputEmail");
                     const phoneInput = document.getElementById("inputPhone");
-                    // Оновлюємо відображення імені в картці
+
                     const displayHeaderName = document.querySelector('.card h3');
                     const displayHeaderEmail = document.querySelector('.card p');
                     const displayRegDate = document.getElementById('profile-registration-date');
@@ -58,7 +55,6 @@ import { Modal } from './utils/Modal.js';
                         displayRegDate.textContent = formatDate(userData.registration_date);
                     if (displayOrderCount)
                         displayOrderCount.textContent = (userData.order_count || 0).toString();
-                    // Оновлюємо localStorage свіжими даними
                     localStorage.setItem('user', JSON.stringify(userData));
                 }
             }
@@ -77,7 +73,6 @@ import { Modal } from './utils/Modal.js';
         }
         const inputs = document.querySelectorAll("input");
         inputs.forEach((input) => {
-            // Email зазвичай не дають змінювати просто так, але якщо треба - розблокуйте
             if (input.id !== "inputEmail") {
                 input.disabled = false;
             }
@@ -95,7 +90,6 @@ import { Modal } from './utils/Modal.js';
         inputs.forEach((input) => {
             input.disabled = true;
         });
-        // Повертаємо старі значення
         loadProfileData();
     }
     function saveProfile() {
@@ -127,8 +121,8 @@ import { Modal } from './utils/Modal.js';
                 });
                 if (response.ok) {
                     yield Modal.alert("Профіль успішно оновлено!", "Успіх", "success");
-                    yield loadProfileData(); // Перезавантажити дані і оновити UI
-                    // Приховуємо кнопки редагування
+                    yield loadProfileData(); 
+    
                     const actionButtons = document.getElementById("actionButtons");
                     const editButtons = document.getElementById("editButtons");
                     if (actionButtons && editButtons) {
@@ -164,7 +158,7 @@ import { Modal } from './utils/Modal.js';
         editBtn === null || editBtn === void 0 ? void 0 : editBtn.addEventListener("click", enableEditing);
         saveBtn === null || saveBtn === void 0 ? void 0 : saveBtn.addEventListener("click", saveProfile);
         cancelBtn === null || cancelBtn === void 0 ? void 0 : cancelBtn.addEventListener("click", cancelEditing);
-        // Password Change Logic
+        
         const changePasswordBtn = document.getElementById('changePasswordBtn');
         const passwordModal = document.getElementById('passwordModal');
         const cancelPasswordBtn = document.getElementById('cancelPasswordBtn');
@@ -191,7 +185,7 @@ import { Modal } from './utils/Modal.js';
             if (e.target === passwordModal)
                 toggleModal(false);
         });
-        // Маска телефону для поля профілю
+        
         const phoneInput = document.getElementById('inputPhone');
         function formatUaPhone(value) {
             const digits = value.replace(/\D/g, '');

@@ -1,9 +1,7 @@
--- Створення типів для ролей та статусів
 CREATE TYPE user_role AS ENUM ('client', 'manager', 'director');
 CREATE TYPE order_status AS ENUM ('new', 'paid', 'completed', 'cancelled');
 CREATE TYPE payment_status AS ENUM ('pending', 'success', 'failed');
 
--- Таблиця користувачів
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
@@ -13,38 +11,37 @@ CREATE TABLE users (
     last_name VARCHAR(100),
     phone VARCHAR(20),
     personal_discount INTEGER DEFAULT 0,
-    order_count INTEGER DEFAULT 0, -- Потрібно для логіки нарахування бонусів/статистики
+    order_count INTEGER DEFAULT 0, 
+
     registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Каталог послуг
 CREATE TABLE services (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    type VARCHAR(50) NOT NULL DEFAULT 'other', -- 'tv', 'internet', 'outdoor'
+    type VARCHAR(50) NOT NULL DEFAULT 'other', 
+
     description TEXT,
     base_price DECIMAL(10, 2) NOT NULL,
     image_path VARCHAR(255),
     is_available BOOLEAN DEFAULT TRUE
 );
 
--- Ресурси
 CREATE TABLE resources (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    type VARCHAR(50) NOT NULL, -- 'equipment', 'personnel'
+    type VARCHAR(50) NOT NULL, 
+
     cost DECIMAL(10, 2) NOT NULL,
     is_available BOOLEAN DEFAULT TRUE
 );
 
--- Зв'язок послуг та ресурсів
 CREATE TABLE service_resources (
     service_id INTEGER REFERENCES services(id) ON DELETE CASCADE,
     resource_id INTEGER REFERENCES resources(id) ON DELETE CASCADE,
     PRIMARY KEY (service_id, resource_id)
 );
 
--- Замовлення
 CREATE TABLE orders (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id),
@@ -56,7 +53,6 @@ CREATE TABLE orders (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Перегляди послуг (Аналітика)
 CREATE TABLE service_views (
     id SERIAL PRIMARY KEY,
     service_id INTEGER REFERENCES services(id),
@@ -64,14 +60,12 @@ CREATE TABLE service_views (
     viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Зв'язок замовлення та ресурсів
 CREATE TABLE order_resources (
     order_id INTEGER REFERENCES orders(id),
     resource_id INTEGER REFERENCES resources(id),
     PRIMARY KEY (order_id, resource_id)
 );
 
--- Платежі (Згідно PostgreSQL.docx)
 CREATE TABLE payments (
     id SERIAL PRIMARY KEY,
     order_id INTEGER REFERENCES orders(id),
@@ -80,7 +74,6 @@ CREATE TABLE payments (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Тестові дані
 INSERT INTO services (name, type, base_price) VALUES 
     ('Зовнішня реклама (Білборди)', 'outdoor', 15000.00),
     ('Реклама в Instagram', 'internet', 8000.00),

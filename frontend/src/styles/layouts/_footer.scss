@@ -1,5 +1,5 @@
 .footer {
-    background-color: $primary; // #1a3a5c
+    background-color: $primary; 
     color: white;
     padding-top: 4rem;
     padding-bottom: 2rem;
@@ -10,7 +10,7 @@
         max-width: 80rem;
         margin: 0 auto;
         padding: 0 1rem;
-        display: block; // Reset flex from previous version
+        display: block;
         
         @media (min-width: 640px) {
             padding: 0 1.5rem;

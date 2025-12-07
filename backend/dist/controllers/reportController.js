@@ -4,61 +4,60 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.exportPdfReport = exports.getReportById = exports.getReports = exports.createReport = exports.getDashboardStats = void 0;
-// @ts-ignore
+
 const Report_1 = __importDefault(require("../models/Report"));
 const postgres_1 = require("../db/postgres");
 const axios_1 = __importDefault(require("axios"));
 const form_data_1 = __importDefault(require("form-data"));
 const reportTemplate_1 = require("../utils/reportTemplate");
-// --- Helper functions ---
+
 const fmt = (num) => num.toLocaleString('uk-UA', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-// Словник перекладів для типів
+
 const typeTranslations = {
     'equipment': 'Обладнання',
     'personnel': 'Персонал'
 };
-// Helper to calculate percentage change
+
 const calculateChange = (current, previous) => {
     if (previous === 0)
-        return null; // Return null to indicate "dash"
+        return null; 
+
     const change = ((current - previous) / previous) * 100;
     return change.toFixed(1);
 };
-// --- Dashboard & Analytics Methods ---
-// GET /dashboard/stats
+
 const getDashboardStats = async (req, res) => {
     try {
         const now = new Date();
         const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        // --- Запит на першу дату ---
+
         const firstOrderRes = await postgres_1.OrderDB.getFirstOrderDate();
         let firstOrderDate = firstOrderRes.rows[0].first_date;
         if (!firstOrderDate)
             firstOrderDate = startOfThisMonth;
-        // 1. Total Stats (All Time)
+
         const totalOrdersRes = await postgres_1.OrderDB.countAll();
         const totalRevenueRes = await postgres_1.OrderDB.getTotalRevenue();
         const totalViewsRes = await postgres_1.ServiceViewsDB.countAll();
         const totalOrders = parseInt(totalOrdersRes.rows[0].count);
         const totalRevenue = parseFloat(totalRevenueRes.rows[0].sum || '0');
         const totalViews = parseInt(totalViewsRes.rows[0].count);
-        // 2. Monthly Changes
-        // This Month
+
         const thisMonthOrdersRes = await postgres_1.OrderDB.countByDateRange(startOfThisMonth, now);
         const thisMonthRevenueRes = await postgres_1.OrderDB.getRevenueByDateRange(startOfThisMonth, now);
         const thisMonthViewsRes = await postgres_1.ServiceViewsDB.countByDateRange(startOfThisMonth, now);
         const thisMonthOrders = parseInt(thisMonthOrdersRes.rows[0].count);
         const thisMonthRevenue = parseFloat(thisMonthRevenueRes.rows[0].sum || '0');
         const thisMonthViews = parseInt(thisMonthViewsRes.rows[0].count);
-        // Last Month
+
         const lastMonthOrdersRes = await postgres_1.OrderDB.countByDateRange(startOfLastMonth, startOfThisMonth);
         const lastMonthRevenueRes = await postgres_1.OrderDB.getRevenueByDateRange(startOfLastMonth, startOfThisMonth);
         const lastMonthViewsRes = await postgres_1.ServiceViewsDB.countByDateRange(startOfLastMonth, startOfThisMonth);
         const lastMonthOrders = parseInt(lastMonthOrdersRes.rows[0].count);
         const lastMonthRevenue = parseFloat(lastMonthRevenueRes.rows[0].sum || '0');
         const lastMonthViews = parseInt(lastMonthViewsRes.rows[0].count);
-        // 3. Efficiency Report (Table Data)
+
         const servicesRes = await postgres_1.ServiceDB.getAll();
         const viewsByServiceRes = await postgres_1.ServiceViewsDB.getViewsCountByService();
         const ordersByServiceRes = await postgres_1.OrderDB.getOrdersCountByService();
@@ -95,9 +94,7 @@ const getDashboardStats = async (req, res) => {
     }
 };
 exports.getDashboardStats = getDashboardStats;
-// --- Report Archive Methods (MongoDB) ---
-// Метод 1: Створення звіту (збереження в архів)
-// POST /reports
+
 const createReport = async (req, res) => {
     try {
         const { type, period, data, managerId } = req.body;
@@ -116,8 +113,7 @@ const createReport = async (req, res) => {
     }
 };
 exports.createReport = createReport;
-// Метод 2: Отримання списку (Архів)
-// GET /reports
+
 const getReports = async (req, res) => {
     try {
         const reports = await Report_1.default.find()
@@ -131,8 +127,7 @@ const getReports = async (req, res) => {
     }
 };
 exports.getReports = getReports;
-// Метод 3: Перегляд деталей
-// GET /reports/:id
+
 const getReportById = async (req, res) => {
     try {
         const report = await Report_1.default.findById(req.params.id);
@@ -147,11 +142,10 @@ const getReportById = async (req, res) => {
     }
 };
 exports.getReportById = getReportById;
-// --- PDF Generation Method (Gotenberg) ---
-// Експорт PDF через Gotenberg
+
 const exportPdfReport = async (req, res) => {
     try {
-        // 1. Отримуємо дані
+
         const { startDate, endDate, managerId } = req.query;
         const now = new Date();
         let startPeriodForDb;
@@ -159,11 +153,11 @@ const exportPdfReport = async (req, res) => {
         let startPeriodForDisplay;
         let endPeriodForDisplay;
         if (startDate && endDate) {
-            // Створюємо дати для БД
+
             startPeriodForDb = new Date(startDate);
             endPeriodForDb = new Date(endDate);
-            endPeriodForDb.setHours(23, 59, 59, 999); // Кінець дня для пошуку
-            // Створюємо дати суто для відображення (без часу, щоб уникнути Timezone shift)
+            endPeriodForDb.setHours(23, 59, 59, 999); 
+
             startPeriodForDisplay = new Date(startDate);
             endPeriodForDisplay = new Date(endDate);
         }
@@ -206,7 +200,7 @@ const exportPdfReport = async (req, res) => {
         const dateStrEnd = endPeriodForDisplay.toLocaleDateString('uk-UA').replace(/\./g, '-');
         const filename = `report_${dateStrStart}_${dateStrEnd}.pdf`;
         const encodedFilename = encodeURIComponent(filename);
-        // 2. Готуємо дані для шаблону
+
         const reportData = {
             title: filename,
             period: periodStr,
@@ -220,12 +214,13 @@ const exportPdfReport = async (req, res) => {
             topClients: topClientsRes.rows.map(c => ({ ...c, total_spent: fmt(Number(c.total_spent)) + ' грн' })),
             topResources: topResourcesRes.rows.map(r => ({
                 ...r,
-                type: typeTranslations[r.type] || r.type // Перекладаємо тип, якщо є у словнику
+                type: typeTranslations[r.type] || r.type 
+
             }))
         };
-        // 3. Генеруємо HTML рядок
+
         const htmlContent = (0, reportTemplate_1.generateReportHtml)(reportData);
-        // 4. Відправляємо в Gotenberg
+
         const gotenbergUrl = process.env.GOTENBERG_URL || 'http://gotenberg:3000';
         const form = new form_data_1.default();
         form.append('files', Buffer.from(htmlContent), { filename: 'index.html', contentType: 'text/html' });
@@ -240,7 +235,7 @@ const exportPdfReport = async (req, res) => {
             },
             responseType: 'stream'
         });
-        // 5. Віддаємо PDF клієнту
+
         res.set({
             'Content-Type': 'application/pdf',
             'Content-Disposition': `inline; filename="${filename}"; filename*=UTF-8''${encodedFilename}`
@@ -255,3 +250,4 @@ const exportPdfReport = async (req, res) => {
     }
 };
 exports.exportPdfReport = exportPdfReport;
+
