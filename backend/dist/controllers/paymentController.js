@@ -14,11 +14,11 @@ const processPayment = async (req, res) => {
         // Для Lab 3 ми часто викликаємо confirmPayment окремо або імітуємо тут.
         // Імітуємо успішну оплату через виклик логіки підтвердження (для спрощення UI)
         // Або повертаємо success, щоб фронтенд викликав confirm
-        res.json({ message: 'Payment processed' });
+        res.json({ message: 'Платіж оброблено' });
     }
     catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 exports.processPayment = processPayment;
@@ -40,11 +40,11 @@ const confirmPayment = async (req, res) => {
                 await postgres_1.UserDB.incrementOrderCount(client, userId);
             }
         });
-        res.json({ message: 'Payment confirmed and order updated' });
+        res.json({ message: 'Платіж підтверджено та замовлення оновлено' });
     }
     catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 exports.confirmPayment = confirmPayment;

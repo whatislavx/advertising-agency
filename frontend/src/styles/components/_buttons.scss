@@ -25,7 +25,7 @@
 
         &:hover {
             background-color: #d1d5db; // gray-300
-            box-shadow: 0 6px 14px -4px rgba(31, 41, 55, 0.25); // subtle glow
+            box-shadow: 0 6px 14px -4px rgba(31, 41, 55, 0.25); 
             transform: translateY(-1px);
         }
 
@@ -37,18 +37,18 @@
         }
 
         &:focus-visible {
-            outline: 2px solid #93c5fd; // blue-300
+            outline: 2px solid #93c5fd; 
             outline-offset: 2px;
             box-shadow: 0 0 0 4px rgba(147, 197, 253, 0.35);
         }
     }
 
     &-icon {
-        padding: 0.5rem; // p-2
+        padding: 0.5rem; 
         border-radius: var(--radius);
 
         &:hover {
-            background-color: #f3f4f6; // gray-100
+            background-color: #f3f4f6; 
         }
     }
 }

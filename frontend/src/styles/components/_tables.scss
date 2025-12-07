@@ -4,7 +4,7 @@ table {
 }
 
 thead {
-    background-color: #f9fafb; // gray-50
+    background-color: #f9fafb;
     border-bottom: 1px solid #e5e7eb;
 }
 
@@ -12,15 +12,15 @@ th {
     text-align: left;
     padding: 1rem 1.5rem;
     font-size: 0.875rem;
-    color: #4b5563; // gray-600
+    color: #4b5563; 
     font-weight: 500;
 }
 
 td {
     padding: 1rem 1.5rem;
-    border-bottom: 1px solid #f3f4f6; // gray-100
+    border-bottom: 1px solid #f3f4f6;
 }
 
 tr:hover {
-    background-color: #f9fafb; // gray-50
+    background-color: #f9fafb; 
 }

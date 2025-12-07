@@ -18,6 +18,10 @@ app.use(express.json());
 // Підключення всіх маршрутів
 app.use('/api', apiRoutes);
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+    });
+}
+
+export default app;

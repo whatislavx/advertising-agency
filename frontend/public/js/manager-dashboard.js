@@ -100,17 +100,26 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             const removeActivePresets = () => {
                 document.querySelectorAll('[data-preset]').forEach(b => b.classList.remove('active'));
             };
-            const config = {
+            const commonConfig = {
                 locale: "uk",
-                dateFormat: "Y-m-d", // Формат значення (для коду/бекенду)
-                altInput: true, // Вмикаємо альтернативне поле вводу
-                altFormat: "d.m.Y", // Формат відображення (для користувача)
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "d.m.Y",
                 allowInput: true,
-                maxDate: "today", // Обмеження дати
-                onChange: removeActivePresets // При ручній зміні дати знімаємо підсвічування
+                maxDate: "today"
             };
-            startPicker = flatpickr(startDateInput, config);
-            endPicker = flatpickr(endDateInput, config);
+            startPicker = flatpickr(startDateInput, Object.assign(Object.assign({}, commonConfig), { onChange: function (selectedDates) {
+                    removeActivePresets();
+                    if (selectedDates.length > 0) {
+                        endPicker.set('minDate', selectedDates[0]);
+                    }
+                } }));
+            endPicker = flatpickr(endDateInput, Object.assign(Object.assign({}, commonConfig), { onChange: function (selectedDates) {
+                    removeActivePresets();
+                    if (selectedDates.length > 0) {
+                        startPicker.set('maxDate', selectedDates[0]);
+                    }
+                } }));
         }
         // Відкриття модалки
         if (openReportBtn && reportModal) {
@@ -119,6 +128,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 reportModal.classList.add('flex');
                 // За замовчуванням - поточний місяць
                 const now = new Date();
+                now.setHours(0, 0, 0, 0);
                 const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
                 if (startPicker)
                     startPicker.setDate(firstDay);
@@ -186,6 +196,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 const end = endDateInput.value;
                 if (!start || !end) {
                     alert("Будь ласка, оберіть дати");
+                    return;
+                }
+                if (start > end) {
+                    alert("Дата початку не може бути пізніше дати кінця");
                     return;
                 }
                 const btn = generateReportBtn;

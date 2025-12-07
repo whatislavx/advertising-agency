@@ -15,7 +15,7 @@ const getUsers = async (req, res) => {
     }
     catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 exports.getUsers = getUsers;
@@ -25,12 +25,12 @@ const getUserById = async (req, res) => {
         // Отримуємо дані користувача та підраховуємо кількість замовлень
         const result = await postgres_1.UserDB.getById(req.params.id);
         if (result.rows.length === 0)
-            return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ message: 'Користувача не знайдено' });
         res.json(result.rows[0]);
     }
     catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 exports.getUserById = getUserById;
@@ -40,15 +40,15 @@ const login = async (req, res) => {
     try {
         const result = await postgres_1.UserDB.getByEmail(email);
         if (result.rows.length === 0)
-            return res.status(401).json({ message: 'Invalid credentials' });
+            return res.status(401).json({ message: 'Неправильна пошта або пароль' });
         const user = result.rows[0];
         const hashedPassword = hashPassword(password);
         if (user.password_hash !== hashedPassword) {
-            return res.status(401).json({ message: 'Invalid credentials' });
+            return res.status(401).json({ message: 'Неправильна пошта або пароль' });
         }
         // Повертаємо дані користувача (в реальному проекті тут був би JWT токен)
         res.json({
-            message: 'Login successful',
+            message: 'Вхід успішний',
             user: {
                 id: user.id,
                 email: user.email,
@@ -61,7 +61,7 @@ const login = async (req, res) => {
     }
     catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 exports.login = login;
@@ -79,7 +79,7 @@ const register = async (req, res) => {
         if (error.code === '23505') {
             return res.status(409).json({ message: 'Користувач з таким email вже існує' });
         }
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 exports.register = register;
@@ -92,7 +92,7 @@ const updateUser = async (req, res) => {
     }
     catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 exports.updateUser = updateUser;
@@ -104,21 +104,24 @@ const changePassword = async (req, res) => {
         // 1. Отримуємо поточний хеш пароля
         const userResult = await postgres_1.UserDB.getPasswordHashById(userId);
         if (userResult.rows.length === 0)
-            return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ message: 'Користувача не знайдено' });
         const user = userResult.rows[0];
         const oldPasswordHash = hashPassword(oldPassword);
         // 2. Перевіряємо старий пароль
         if (user.password_hash !== oldPasswordHash) {
-            return res.status(401).json({ message: 'Incorrect old password' });
+            return res.status(401).json({ message: 'Неправильний старий пароль' });
+        }
+        if (oldPassword === newPassword) {
+            return res.status(400).json({ message: 'Старий і новий паролі співпадають' });
         }
         // 3. Оновлюємо пароль
         const newPasswordHash = hashPassword(newPassword);
         await postgres_1.UserDB.updatePassword(userId, newPasswordHash);
-        res.json({ message: 'Password updated successfully' });
+        res.json({ message: 'Пароль успішно оновлено' });
     }
     catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 exports.changePassword = changePassword;
@@ -126,7 +129,7 @@ exports.changePassword = changePassword;
 const setDiscount = async (req, res) => {
     const { discount, initiatorRole } = req.body; // initiatorRole передаємо з фронту для спрощення (в реальності - з токена)
     if (initiatorRole !== 'director') {
-        return res.status(403).json({ message: 'Access denied. Only Director can set discounts.' });
+        return res.status(403).json({ message: 'Доступ заборонено. Тільки директор може встановлювати знижки.' });
     }
     try {
         const result = await postgres_1.UserDB.updateDiscount(req.params.id, discount);
@@ -134,7 +137,7 @@ const setDiscount = async (req, res) => {
     }
     catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 exports.setDiscount = setDiscount;

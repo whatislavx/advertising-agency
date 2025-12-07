@@ -29,9 +29,17 @@ import { Modal } from './utils/Modal.js';
     function getDisplayStatus(order: Order): string {
         // Logic: if paid and end_date is passed, show as completed
         if (order.status === 'paid' && order.end_date) {
-            const endDate = new Date(order.end_date);
+            // Парсимо дату завершення як локальну дату (кінець дня)
+            const parts = order.end_date.split('-');
+            const localEndDate = new Date(
+                parseInt(parts[0]), 
+                parseInt(parts[1]) - 1, 
+                parseInt(parts[2]), 
+                23, 59, 59, 999
+            );
+            
             const now = new Date();
-            if (now > endDate) {
+            if (now > localEndDate) {
                 return 'completed';
             }
         }

@@ -67,7 +67,7 @@ const fileFilter = (req, file, cb) => {
         cb(null, true);
     }
     else {
-        cb(new Error('Only .png, .jpg and .jpeg format allowed!'), false);
+        cb(new Error('Дозволені лише формати .png, .jpg та .jpeg!'), false);
     }
 };
 const upload = (0, multer_1.default)({

@@ -9,7 +9,7 @@ const getOrders = async (req, res) => {
     }
     catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 exports.getOrders = getOrders;
@@ -28,7 +28,7 @@ const createOrder = async (req, res) => {
             }
             const start = new Date(event_date);
             const end = new Date(end_date || event_date);
-            const diffTime = Math.abs(end.getTime() - start.getTime());
+            const diffTime = end.getTime() - start.getTime();
             const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
             if (days <= 0)
                 throw new Error('Invalid date range');
@@ -42,11 +42,11 @@ const createOrder = async (req, res) => {
             }
             return { orderId, total };
         });
-        res.status(201).json({ message: 'Order created', orderId: result.orderId, total: result.total });
+        res.status(201).json({ message: 'Замовлення створено', orderId: result.orderId, total: result.total });
     }
     catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 exports.createOrder = createOrder;
@@ -57,7 +57,7 @@ const getOrdersByUserId = async (req, res) => {
     }
     catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 exports.getOrdersByUserId = getOrdersByUserId;
@@ -69,7 +69,7 @@ const updateOrderStatus = async (req, res) => {
     }
     catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 exports.updateOrderStatus = updateOrderStatus;
@@ -125,11 +125,11 @@ const rescheduleOrder = async (req, res) => {
     catch (error) {
         console.error(error);
         if (error.message === 'Order not found')
-            return res.status(404).json({ message: 'Order not found' });
+            return res.status(404).json({ message: 'Замовлення не знайдено' });
         if (error.message === 'Duration change not allowed for paid orders') {
             return res.status(400).json({ message: 'Зміна тривалості заборонена для оплачених замовлень' });
         }
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 exports.rescheduleOrder = rescheduleOrder;

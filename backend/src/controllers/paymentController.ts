@@ -17,10 +17,10 @@ export const processPayment = async (req: Request, res: Response) => {
         // Імітуємо успішну оплату через виклик логіки підтвердження (для спрощення UI)
         // Або повертаємо success, щоб фронтенд викликав confirm
         
-        res.json({ message: 'Payment processed' });
+        res.json({ message: 'Платіж оброблено' });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 
@@ -47,9 +47,9 @@ export const confirmPayment = async (req: Request, res: Response) => {
             }
         });
 
-        res.json({ message: 'Payment confirmed and order updated' });
+        res.json({ message: 'Платіж підтверджено та замовлення оновлено' });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
