@@ -4,6 +4,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.trackView = exports.deleteResource = exports.deleteService = exports.createResource = exports.patchResource = exports.patchService = exports.createService = exports.getResources = exports.getAllServices = void 0;
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
 const postgres_1 = require("../db/postgres");
 const redis_1 = __importDefault(require("../config/redis"));
 // --- Константи для кешування ---
@@ -187,7 +189,26 @@ const deleteService = async (req, res) => {
         if (result.rowCount === 0) {
             return res.status(404).json({ message: 'Service not found' });
         }
-        await redis_1.default.del(SERVICES_CACHE_KEY);
+        // Видалення файлу зображення
+        const deletedService = result.rows[0];
+        if (deletedService.image_path) {
+            // image_path зберігається як "/uploads/filename.ext"
+            // Видаляємо перший слеш, щоб шлях був відносним до кореня проекту
+            const relativePath = deletedService.image_path.startsWith('/')
+                ? deletedService.image_path.substring(1)
+                : deletedService.image_path;
+            const filePath = path_1.default.join(process.cwd(), relativePath);
+            fs_1.default.unlink(filePath, (err) => {
+                if (err) {
+                    console.error(`Failed to delete image file: ${filePath}`, err);
+                }
+                else {
+                    console.log(`Deleted image file: ${filePath}`);
+                }
+            });
+        }
+        await redis_1.default.del('catalog:services_list:all');
+        await redis_1.default.del('catalog:services_list:available');
         res.json({ message: 'Service deleted' });
     }
     catch (error) {

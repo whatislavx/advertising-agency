@@ -28,7 +28,18 @@ const storage = multer.diskStorage({
     }
 });
 
-const upload = multer({ storage: storage });
+const fileFilter = (req: any, file: any, cb: any) => {
+    if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
+        cb(null, true);
+    } else {
+        cb(new Error('Only .png, .jpg and .jpeg format allowed!'), false);
+    }
+};
+
+const upload = multer({ 
+    storage: storage,
+    fileFilter: fileFilter
+});
 
 // --- User Routes (PostgreSQL) ---
 router.get('/users', userController.getUsers);

@@ -62,7 +62,18 @@ const storage = multer_1.default.diskStorage({
         cb(null, uniqueSuffix + path_1.default.extname(file.originalname));
     }
 });
-const upload = (0, multer_1.default)({ storage: storage });
+const fileFilter = (req, file, cb) => {
+    if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
+        cb(null, true);
+    }
+    else {
+        cb(new Error('Only .png, .jpg and .jpeg format allowed!'), false);
+    }
+};
+const upload = (0, multer_1.default)({
+    storage: storage,
+    fileFilter: fileFilter
+});
 // --- User Routes (PostgreSQL) ---
 router.get('/users', userController.getUsers);
 router.get('/users/:id', userController.getUserById); // Профіль

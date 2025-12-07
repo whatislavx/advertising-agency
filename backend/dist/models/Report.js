@@ -45,7 +45,7 @@ const ReportSchema = new mongoose_1.Schema({
     },
     generatedData: {
         type: mongoose_1.Schema.Types.Mixed,
-        required: true // Mongoose зберігає тут будь-яку JSON структуру "як є" [cite: 13-16]
+        required: true
     },
     managerId: {
         type: Number,
