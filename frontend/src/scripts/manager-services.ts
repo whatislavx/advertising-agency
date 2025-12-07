@@ -48,6 +48,37 @@ let services: Service[] = [];
 let resourcesList: Resource[] = [];
 let editingServiceId: number | null = null;
 
+const MAX_DESCRIPTION_LENGTH = 100;
+
+function updateDescriptionCounter() {
+    const textarea = document.getElementById('service-description') as HTMLTextAreaElement;
+    const counter = document.getElementById('description-counter');
+    const error = document.getElementById('description-error');
+    
+    if (!textarea || !counter) return;
+    
+    const length = textarea.value.length;
+    counter.textContent = `${length}/${MAX_DESCRIPTION_LENGTH}`;
+    
+    if (length > MAX_DESCRIPTION_LENGTH) {
+        counter.classList.add('text-red-500');
+        counter.classList.remove('text-gray-500');
+        textarea.classList.add('border-red-500');
+        textarea.classList.remove('border-gray-300');
+        textarea.classList.add('focus:ring-red-500');
+        textarea.classList.remove('focus:ring-[#ff6b35]');
+        if (error) error.classList.remove('hidden');
+    } else {
+        counter.classList.remove('text-red-500');
+        counter.classList.add('text-gray-500');
+        textarea.classList.remove('border-red-500');
+        textarea.classList.add('border-gray-300');
+        textarea.classList.remove('focus:ring-red-500');
+        textarea.classList.add('focus:ring-[#ff6b35]');
+        if (error) error.classList.add('hidden');
+    }
+}
+
 function formatCurrency(amount: string | number): string {
     return Number(amount).toLocaleString('uk-UA', { style: 'currency', currency: 'UAH' }).replace('UAH', '₴').replace(',', '.');
 }
@@ -131,6 +162,7 @@ function setupImagePreview() {
     const input = document.getElementById('service-image-input') as HTMLInputElement;
     const preview = document.getElementById('service-image-preview') as HTMLImageElement;
     const placeholder = document.getElementById('service-image-placeholder');
+    const filenameEl = document.getElementById('service-image-filename');
 
     if (input) {
         input.addEventListener('change', () => {
@@ -145,6 +177,9 @@ function setupImagePreview() {
                     placeholder?.classList.add('hidden');
                 };
                 reader.readAsDataURL(file);
+                if (filenameEl) filenameEl.textContent = file.name;
+            } else {
+                if (filenameEl) filenameEl.textContent = 'Файл не вибрано';
             }
         });
     }
@@ -199,7 +234,6 @@ function renderServices(servicesData: Service[]) {
         <tr>
             <td class="text-gray-600 text-sm text-left">SRV-${service.id.toString().padStart(3, '0')}</td>
             <td class="text-primary font-medium text-left flex items-center gap-2">
-               ${service.image_path ? `<img src="${service.image_path}" class="w-8 h-8 rounded object-cover border border-gray-200" alt="">` : ''}
                ${service.name}
             </td>
             <td class="text-left"><span class="badge badge-blue">${translateType(service.type || 'other')}</span></td>
@@ -246,11 +280,19 @@ function openAddServiceModal() {
     if(priceInput) priceInput.value = '';
     if(typeInput) typeInput.value = 'internet';
     if(typeText) typeText.textContent = 'Інтернет';
-    if (descriptionInput) descriptionInput.value = '';
+    if (descriptionInput) {
+        descriptionInput.value = '';
+        // Re-attach listener just in case
+        descriptionInput.removeEventListener('input', updateDescriptionCounter);
+        descriptionInput.addEventListener('input', updateDescriptionCounter);
+        updateDescriptionCounter();
+    }
     if(availableInput) availableInput.checked = true;
 
     // Reset image inputs
     if (fileInput) fileInput.value = '';
+    const filenameEl = document.getElementById('service-image-filename');
+    if (filenameEl) filenameEl.textContent = 'Файл не вибрано';
     if (preview) {
         preview.src = '';
         preview.classList.add('hidden');
@@ -283,7 +325,13 @@ function openAddServiceModal() {
     const availableInput = document.getElementById('serviceAvailable') as HTMLInputElement;
     
     const descriptionInput = document.getElementById('service-description') as HTMLTextAreaElement;
-    if (descriptionInput) descriptionInput.value = service.description || '';
+    if (descriptionInput) {
+        descriptionInput.value = service.description || '';
+        // Re-attach listener just in case
+        descriptionInput.removeEventListener('input', updateDescriptionCounter);
+        descriptionInput.addEventListener('input', updateDescriptionCounter);
+        updateDescriptionCounter();
+    }
     if(availableInput) availableInput.checked = service.is_available;
     
     if (typeInput) typeInput.value = service.type || 'internet';
@@ -362,6 +410,11 @@ async function handleSaveService() {
         return;
     }
 
+    if (description.length > MAX_DESCRIPTION_LENGTH) {
+        await Modal.alert(`Опис занадто довгий! Максимум ${MAX_DESCRIPTION_LENGTH} символів.`);
+        return;
+    }
+
     // --- Використовуємо FormData для відправки файлу ---
     const formData = new FormData();
     formData.append('name', name);
@@ -436,6 +489,11 @@ function init() {
         
         // Ініціалізація прев'ю картинки
         setupImagePreview(); 
+
+        const descriptionInput = document.getElementById('service-description');
+        if (descriptionInput) {
+            descriptionInput.addEventListener('input', updateDescriptionCounter);
+        }
 
         const btnAddService = document.getElementById('btn-add-service');
         if (btnAddService) {

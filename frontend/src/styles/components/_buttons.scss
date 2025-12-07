@@ -25,6 +25,21 @@
 
         &:hover {
             background-color: #d1d5db; // gray-300
+            box-shadow: 0 6px 14px -4px rgba(31, 41, 55, 0.25); // subtle glow
+            transform: translateY(-1px);
+        }
+
+        &.active {
+            background-color: $orange !important;
+            color: white !important;
+            box-shadow: 0 4px 6px -1px rgba(255, 107, 53, 0.2) !important;
+            border-color: $orange !important;
+        }
+
+        &:focus-visible {
+            outline: 2px solid #93c5fd; // blue-300
+            outline-offset: 2px;
+            box-shadow: 0 0 0 4px rgba(147, 197, 253, 0.35);
         }
     }
 

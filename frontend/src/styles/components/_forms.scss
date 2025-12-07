@@ -84,6 +84,12 @@ input[type="radio"]:checked+.role-radio-label {
     }
 }
 
+// File select button size control
+.file-select-btn {
+    display: inline-flex;
+    width: auto;
+}
+
 // Flatpickr overrides
 .flatpickr-calendar {
     font-family: Arial, sans-serif !important;

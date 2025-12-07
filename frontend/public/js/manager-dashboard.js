@@ -97,12 +97,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         let endPicker;
         // Ініціалізація Flatpickr з правильним форматуванням
         if (typeof flatpickr !== 'undefined' && startDateInput && endDateInput) {
+            const removeActivePresets = () => {
+                document.querySelectorAll('[data-preset]').forEach(b => b.classList.remove('active'));
+            };
             const config = {
                 locale: "uk",
                 dateFormat: "Y-m-d", // Формат значення (для коду/бекенду)
                 altInput: true, // Вмикаємо альтернативне поле вводу
                 altFormat: "d.m.Y", // Формат відображення (для користувача)
-                allowInput: true
+                allowInput: true,
+                maxDate: "today", // Обмеження дати
+                onChange: removeActivePresets // При ручній зміні дати знімаємо підсвічування
             };
             startPicker = flatpickr(startDateInput, config);
             endPicker = flatpickr(endDateInput, config);
@@ -119,6 +124,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                     startPicker.setDate(firstDay);
                 if (endPicker)
                     endPicker.setDate(now);
+                // Скидаємо активний клас з усіх кнопок
+                document.querySelectorAll('[data-preset]').forEach(b => b.classList.remove('active'));
             });
         }
         const closeReport = () => {
@@ -132,10 +139,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         if (cancelReportBtn)
             cancelReportBtn.addEventListener('click', closeReport);
         // Кнопки швидкого вибору (Presets)
-        document.querySelectorAll('[data-preset]').forEach(btn => {
+        const presetBtns = document.querySelectorAll('[data-preset]');
+        presetBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const preset = e.target.getAttribute('data-preset');
+                console.log('Preset clicked:', btn.getAttribute('data-preset'));
+                // Visual feedback
+                presetBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const preset = btn.getAttribute('data-preset');
                 const now = new Date();
+                now.setHours(0, 0, 0, 0); // Скидаємо час, щоб уникнути проблем з maxDate="today"
                 let start, end;
                 switch (preset) {
                     case 'today':
@@ -145,10 +158,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                     case 'month':
                         start = new Date(now.getFullYear(), now.getMonth(), 1);
                         end = new Date(now.getFullYear(), now.getMonth() + 1, 0); // Останній день місяця
+                        if (end > now)
+                            end = now; // Обмежуємо поточною датою
                         break;
                     case 'year':
                         start = new Date(now.getFullYear(), 0, 1);
                         end = new Date(now.getFullYear(), 11, 31);
+                        if (end > now)
+                            end = now; // Обмежуємо поточною датою
                         break;
                     case 'all':
                         start = globalFirstOrderDate || new Date(2020, 0, 1);

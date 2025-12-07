@@ -1,4 +1,6 @@
 import { Request, Response } from 'express';
+import fs from 'fs';
+import path from 'path';
 import { ServiceDB, ResourceDB, ServiceViewsDB, runTransaction } from '../db/postgres';
 import redisClient from '../config/redis';
 
@@ -198,6 +200,27 @@ export const deleteService = async (req: Request, res: Response) => {
         if (result.rowCount === 0) {
             return res.status(404).json({ message: 'Service not found' });
         }
+
+        // Видалення файлу зображення
+        const deletedService = result.rows[0];
+        if (deletedService.image_path) {
+            // image_path зберігається як "/uploads/filename.ext"
+            // Видаляємо перший слеш, щоб шлях був відносним до кореня проекту
+            const relativePath = deletedService.image_path.startsWith('/') 
+                ? deletedService.image_path.substring(1) 
+                : deletedService.image_path;
+            
+            const filePath = path.join(process.cwd(), relativePath);
+            
+            fs.unlink(filePath, (err) => {
+                if (err) {
+                    console.error(`Failed to delete image file: ${filePath}`, err);
+                } else {
+                    console.log(`Deleted image file: ${filePath}`);
+                }
+            });
+        }
+
         await redisClient.del(SERVICES_CACHE_KEY);
         res.json({ message: 'Service deleted' });
     } catch (error: any) {
