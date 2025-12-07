@@ -101,7 +101,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         });
     } catch (error) {
         console.error('Error getting dashboard stats:', error);
-        res.status(500).json({ message: 'Internal Server Error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 
@@ -125,7 +125,7 @@ export const createReport = async (req: Request, res: Response) => {
         res.status(200).json({ success: true, id: report._id });
     } catch (error) {
         console.error('Error creating report:', error);
-        res.status(500).json({ message: 'Error creating report' });
+        res.status(500).json({ message: 'Помилка створення звіту' });
     }
 };
 
@@ -141,7 +141,7 @@ export const getReports = async (req: Request, res: Response) => {
     } 
     catch (error) {
         console.error('Error fetching reports:', error);
-        res.status(500).json({ message: 'Error fetching reports' });
+        res.status(500).json({ message: 'Помилка отримання звітів' });
     }
 };
 
@@ -152,14 +152,14 @@ export const getReportById = async (req: Request, res: Response) => {
         const report = await Report.findById(req.params.id);
 
         if (!report) {
-            return res.status(404).json({ message: 'Report not found' });
+            return res.status(404).json({ message: 'Звіт не знайдено' });
         }
 
         res.json(report);
     } 
     catch (error) {
         console.error('Error fetching report details:', error);
-        res.status(500).json({ message: 'Error fetching report details' });
+        res.status(500).json({ message: 'Помилка отримання деталей звіту' });
     }
 };
 
@@ -290,7 +290,7 @@ export const exportPdfReport = async (req: Request, res: Response) => {
     } catch (error) {
         console.error('Report Generation Error:', error);
         if (!res.headersSent) {
-            res.status(500).json({ message: 'Failed to generate PDF report' });
+            res.status(500).json({ message: 'Не вдалося згенерувати PDF звіт' });
         }
     }
 };

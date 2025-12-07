@@ -3,22 +3,22 @@
     align-items: center;
     gap: 0.25rem;
     padding: 0.25rem 0.75rem;
-    border-radius: 9999px; // full
-    font-size: 0.875rem; // text-sm
+    border-radius: 9999px;
+    font-size: 0.875rem; 
 
     &-green {
-        background-color: #dcfce7; // green-100
-        color: #15803d; // green-700
+        background-color: #dcfce7; 
+        color: #15803d;
     }
 
     &-yellow {
-        background-color: #fef9c3; // yellow-100
-        color: #a16207; // yellow-700
+        background-color: #fef9c3; 
+        color: #a16207; 
     }
 
     &-blue {
-        background-color: #dbeafe; // blue-100
-        color: #1d4ed8; // blue-700
+        background-color: #dbeafe; 
+        color: #1d4ed8; 
     }
 
     &-gray {
@@ -27,7 +27,7 @@
     }
 
     &-red {
-        background-color: #fee2e2; // red-100
-        color: #b91c1c; // red-700
+        background-color: #fee2e2; 
+        color: #b91c1c;
     }
 }

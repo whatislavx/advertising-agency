@@ -45,7 +45,7 @@ export const getAllServices = async (req: Request, res: Response) => {
         res.json(services);
     } catch (error) {
         console.error('Error getting services:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 
@@ -76,7 +76,7 @@ export const getResources = async (req: Request, res: Response) => {
         res.json(resources);
     } catch (error) {
         console.error('Error getting resources:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 
@@ -116,7 +116,7 @@ export const createService = async (req: Request, res: Response) => {
         res.status(201).json(newService);
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 
@@ -155,8 +155,8 @@ export const patchService = async (req: Request, res: Response) => {
         res.json(updatedService);
     } catch (error: any) {
         console.error(error);
-        if (error.message === 'Not found') return res.status(404).json({ message: 'Not found' });
-        res.status(500).json({ message: 'Server error' });
+        if (error.message === 'Not found') return res.status(404).json({ message: 'Не знайдено' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 
@@ -167,7 +167,7 @@ export const patchResource = async (req: Request, res: Response) => {
         const result = await ResourceDB.update(id, name, type, cost, is_available);
         
         if (result.rowCount === 0) {
-            return res.status(404).json({ message: 'Resource not found' });
+            return res.status(404).json({ message: 'Ресурс не знайдено' });
         }
         
         await redisClient.del(RESOURCES_CACHE_KEY);
@@ -176,7 +176,7 @@ export const patchResource = async (req: Request, res: Response) => {
         res.json(result.rows[0]);
     } catch (error) {
         console.error('Error updating resource:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 
@@ -189,7 +189,7 @@ export const createResource = async (req: Request, res: Response) => {
         res.status(201).json(result.rows[0]);
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 
@@ -198,7 +198,7 @@ export const deleteService = async (req: Request, res: Response) => {
     try {
         const result = await ServiceDB.delete(id);
         if (result.rowCount === 0) {
-            return res.status(404).json({ message: 'Service not found' });
+            return res.status(404).json({ message: 'Послугу не знайдено' });
         }
 
         // Видалення файлу зображення
@@ -223,13 +223,13 @@ export const deleteService = async (req: Request, res: Response) => {
 
         await redisClient.del('catalog:services_list:all');
         await redisClient.del('catalog:services_list:available');
-        res.json({ message: 'Service deleted' });
+        res.json({ message: 'Послугу видалено' });
     } catch (error: any) {
         console.error('Error deleting service:', error);
         if (error.code === '23503') {
             return res.status(400).json({ message: 'Неможливо видалити послугу, оскільки вона використовується в замовленнях.' });
         }
-        res.status(500).json({ message: 'Internal Server Error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 
@@ -238,17 +238,17 @@ export const deleteResource = async (req: Request, res: Response) => {
     try {
         const result = await ResourceDB.delete(id);
         if (result.rowCount === 0) {
-            return res.status(404).json({ message: 'Resource not found' });
+            return res.status(404).json({ message: 'Ресурс не знайдено' });
         }
         await redisClient.del(RESOURCES_CACHE_KEY);
         await redisClient.del(RESOURCES_AVAILABLE_CACHE_KEY);
-        res.json({ message: 'Resource deleted' });
+        res.json({ message: 'Ресурс видалено' });
     } catch (error: any) {
         console.error('Error deleting resource:', error);
         if (error.code === '23503') {
             return res.status(400).json({ message: 'Неможливо видалити ресурс, оскільки він використовується в замовленнях.' });
         }
-        res.status(500).json({ message: 'Internal Server Error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 
@@ -257,9 +257,9 @@ export const trackView = async (req: Request, res: Response) => {
     const { serviceId, userId } = req.body;
     try {
         await ServiceViewsDB.create(serviceId, userId);
-        res.status(200).json({ message: 'View tracked' });
+        res.status(200).json({ message: 'Перегляд зараховано' });
     } catch (error) {
         console.error('Error tracking view:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };

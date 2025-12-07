@@ -119,17 +119,34 @@
                 document.querySelectorAll('[data-preset]').forEach(b => b.classList.remove('active'));
             };
 
-            const config = {
+            const commonConfig = {
                 locale: "uk",
-                dateFormat: "Y-m-d", // Формат значення (для коду/бекенду)
-                altInput: true,      // Вмикаємо альтернативне поле вводу
-                altFormat: "d.m.Y",  // Формат відображення (для користувача)
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "d.m.Y",
                 allowInput: true,
-                maxDate: "today",    // Обмеження дати
-                onChange: removeActivePresets // При ручній зміні дати знімаємо підсвічування
+                maxDate: "today"
             };
-            startPicker = flatpickr(startDateInput, config);
-            endPicker = flatpickr(endDateInput, config);
+
+            startPicker = flatpickr(startDateInput, {
+                ...commonConfig,
+                onChange: function(selectedDates: Date[]) {
+                    removeActivePresets();
+                    if (selectedDates.length > 0) {
+                        endPicker.set('minDate', selectedDates[0]);
+                    }
+                }
+            });
+
+            endPicker = flatpickr(endDateInput, {
+                ...commonConfig,
+                onChange: function(selectedDates: Date[]) {
+                    removeActivePresets();
+                    if (selectedDates.length > 0) {
+                        startPicker.set('maxDate', selectedDates[0]);
+                    }
+                }
+            });
         }
 
         // Відкриття модалки
@@ -140,6 +157,7 @@
                 
                 // За замовчуванням - поточний місяць
                 const now = new Date();
+                now.setHours(0, 0, 0, 0);
                 const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
                 
                 if (startPicker) startPicker.setDate(firstDay);
@@ -212,6 +230,11 @@
 
                 if (!start || !end) {
                     alert("Будь ласка, оберіть дати");
+                    return;
+                }
+
+                if (start > end) {
+                    alert("Дата початку не може бути пізніше дати кінця");
                     return;
                 }
 

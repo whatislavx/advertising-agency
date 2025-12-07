@@ -32,7 +32,7 @@ const fileFilter = (req: any, file: any, cb: any) => {
     if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
         cb(null, true);
     } else {
-        cb(new Error('Only .png, .jpg and .jpeg format allowed!'), false);
+        cb(new Error('Дозволені лише формати .png, .jpg та .jpeg!'), false);
     }
 };
 

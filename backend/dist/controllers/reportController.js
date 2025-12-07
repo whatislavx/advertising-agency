@@ -91,7 +91,7 @@ const getDashboardStats = async (req, res) => {
     }
     catch (error) {
         console.error('Error getting dashboard stats:', error);
-        res.status(500).json({ message: 'Internal Server Error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 exports.getDashboardStats = getDashboardStats;
@@ -112,7 +112,7 @@ const createReport = async (req, res) => {
     }
     catch (error) {
         console.error('Error creating report:', error);
-        res.status(500).json({ message: 'Error creating report' });
+        res.status(500).json({ message: 'Помилка створення звіту' });
     }
 };
 exports.createReport = createReport;
@@ -127,7 +127,7 @@ const getReports = async (req, res) => {
     }
     catch (error) {
         console.error('Error fetching reports:', error);
-        res.status(500).json({ message: 'Error fetching reports' });
+        res.status(500).json({ message: 'Помилка отримання звітів' });
     }
 };
 exports.getReports = getReports;
@@ -137,13 +137,13 @@ const getReportById = async (req, res) => {
     try {
         const report = await Report_1.default.findById(req.params.id);
         if (!report) {
-            return res.status(404).json({ message: 'Report not found' });
+            return res.status(404).json({ message: 'Звіт не знайдено' });
         }
         res.json(report);
     }
     catch (error) {
         console.error('Error fetching report details:', error);
-        res.status(500).json({ message: 'Error fetching report details' });
+        res.status(500).json({ message: 'Помилка отримання деталей звіту' });
     }
 };
 exports.getReportById = getReportById;
@@ -250,7 +250,7 @@ const exportPdfReport = async (req, res) => {
     catch (error) {
         console.error('Report Generation Error:', error);
         if (!res.headersSent) {
-            res.status(500).json({ message: 'Failed to generate PDF report' });
+            res.status(500).json({ message: 'Не вдалося згенерувати PDF звіт' });
         }
     }
 };

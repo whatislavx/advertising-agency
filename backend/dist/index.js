@@ -17,6 +17,9 @@ app.use('/uploads', express_1.default.static(path_1.default.join(__dirname, '../
 app.use(express_1.default.json());
 // Підключення всіх маршрутів
 app.use('/api', api_1.default);
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+    });
+}
+exports.default = app;

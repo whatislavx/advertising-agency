@@ -44,7 +44,7 @@ const getAllServices = async (req, res) => {
     }
     catch (error) {
         console.error('Error getting services:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 exports.getAllServices = getAllServices;
@@ -68,7 +68,7 @@ const getResources = async (req, res) => {
     }
     catch (error) {
         console.error('Error getting resources:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 exports.getResources = getResources;
@@ -107,7 +107,7 @@ const createService = async (req, res) => {
     }
     catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 exports.createService = createService;
@@ -145,8 +145,8 @@ const patchService = async (req, res) => {
     catch (error) {
         console.error(error);
         if (error.message === 'Not found')
-            return res.status(404).json({ message: 'Not found' });
-        res.status(500).json({ message: 'Server error' });
+            return res.status(404).json({ message: 'Не знайдено' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 exports.patchService = patchService;
@@ -156,7 +156,7 @@ const patchResource = async (req, res) => {
     try {
         const result = await postgres_1.ResourceDB.update(id, name, type, cost, is_available);
         if (result.rowCount === 0) {
-            return res.status(404).json({ message: 'Resource not found' });
+            return res.status(404).json({ message: 'Ресурс не знайдено' });
         }
         await redis_1.default.del(RESOURCES_CACHE_KEY);
         await redis_1.default.del(RESOURCES_AVAILABLE_CACHE_KEY);
@@ -164,7 +164,7 @@ const patchResource = async (req, res) => {
     }
     catch (error) {
         console.error('Error updating resource:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 exports.patchResource = patchResource;
@@ -178,7 +178,7 @@ const createResource = async (req, res) => {
     }
     catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 exports.createResource = createResource;
@@ -187,7 +187,7 @@ const deleteService = async (req, res) => {
     try {
         const result = await postgres_1.ServiceDB.delete(id);
         if (result.rowCount === 0) {
-            return res.status(404).json({ message: 'Service not found' });
+            return res.status(404).json({ message: 'Послугу не знайдено' });
         }
         // Видалення файлу зображення
         const deletedService = result.rows[0];
@@ -209,14 +209,14 @@ const deleteService = async (req, res) => {
         }
         await redis_1.default.del('catalog:services_list:all');
         await redis_1.default.del('catalog:services_list:available');
-        res.json({ message: 'Service deleted' });
+        res.json({ message: 'Послугу видалено' });
     }
     catch (error) {
         console.error('Error deleting service:', error);
         if (error.code === '23503') {
             return res.status(400).json({ message: 'Неможливо видалити послугу, оскільки вона використовується в замовленнях.' });
         }
-        res.status(500).json({ message: 'Internal Server Error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 exports.deleteService = deleteService;
@@ -225,18 +225,18 @@ const deleteResource = async (req, res) => {
     try {
         const result = await postgres_1.ResourceDB.delete(id);
         if (result.rowCount === 0) {
-            return res.status(404).json({ message: 'Resource not found' });
+            return res.status(404).json({ message: 'Ресурс не знайдено' });
         }
         await redis_1.default.del(RESOURCES_CACHE_KEY);
         await redis_1.default.del(RESOURCES_AVAILABLE_CACHE_KEY);
-        res.json({ message: 'Resource deleted' });
+        res.json({ message: 'Ресурс видалено' });
     }
     catch (error) {
         console.error('Error deleting resource:', error);
         if (error.code === '23503') {
             return res.status(400).json({ message: 'Неможливо видалити ресурс, оскільки він використовується в замовленнях.' });
         }
-        res.status(500).json({ message: 'Internal Server Error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 exports.deleteResource = deleteResource;
@@ -245,11 +245,11 @@ const trackView = async (req, res) => {
     const { serviceId, userId } = req.body;
     try {
         await postgres_1.ServiceViewsDB.create(serviceId, userId);
-        res.status(200).json({ message: 'View tracked' });
+        res.status(200).json({ message: 'Перегляд зараховано' });
     }
     catch (error) {
         console.error('Error tracking view:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 exports.trackView = trackView;
