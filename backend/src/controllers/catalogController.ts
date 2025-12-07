@@ -221,7 +221,8 @@ export const deleteService = async (req: Request, res: Response) => {
             });
         }
 
-        await redisClient.del(SERVICES_CACHE_KEY);
+        await redisClient.del('catalog:services_list:all');
+        await redisClient.del('catalog:services_list:available');
         res.json({ message: 'Service deleted' });
     } catch (error: any) {
         console.error('Error deleting service:', error);
