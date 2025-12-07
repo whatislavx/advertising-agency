@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { OrderDB, ServiceDB, ResourceDB, runTransaction } from '../db/postgres';
+import { OrderDB, ServiceDB, ResourceDB, UserDB, runTransaction } from '../db/postgres';
 
 export const getOrders = async (req: Request, res: Response) => {
     try {
@@ -33,7 +33,15 @@ export const createOrder = async (req: Request, res: Response) => {
 
             if (days <= 0) throw new Error('Invalid date range');
 
-            const total = (basePricePerDay + resourcesCostPerDay) * days;
+            // Get user discount
+            const userRes = await UserDB.getById(user_id);
+            let discount = 0;
+            if (userRes.rows.length > 0) {
+                discount = Number(userRes.rows[0].personal_discount) || 0;
+            }
+
+            const subtotal = (basePricePerDay + resourcesCostPerDay) * days;
+            const total = subtotal * (1 - discount / 100);
 
             const orderRes = await OrderDB.create(client, user_id, service_id, event_date, end_date, total, 'new');
             const orderId = orderRes.rows[0].id;
@@ -66,9 +74,27 @@ export const getOrdersByUserId = async (req: Request, res: Response) => {
 
 export const updateOrderStatus = async (req: Request, res: Response) => {
     const { status } = req.body;
+    const orderId = req.params.id;
+
     try {
-        const result = await OrderDB.updateStatus(req.params.id, status);
-        res.json(result.rows[0]);
+        const result = await runTransaction(async (client) => {
+            const updateRes = await OrderDB.updateStatus(orderId, status);
+            
+            if (status === 'completed') {
+                const orderRes = await OrderDB.getById(client, orderId);
+                if (orderRes.rows.length > 0) {
+                    const userId = orderRes.rows[0].user_id;
+                    await UserDB.incrementOrderCount(client, userId);
+                    
+                    // Check for automatic discount upgrade
+                    await UserDB.checkAndApplyDiscount(client, userId);
+                }
+            }
+            
+            return updateRes.rows[0];
+        });
+
+        res.json(result);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Помилка сервера' });

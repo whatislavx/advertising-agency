@@ -14,7 +14,7 @@ export class Modal {
     static init(type = 'info') {
         var _a, _b;
         if (this.overlay) {
-            this.overlay.remove(); // Re-create to update icon/structure if needed
+            this.overlay.remove();
             this.overlay = null;
         }
         const overlay = document.createElement('div');
@@ -42,7 +42,6 @@ export class Modal {
         this.cancelBtn = overlay.querySelector('#modal-cancel');
         (_a = this.confirmBtn) === null || _a === void 0 ? void 0 : _a.addEventListener('click', () => this.close(true));
         (_b = this.cancelBtn) === null || _b === void 0 ? void 0 : _b.addEventListener('click', () => this.close(false));
-        // Close on click outside
         this.overlay.addEventListener('click', (e) => {
             if (e.target === this.overlay) {
                 this.close(false);
@@ -77,7 +76,6 @@ export class Modal {
         });
     }
     static alert(message, title = 'Інформація', type = 'info') {
-        // Auto-detect type from title if not provided (simple heuristic)
         if (type === 'info') {
             if (title.toLowerCase().includes('помилка') || title.toLowerCase().includes('error'))
                 type = 'error';
@@ -106,7 +104,6 @@ export class Modal {
     static close(result) {
         var _a;
         (_a = this.overlay) === null || _a === void 0 ? void 0 : _a.classList.remove('open');
-        // Wait for transition to finish before resolving
         setTimeout(() => {
             if (this.resolvePromise) {
                 this.resolvePromise(result);

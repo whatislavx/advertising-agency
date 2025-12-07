@@ -10,16 +10,36 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import { Modal } from './utils/Modal.js';
 (function () {
     const flatpickr = window.flatpickr;
+    const lucide = window.lucide;
     let services = [];
     let resources = [];
     let currentService;
     let selectedItems = [];
     let servicePricePerDay = 0;
     let durationInDays = 0;
-    
+    let userDiscount = 0;
+    function fetchUserDiscount() {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const userStr = localStorage.getItem('user');
+                if (!userStr)
+                    return;
+                const user = JSON.parse(userStr);
+                const response = yield fetch(`/api/users/${user.id}`);
+                if (response.ok) {
+                    const userData = yield response.json();
+                    userDiscount = Number(userData.personal_discount) || 0;
+                }
+            }
+            catch (e) {
+                console.error("Failed to fetch user discount", e);
+            }
+        });
+    }
     function fetchData() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
+                yield fetchUserDiscount();
                 const [servicesRes, resourcesRes] = yield Promise.all([
                     fetch('/api/services'),
                     fetch('/api/resources?available=true')
@@ -46,13 +66,17 @@ import { Modal } from './utils/Modal.js';
     function calculateTotal() {
         const resourcesPricePerDay = selectedItems.reduce((acc, item) => acc + item.price, 0);
         const totalPricePerDay = servicePricePerDay + resourcesPricePerDay;
-        return totalPricePerDay * (durationInDays > 0 ? durationInDays : 0);
+        const subtotal = totalPricePerDay * (durationInDays > 0 ? durationInDays : 0);
+        return subtotal * (1 - userDiscount / 100);
     }
     function updateSummary() {
         const listContainer = document.getElementById('selectedResourcesList');
         const dynamicList = document.getElementById('dynamicList');
         const totalEl = document.getElementById('totalPrice');
         const summaryBaseEl = document.getElementById('summaryBasePrice');
+        const discountRow = document.getElementById('discountRow');
+        const discountValue = document.getElementById('discountValue');
+        const oldPriceEl = document.getElementById('oldPrice');
         if (summaryBaseEl) {
             summaryBaseEl.innerHTML = `${formatCurrency(servicePricePerDay)} <span class="text-sm text-gray-400">/ доба</span>`;
         }
@@ -74,6 +98,20 @@ import { Modal } from './utils/Modal.js';
             }
         }
         const total = calculateTotal();
+        const subtotal = (servicePricePerDay + selectedItems.reduce((acc, item) => acc + item.price, 0)) * (durationInDays > 0 ? durationInDays : 0);
+        if (discountRow && discountValue && oldPriceEl) {
+            if (userDiscount > 0 && durationInDays > 0) {
+                discountRow.style.display = 'flex';
+                const savedAmount = subtotal - total;
+                discountValue.textContent = `-${userDiscount}% (-${formatCurrency(savedAmount)})`;
+                oldPriceEl.style.display = 'block';
+                oldPriceEl.textContent = formatCurrency(subtotal);
+            }
+            else {
+                discountRow.style.display = 'none';
+                oldPriceEl.style.display = 'none';
+            }
+        }
         if (totalEl) {
             const daysText = durationInDays > 0 ? `(${durationInDays} днів)` : '(оберіть дати)';
             totalEl.innerHTML = `${formatCurrency(total)} <span class="text-sm font-normal text-gray-300">${daysText}</span>`;
@@ -124,7 +162,6 @@ import { Modal } from './utils/Modal.js';
         if (!resourceContainer || !currentService)
             return;
         resourceContainer.innerHTML = '';
-        
         const allowedIds = currentService.allowed_resources || [];
         const availableResources = resources.filter(res => allowedIds.includes(res.id));
         if (availableResources.length === 0) {
@@ -199,11 +236,27 @@ import { Modal } from './utils/Modal.js';
                 });
                 if (res.ok) {
                     const data = yield res.json();
+                    let priceDetailsHtml = '';
+                    if (userDiscount > 0) {
+                        const subtotal = data.total / (1 - userDiscount / 100);
+                        priceDetailsHtml = `
+                        <div class="mt-2 text-sm text-gray-500">
+                            <p class="flex justify-between"><span>Вартість без знижки:</span> <span>${formatCurrency(subtotal)}</span></p>
+                            <p class="flex justify-between text-green-600"><span>Ваша знижка:</span> <span>${userDiscount}%</span></p>
+                        </div>
+                    `;
+                    }
                     yield Modal.alert(`
-                    <p>Ваше замовлення успішно зареєстровано в системі.</p>
-                    <div class="order-success-details">
-                        <p><span>Номер замовлення:</span> <strong>#${data.orderId}</strong></p>
-                        <p class="total-price"><span>До сплати:</span> <span>${formatCurrency(data.total)}</span></p>
+                    <p class="mb-2">Ваше замовлення успішно зареєстровано в системі.</p>
+                    <div class="order-success-details bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <p class="flex justify-between mb-1"><span>Номер замовлення:</span> <strong>#${data.orderId}</strong></p>
+                        ${priceDetailsHtml}
+                        <div class="border-t border-gray-200 my-2 pt-2">
+                            <p class="total-price flex justify-between items-center">
+                                <span>До сплати:</span> 
+                                <span class="text-xl font-bold text-[#1a3a5c]">${formatCurrency(data.total)}</span>
+                            </p>
+                        </div>
                     </div>
                 `, 'Успішно!', 'success');
                     window.location.href = 'my-orders.html';
@@ -220,6 +273,8 @@ import { Modal } from './utils/Modal.js';
         });
     }
     document.addEventListener('DOMContentLoaded', () => {
+        if (lucide)
+            lucide.createIcons();
         initPage();
         const startDateInput = document.getElementById('startDate');
         const endDateInput = document.getElementById('endDate');

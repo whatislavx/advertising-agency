@@ -50,7 +50,7 @@ async function handleLogin(e: Event) {
         if (response.ok) {
             localStorage.setItem('user', JSON.stringify(data.user));
             
-            if (data.user.role === 'manager' || data.user.role === 'director') {
+            if (data.user.role === 'manager') {
                 window.location.href = "manager-dashboard.html";
             } else {
                 window.location.href = "catalog.html";

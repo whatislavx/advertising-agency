@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { UserDB } from '../db/postgres';
+import pool from '../config/postgres';
 import crypto from 'crypto';
 
 const hashPassword = (password: string) => crypto.createHash('sha256').update(password).digest('hex');
@@ -117,12 +118,12 @@ export const changePassword = async (req: Request, res: Response) => {
 export const setDiscount = async (req: Request, res: Response) => {
     const { discount, initiatorRole } = req.body; 
 
-    if (initiatorRole !== 'director') {
-        return res.status(403).json({ message: 'Доступ заборонено. Тільки директор може встановлювати знижки.' });
+    if (initiatorRole !== 'manager') {
+        return res.status(403).json({ message: 'Доступ заборонено. Тільки менеджер може встановлювати знижки.' });
     }
 
     try {
-        const result = await UserDB.updateDiscount(req.params.id, discount);
+        const result = await UserDB.updateDiscount(pool, req.params.id, discount);
         res.json(result.rows[0]);
     } catch (error) {
         console.error(error);

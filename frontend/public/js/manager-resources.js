@@ -8,7 +8,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { Modal } from './utils/Modal.js';
-
 function toggleModal(modalId) {
     const modal = document.getElementById(modalId);
     if (!modal)
@@ -36,7 +35,6 @@ const typeTranslations = {
 function translateType(type) {
     return typeTranslations[type] || type;
 }
-
 function setupCustomSelect(containerId) {
     const container = document.getElementById(containerId);
     if (!container)
@@ -92,7 +90,6 @@ function setupCustomSelect(containerId) {
         }
     });
 }
-
 function fetchResources() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -107,7 +104,6 @@ function fetchResources() {
         }
     });
 }
-
 function renderResources(resourcesData) {
     const tbody = document.getElementById('resources-table-body');
     if (!tbody)
@@ -142,7 +138,6 @@ function renderResources(resourcesData) {
     if (typeof lucide !== 'undefined')
         lucide.createIcons();
 }
-
 function openAddResourceModal() {
     editingResourceId = null;
     const nameInput = document.getElementById('resource-name');
