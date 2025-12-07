@@ -19,9 +19,7 @@ import { Modal } from './utils/Modal.js';
         return new Date(dateString).toLocaleDateString('uk-UA');
     }
     function getDisplayStatus(order) {
-        // Logic: if paid and end_date is passed, show as completed
         if (order.status === 'paid' && order.end_date) {
-            // Парсимо дату завершення як локальну дату (кінець дня)
             const parts = order.end_date.split('-');
             const localEndDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), 23, 59, 59, 999);
             const now = new Date();
@@ -79,7 +77,7 @@ import { Modal } from './utils/Modal.js';
         tbody.innerHTML = '';
         orders.forEach(order => {
             const displayStatus = getDisplayStatus(order);
-            // Main Row
+
             const tr = document.createElement('tr');
             tr.className = "order-row hover:bg-gray-50 transition-colors border-b border-gray-100";
             tr.setAttribute('data-status', displayStatus);
@@ -106,7 +104,7 @@ import { Modal } from './utils/Modal.js';
                 </td>
             `;
             tbody.appendChild(tr);
-            // Details Row
+
             const detailsTr = document.createElement('tr');
             detailsTr.id = `details-${order.id}`;
             detailsTr.className = "hidden bg-gray-50 border-t border-gray-100";
@@ -137,7 +135,7 @@ import { Modal } from './utils/Modal.js';
             lucide.createIcons();
         }
     }
-    // Make toggleDetails global
+
     window.toggleDetails = (id) => {
         const detailsRow = document.getElementById(`details-${id}`);
         const icon = document.getElementById(`icon-${id}`);
@@ -173,14 +171,16 @@ import { Modal } from './utils/Modal.js';
             if (matchesSearch && matchesStatus) {
                 htmlRow.style.display = "";
                 if (isDetailsRow) {
-                    nextRow.style.display = ""; // Reset inline display to allow class-based toggling
+                    nextRow.style.display = ""; 
+
                 }
             }
             else {
                 htmlRow.style.display = "none";
                 if (isDetailsRow) {
                     nextRow.style.display = "none";
-                    nextRow.classList.add('hidden'); // Reset to collapsed state
+                    nextRow.classList.add('hidden'); 
+
                 }
             }
         });
@@ -218,7 +218,7 @@ import { Modal } from './utils/Modal.js';
     document.addEventListener("DOMContentLoaded", () => {
         fetchOrders();
         const searchInput = document.getElementById("searchOrders");
-        // Custom Select Logic
+
         const selectContainer = document.getElementById('customSelectContainer');
         const selectTrigger = document.getElementById('customSelectTrigger');
         const selectMenu = document.getElementById('customSelectMenu');
@@ -227,7 +227,7 @@ import { Modal } from './utils/Modal.js';
         const selectedText = document.getElementById('selectedStatusText');
         const options = document.querySelectorAll('.custom-option');
         if (selectTrigger && selectMenu && selectArrow && hiddenInput && selectedText) {
-            // Toggle dropdown
+
             selectTrigger.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const isHidden = selectMenu.classList.contains('hidden');
@@ -240,14 +240,14 @@ import { Modal } from './utils/Modal.js';
                     selectArrow.style.transform = 'rotate(0deg)';
                 }
             });
-            // Close when clicking outside
+
             document.addEventListener('click', (e) => {
                 if (selectContainer && !selectContainer.contains(e.target)) {
                     selectMenu.classList.add('hidden');
                     selectArrow.style.transform = 'rotate(0deg)';
                 }
             });
-            // Select option
+
             options.forEach(option => {
                 option.addEventListener('click', () => {
                     var _a;
@@ -256,10 +256,10 @@ import { Modal } from './utils/Modal.js';
                     if (value && text) {
                         hiddenInput.value = value;
                         selectedText.textContent = text;
-                        // Update UI
+
                         selectMenu.classList.add('hidden');
                         selectArrow.style.transform = 'rotate(0deg)';
-                        // Trigger filter
+
                         window.filterOrders();
                     }
                 });
@@ -268,3 +268,4 @@ import { Modal } from './utils/Modal.js';
         searchInput === null || searchInput === void 0 ? void 0 : searchInput.addEventListener("input", window.filterOrders);
     });
 })();
+

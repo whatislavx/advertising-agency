@@ -3,7 +3,6 @@ import { Modal } from './utils/Modal.js';
 (function() {
 const lucide = (window as any).lucide;
 
-// Отримання поточного юзера з localStorage
 function getCurrentUser() {
     const userStr = localStorage.getItem('user');
     if (!userStr) return null;
@@ -15,7 +14,6 @@ function formatDate(dateStr: string): string {
     return new Date(dateStr).toLocaleDateString('uk-UA');
 }
 
-// Завантаження актуальних даних з сервера
 async function loadProfileData() {
     const user = getCurrentUser();
     if (!user) {
@@ -29,12 +27,10 @@ async function loadProfileData() {
             const userData = await response.json();
             console.log('User Data from API:', userData);
             
-            // Оновлюємо поля вводу
             const nameInput = document.getElementById("inputName") as HTMLInputElement;
             const emailInput = document.getElementById("inputEmail") as HTMLInputElement;
             const phoneInput = document.getElementById("inputPhone") as HTMLInputElement;
             
-            // Оновлюємо відображення імені в картці
             const displayHeaderName = document.querySelector('.card h3');
             const displayHeaderEmail = document.querySelector('.card p');
             const displayRegDate = document.getElementById('profile-registration-date');
@@ -49,7 +45,6 @@ async function loadProfileData() {
             if (displayRegDate) displayRegDate.textContent = formatDate(userData.registration_date);
             if (displayOrderCount) displayOrderCount.textContent = (userData.order_count || 0).toString();
 
-            // Оновлюємо localStorage свіжими даними
             localStorage.setItem('user', JSON.stringify(userData));
         }
     } catch (e) {
@@ -69,7 +64,6 @@ function enableEditing() {
 
     const inputs = document.querySelectorAll("input");
     inputs.forEach((input) => {
-        // Email зазвичай не дають змінювати просто так, але якщо треба - розблокуйте
         if (input.id !== "inputEmail") { 
             input.disabled = false;
         }
@@ -91,7 +85,6 @@ function cancelEditing() {
         input.disabled = true;
     });
     
-    // Повертаємо старі значення
     loadProfileData();
 }
 
@@ -127,9 +120,8 @@ async function saveProfile() {
 
         if (response.ok) {
             await Modal.alert("Профіль успішно оновлено!", "Успіх", "success");
-            await loadProfileData(); // Перезавантажити дані і оновити UI
+            await loadProfileData(); 
             
-            // Приховуємо кнопки редагування
             const actionButtons = document.getElementById("actionButtons");
             const editButtons = document.getElementById("editButtons");
             if (actionButtons && editButtons) {
@@ -168,7 +160,6 @@ document.addEventListener("DOMContentLoaded", () => {
     saveBtn?.addEventListener("click", saveProfile);
     cancelBtn?.addEventListener("click", cancelEditing);
 
-    // Password Change Logic
     const changePasswordBtn = document.getElementById('changePasswordBtn');
     const passwordModal = document.getElementById('passwordModal');
     const cancelPasswordBtn = document.getElementById('cancelPasswordBtn');
@@ -196,7 +187,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (e.target === passwordModal) toggleModal(false);
     });
 
-    // Маска телефону для поля профілю
     const phoneInput = document.getElementById('inputPhone') as HTMLInputElement | null;
     function formatUaPhone(value: string): string {
         const digits = value.replace(/\D/g, '');

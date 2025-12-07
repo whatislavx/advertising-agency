@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.runTransaction = exports.PaymentDB = exports.ServiceViewsDB = exports.OrderDB = exports.ResourceDB = exports.ServiceDB = exports.UserDB = void 0;
-// Database Access Objects
+
 const postgres_1 = __importDefault(require("../config/postgres"));
 exports.UserDB = {
     getAll: () => postgres_1.default.query('SELECT id, email, role, first_name, last_name, personal_discount FROM users'),
@@ -100,7 +100,7 @@ exports.OrderDB = {
     getTotalRevenue: () => postgres_1.default.query("SELECT SUM(total_cost) FROM orders WHERE status IN ('paid', 'completed')"),
     getRevenueByDateRange: (startDate, endDate) => postgres_1.default.query("SELECT SUM(total_cost) FROM orders WHERE status IN ('paid', 'completed') AND created_at >= $1 AND created_at < $2", [startDate, endDate]),
     getOrdersCountByService: () => postgres_1.default.query('SELECT service_id, COUNT(*) as count FROM orders GROUP BY service_id'),
-    // Топ-5 послуг за доходом
+
     getTopServicesByRevenue: (startDate, endDate) => postgres_1.default.query(`
         SELECT s.name, SUM(o.total_cost) as revenue, COUNT(o.id) as count
         FROM orders o
@@ -110,7 +110,7 @@ exports.OrderDB = {
         ORDER BY revenue DESC
         LIMIT 5
     `, [startDate, endDate]),
-    // Розподіл доходу за типом (для діаграми)
+
     getRevenueByType: (startDate, endDate) => postgres_1.default.query(`
         SELECT s.type, SUM(o.total_cost) as revenue
         FROM orders o
@@ -118,7 +118,7 @@ exports.OrderDB = {
         WHERE o.status IN ('paid', 'completed') AND o.created_at >= $1 AND o.created_at < $2
         GROUP BY s.type
     `, [startDate, endDate]),
-    // Топ-5 клієнтів
+
     getTopClients: (startDate, endDate) => postgres_1.default.query(`
         SELECT u.first_name, u.last_name, u.email, SUM(o.total_cost) as total_spent, COUNT(o.id) as orders_count
         FROM orders o
@@ -128,7 +128,7 @@ exports.OrderDB = {
         ORDER BY total_spent DESC
         LIMIT 5
     `, [startDate, endDate]),
-    // Найпопулярніші ресурси
+
     getTopResources: (startDate, endDate) => postgres_1.default.query(`
         SELECT r.name, r.type, COUNT(orr.resource_id) as usage_count
         FROM order_resources orr
@@ -139,7 +139,7 @@ exports.OrderDB = {
         ORDER BY usage_count DESC
         LIMIT 5
     `, [startDate, endDate]),
-    // инаміка доходу по днях (якщо знадобиться для графіка)
+
     getDailyRevenue: (startDate, endDate) => postgres_1.default.query(`
         SELECT DATE(created_at) as date, SUM(total_cost) as revenue
         FROM orders
@@ -175,3 +175,4 @@ const runTransaction = async (callback) => {
     }
 };
 exports.runTransaction = runTransaction;
+

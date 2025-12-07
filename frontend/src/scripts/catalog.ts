@@ -1,7 +1,6 @@
 (function() {
     const lucide = (window as any).lucide;
 
-    // Оновлений інтерфейс: додали image_path
     interface Service {
         id: number;
         name: string;
@@ -15,7 +14,6 @@
 
     async function fetchServices() {
         try {
-            // Додаємо ?available=true
             const response = await fetch('/api/services?available=true');
             if (response.ok) {
                 allServices = await response.json();
@@ -30,14 +28,11 @@
         return num.toLocaleString('uk-UA') + ' грн';
     }
 
-    // Оновлена функція: приймає об'єкт Service, а не рядок type
     function getServiceImage(service: Service): string {
-        // 1. Якщо є завантажене фото - повертаємо шлях до нього
         if (service.image_path) {
             return service.image_path; 
         }
 
-        // 2. Інакше повертаємо старі заглушки (fallback) залежно від типу
         switch (service.type) {
             case 'tv': return 'https://images.unsplash.com/photo-1593784991188-c899ca07263b?w=400&h=300&fit=crop';
             case 'internet': return 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=400&h=300&fit=crop';
@@ -103,7 +98,6 @@
         if (userStr) {
             try {
                 const user = JSON.parse(userStr);
-                // Send tracking request without awaiting to not delay navigation too much
                 fetch('/api/analytics/view', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -113,7 +107,6 @@
                 console.error("Tracking error", e);
             }
         }
-        // Navigate immediately
         window.location.href = `order-form.html?id=${serviceId}`;
     };
 
@@ -130,9 +123,7 @@
             services.forEach(service => {
                 const card = document.createElement('div');
                 card.className = 'card flex flex-col';
-                
-                // ЗМІНА 1: Просто беремо опис з об'єкта. Якщо його немає — буде undefined/порожній рядок.
-                // Ми більше не викликаємо getServiceDescription(service.type)
+
                 const descriptionText = service.description;
                 
                 card.innerHTML = `

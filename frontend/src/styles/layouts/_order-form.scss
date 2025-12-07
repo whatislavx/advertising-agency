@@ -1,7 +1,6 @@
-/* Page: Order Form */
 .order-form-page {
-    background-color: #EEF2F6; // var(--bg-body)
-    color: $primary; // var(--text-main)
+    background-color: #EEF2F6; 
+    color: $primary; 
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -21,7 +20,6 @@
         padding: 0 40px;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
-        // Override existing header styles if needed
         position: static;
         max-width: none;
     }

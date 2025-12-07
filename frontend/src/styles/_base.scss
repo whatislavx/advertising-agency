@@ -7,15 +7,12 @@ html {
 
 body {
     background-color: #f9fafb;
-    /* gray-50 */
     color: #1f2937;
-    /* gray-800 */
     margin: 0;
     padding: 0;
     min-height: 100vh;
 }
 
-/* Базові стилі для іконок Lucide, щоб вони не стрибали */
 i[data-lucide] {
     display: inline-block;
     vertical-align: middle;

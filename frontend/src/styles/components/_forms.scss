@@ -8,7 +8,7 @@ select,
 textarea {
     width: 100%;
     padding: 0.75rem 1rem;
-    border: 1px solid #d1d5db; // gray-300
+    border: 1px solid #d1d5db; 
     border-radius: var(--radius);
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
@@ -19,7 +19,7 @@ textarea {
     }
 
     &:disabled {
-        background-color: #f9fafb; // gray-50
+        background-color: #f9fafb;
         cursor: not-allowed;
     }
 }
@@ -32,7 +32,6 @@ input[type="tel"].with-icon {
     padding: 0.75rem 1rem 0.75rem 2.6rem;
 }
 
-// Радіо-кнопки вибору ролі (Auth page)
 .role-radio-label {
     display: flex;
     align-items: center;
@@ -43,7 +42,7 @@ input[type="tel"].with-icon {
     border: 2px solid #d1d5db;
     cursor: pointer;
     transition: all 0.2s;
-    color: #4b5563; // gray-600
+    color: #4b5563; 
 
     &:hover {
         border-color: #9ca3af;
@@ -84,13 +83,11 @@ input[type="radio"]:checked+.role-radio-label {
     }
 }
 
-// File select button size control
 .file-select-btn {
     display: inline-flex;
     width: auto;
 }
 
-// Flatpickr overrides
 .flatpickr-calendar {
     font-family: Arial, sans-serif !important;
     border-radius: 12px;

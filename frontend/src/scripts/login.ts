@@ -48,10 +48,8 @@ async function handleLogin(e: Event) {
         const data = await response.json();
 
         if (response.ok) {
-            // Зберігаємо дані користувача для сесії
             localStorage.setItem('user', JSON.stringify(data.user));
             
-            // Перенаправлення залежно від ролі
             if (data.user.role === 'manager' || data.user.role === 'director') {
                 window.location.href = "manager-dashboard.html";
             } else {
@@ -74,7 +72,6 @@ async function handleRegister(e: Event) {
     const emailInput = document.getElementById("reg-email") as HTMLInputElement;
     const passwordInput = document.getElementById("reg-password") as HTMLInputElement;
 
-    // Визначаємо поля та їх назви для перевірки
     const fields = [
         { input: nameInput, label: "Ім'я" },
         { input: phoneInput, label: "Телефон" },
@@ -82,36 +79,27 @@ async function handleRegister(e: Event) {
         { input: passwordInput, label: "Пароль" }
     ];
 
-    // Знаходимо незаповнені поля
     const emptyFields = fields.filter(field => !field.input || !field.input.value.trim());
 
     if (emptyFields.length > 0) {
-        // Формуємо текст повідомлення
         const emptyLabels = emptyFields.map(f => f.label).join(', ');
-        
-        // Показуємо модальне вікно (чекаємо, поки користувач натисне "Зрозуміло")
+
         await Modal.alert(`Будь ласка, заповніть наступні поля: ${emptyLabels}`);
 
-        // Після закриття модалки підсвічуємо поля
         emptyFields.forEach(field => {
             if (field.input) {
-                // Встановлюємо червоний бордер
                 field.input.style.borderColor = 'red';
 
-                // Функція для очищення стилю при вводі
                 const removeErrorStyle = () => {
-                    field.input.style.borderColor = ''; // Повертаємо стандартний стиль
+                    field.input.style.borderColor = ''; 
                     field.input.removeEventListener('input', removeErrorStyle);
                 };
 
-                // Додаємо слухач події
                 field.input.addEventListener('input', removeErrorStyle);
             }
         });
         return;
     }
-
-    // --- Далі йде стандартна логіка валідації (email regex, довжина пароля тощо) ---
     
     const nameVal = nameInput.value.trim();
     const emailVal = emailInput.value.trim();
@@ -129,7 +117,6 @@ async function handleRegister(e: Event) {
         return;
     }
 
-    // Валідація телефону
     const digitsOnly = phoneVal.replace(/\D/g, '');
     if (!(digitsOnly.startsWith('380') && digitsOnly.length === 12)) {
         await Modal.alert("Телефон має бути у форматі +380XXXXXXXXX");
@@ -149,8 +136,6 @@ async function handleRegister(e: Event) {
 
         if (response.ok) {
             await Modal.alert('Реєстрація успішна! Тепер увійдіть.');
-            // Тут потрібно викликати вашу функцію switchTab('login'), 
-            // але оскільки вона не експортована, можливо доведеться клікнути по кнопці:
             document.getElementById("tab-login")?.click(); 
         } else {
             const data = await response.json();
@@ -172,22 +157,18 @@ document.addEventListener('DOMContentLoaded', () => {
     registerTabBtn?.addEventListener('click', () => switchTab('register'));
     
     loginForm?.addEventListener('submit', handleLogin);
-    // Видаляємо старі обробники, якщо вони були в HTML
     registerForm?.removeAttribute('onsubmit');
     registerForm?.addEventListener('submit', handleRegister);
 
-    // Маска та обмеження для телефону: тільки цифри, автоформат у +380 XX XXX XX XX
     const regPhone = document.getElementById('reg-phone') as HTMLInputElement | null;
     function formatUaPhone(value: string): string {
         const digits = value.replace(/\D/g, '');
         let normalized = digits;
         if (!normalized.startsWith('380')) {
-            // якщо користувач вводить без 380, додамо 380 на початок при наявності цифр
             if (normalized.length > 0) normalized = '380' + normalized;
         }
         normalized = normalized.slice(0, 12);
-        // форматувати у +380 XX XXX XX XX
-        const cc = normalized.slice(0, 3); // 380
+        const cc = normalized.slice(0, 3); 
         const p1 = normalized.slice(3, 5);
         const p2 = normalized.slice(5, 8);
         const p3 = normalized.slice(8, 10);
@@ -214,7 +195,6 @@ document.addEventListener('DOMContentLoaded', () => {
         regPhone.setAttribute('placeholder', '+380 XX XXX XX XX');
     }
 
-    // Очищення полів від автозаповнення
     setTimeout(() => {
         const inputs = document.querySelectorAll('input');
         inputs.forEach(input => input.value = '');

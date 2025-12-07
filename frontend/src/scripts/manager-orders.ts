@@ -27,9 +27,7 @@ import { Modal } from './utils/Modal.js';
     }
 
     function getDisplayStatus(order: Order): string {
-        // Logic: if paid and end_date is passed, show as completed
         if (order.status === 'paid' && order.end_date) {
-            // Парсимо дату завершення як локальну дату (кінець дня)
             const parts = order.end_date.split('-');
             const localEndDate = new Date(
                 parseInt(parts[0]), 
@@ -161,7 +159,6 @@ import { Modal } from './utils/Modal.js';
         }
     }
 
-    // Make toggleDetails global
     (window as any).toggleDetails = (id: number) => {
         const detailsRow = document.getElementById(`details-${id}`);
         const icon = document.getElementById(`icon-${id}`);
@@ -203,13 +200,13 @@ import { Modal } from './utils/Modal.js';
             if (matchesSearch && matchesStatus) {
                 htmlRow.style.display = "";
                 if (isDetailsRow) {
-                    nextRow.style.display = ""; // Reset inline display to allow class-based toggling
+                    nextRow.style.display = ""; 
                 }
             } else {
                 htmlRow.style.display = "none";
                 if (isDetailsRow) {
                     nextRow.style.display = "none";
-                    nextRow.classList.add('hidden'); // Reset to collapsed state
+                    nextRow.classList.add('hidden'); 
                 }
             }
         });
@@ -248,8 +245,7 @@ import { Modal } from './utils/Modal.js';
         fetchOrders();
 
         const searchInput = document.getElementById("searchOrders");
-        
-        // Custom Select Logic
+   
         const selectContainer = document.getElementById('customSelectContainer');
         const selectTrigger = document.getElementById('customSelectTrigger');
         const selectMenu = document.getElementById('customSelectMenu');
@@ -259,7 +255,6 @@ import { Modal } from './utils/Modal.js';
         const options = document.querySelectorAll('.custom-option');
 
         if (selectTrigger && selectMenu && selectArrow && hiddenInput && selectedText) {
-            // Toggle dropdown
             selectTrigger.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const isHidden = selectMenu.classList.contains('hidden');
@@ -272,7 +267,6 @@ import { Modal } from './utils/Modal.js';
                 }
             });
 
-            // Close when clicking outside
             document.addEventListener('click', (e) => {
                 if (selectContainer && !selectContainer.contains(e.target as Node)) {
                     selectMenu.classList.add('hidden');
@@ -280,7 +274,6 @@ import { Modal } from './utils/Modal.js';
                 }
             });
 
-            // Select option
             options.forEach(option => {
                 option.addEventListener('click', () => {
                     const value = option.getAttribute('data-value');
@@ -289,12 +282,10 @@ import { Modal } from './utils/Modal.js';
                     if (value && text) {
                         hiddenInput.value = value;
                         selectedText.textContent = text;
-                        
-                        // Update UI
+
                         selectMenu.classList.add('hidden');
                         selectArrow.style.transform = 'rotate(0deg)';
-                        
-                        // Trigger filter
+
                         (window as any).filterOrders();
                     }
                 });

@@ -1,10 +1,9 @@
-// Database Access Objects
 import pool from '../config/postgres';
 import { PoolClient, Pool } from 'pg';
 
 export const UserDB = {
     getAll: () => pool.query('SELECT id, email, role, first_name, last_name, personal_discount FROM users'),
-    
+
     getById: (id: string) => pool.query(`
         SELECT u.id, u.email, u.role, u.first_name, u.last_name, u.phone, u.personal_discount, u.registration_date,
         (SELECT COUNT(*) FROM orders o WHERE o.user_id = u.id) as order_count
@@ -99,13 +98,13 @@ export const ResourceDB = {
             'INSERT INTO resources (name, type, cost, is_available) VALUES ($1, $2, $3, $4) RETURNING *',
             [name, type, cost, is_available]
         ),
-    
+
     update: (id: string, name: string, type: string, cost: number, is_available: boolean) => 
         pool.query(
             'UPDATE resources SET name = $1, type = $2, cost = $3, is_available = $4 WHERE id = $5 RETURNING *',
             [name, type, cost, is_available, id]
         ),
-    
+
     delete: (id: string) => pool.query('DELETE FROM resources WHERE id = $1 RETURNING *', [id])
 };
 
@@ -186,7 +185,6 @@ export const OrderDB = {
     getOrdersCountByService: () => 
         pool.query('SELECT service_id, COUNT(*) as count FROM orders GROUP BY service_id'),
 
-    // Топ-5 послуг за доходом
     getTopServicesByRevenue: (startDate: Date, endDate: Date) => pool.query(`
         SELECT s.name, SUM(o.total_cost) as revenue, COUNT(o.id) as count
         FROM orders o
@@ -197,7 +195,6 @@ export const OrderDB = {
         LIMIT 5
     `, [startDate, endDate]),
 
-    // Розподіл доходу за типом (для діаграми)
     getRevenueByType: (startDate: Date, endDate: Date) => pool.query(`
         SELECT s.type, SUM(o.total_cost) as revenue
         FROM orders o
@@ -206,7 +203,6 @@ export const OrderDB = {
         GROUP BY s.type
     `, [startDate, endDate]),
 
-    // Топ-5 клієнтів
     getTopClients: (startDate: Date, endDate: Date) => pool.query(`
         SELECT u.first_name, u.last_name, u.email, SUM(o.total_cost) as total_spent, COUNT(o.id) as orders_count
         FROM orders o
@@ -217,7 +213,6 @@ export const OrderDB = {
         LIMIT 5
     `, [startDate, endDate]),
 
-    // Найпопулярніші ресурси
     getTopResources: (startDate: Date, endDate: Date) => pool.query(`
         SELECT r.name, r.type, COUNT(orr.resource_id) as usage_count
         FROM order_resources orr
@@ -229,7 +224,6 @@ export const OrderDB = {
         LIMIT 5
     `, [startDate, endDate]),
 
-    // инаміка доходу по днях (якщо знадобиться для графіка)
     getDailyRevenue: (startDate: Date, endDate: Date) => pool.query(`
         SELECT DATE(created_at) as date, SUM(total_cost) as revenue
         FROM orders

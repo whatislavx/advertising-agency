@@ -4,10 +4,9 @@ import { Modal } from './utils/Modal.js';
     const lucide = (window as any).lucide;
     const flatpickr = (window as any).flatpickr;
 
-    // Змінні стану
     let currentOrderId: number | null = null;
     let currentOrderStatus: string | null = null;
-    let currentOrderDuration: number | null = null; // у днях
+    let currentOrderDuration: number | null = null; 
 
     let rescheduleStartPicker: any = null;
     let rescheduleEndPicker: any = null;
@@ -21,11 +20,9 @@ import { Modal } from './utils/Modal.js';
         return date.toLocaleDateString('uk-UA');
     }
 
-    // Розрахунок тривалості в днях (включно з початковою датою)
     function calculateDuration(startStr: string, endStr: string): number {
         const start = new Date(startStr);
         const end = new Date(endStr || startStr);
-        // Різниця в часі / мілісекунд в добі
         const diffTime = Math.abs(end.getTime() - start.getTime());
         const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
         return days + 1; 
@@ -33,7 +30,6 @@ import { Modal } from './utils/Modal.js';
 
     function getDisplayStatus(order: any): string {
         if (order.status === 'paid' && order.end_date) {
-            // Парсимо дату завершення як локальну дату (кінець дня)
             const parts = order.end_date.split('-');
             const localEndDate = new Date(
                 parseInt(parts[0]), 
@@ -191,8 +187,6 @@ import { Modal } from './utils/Modal.js';
         }
     }
 
-    // --- Функції дій ---
-
     (window as any).toggleDetails = (id: number) => {
         const detailsRow = document.getElementById(`details-${id}`);
         const icon = document.getElementById(`icon-${id}`);
@@ -269,7 +263,6 @@ import { Modal } from './utils/Modal.js';
         modal?.classList.remove('flex');
     };
 
-    // Ініціалізація календарів
     function initPickers() {
         if (typeof flatpickr === 'undefined') return;
 
@@ -283,26 +276,19 @@ import { Modal } from './utils/Modal.js';
                 locale: "uk",
                 dateFormat: "d.m.Y",
                 minDate: "today",
-                // Логіка при зміні початкової дати
                 onChange: function(selectedDates: Date[]) {
                     if (selectedDates.length > 0 && rescheduleEndPicker) {
                         const newStartDate = selectedDates[0];
-
-                        // Якщо замовлення оплачене - ФІКСУЄМО тривалість
                         if (currentOrderStatus === 'paid' && currentOrderDuration) {
-                            // Рахуємо нову кінцеву дату: start + (duration - 1)
                             const fixedEndDate = new Date(newStartDate);
                             fixedEndDate.setDate(newStartDate.getDate() + (currentOrderDuration - 1));
-                            
-                            // Встановлюємо цю дату як єдину можливу
+                        
                             rescheduleEndPicker.setDate(fixedEndDate);
                             rescheduleEndPicker.set('minDate', fixedEndDate);
                             rescheduleEndPicker.set('maxDate', fixedEndDate);
                         } 
-                        // Якщо не оплачене - просто зсуваємо мінімальну дату
                         else {
                             rescheduleEndPicker.set('minDate', newStartDate);
-                            // Знімаємо обмеження maxDate, якщо воно було
                             rescheduleEndPicker.set('maxDate', undefined); 
                         }
                     }
@@ -332,7 +318,6 @@ import { Modal } from './utils/Modal.js';
 
         initPickers();
 
-        // Встановлюємо початкові значення
         if (rescheduleStartPicker) {
             rescheduleStartPicker.setDate(new Date(start));
         }
@@ -340,12 +325,10 @@ import { Modal } from './utils/Modal.js';
             const endDateObj = end ? new Date(end) : new Date(start);
             rescheduleEndPicker.setDate(endDateObj);
 
-            // Якщо статус 'paid', то відразу блокуємо вибір кінцевої дати на поточну
             if (status === 'paid') {
                 rescheduleEndPicker.set('minDate', endDateObj);
                 rescheduleEndPicker.set('maxDate', endDateObj);
             } else {
-                // Якщо 'new', то просто мінімум = старт
                 rescheduleEndPicker.set('minDate', new Date(start));
                 rescheduleEndPicker.set('maxDate', undefined);
             }
@@ -372,7 +355,6 @@ import { Modal } from './utils/Modal.js';
         const event_date = `${y1}-${m1}-${d1}`;
         const end_date = `${y2}-${m2}-${d2}`;
 
-        // Подвійна перевірка на клієнті (для безпеки)
         if (currentOrderStatus === 'paid') {
             const newDuration = calculateDuration(event_date, end_date);
             if (newDuration !== currentOrderDuration) {

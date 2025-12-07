@@ -14,7 +14,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     function fetchServices() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                // Додаємо ?available=true
+
                 const response = yield fetch('/api/services?available=true');
                 if (response.ok) {
                     allServices = yield response.json();
@@ -29,13 +29,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     function formatCurrency(num) {
         return num.toLocaleString('uk-UA') + ' грн';
     }
-    // Оновлена функція: приймає об'єкт Service, а не рядок type
+
     function getServiceImage(service) {
-        // 1. Якщо є завантажене фото - повертаємо шлях до нього
+
         if (service.image_path) {
             return service.image_path;
         }
-        // 2. Інакше повертаємо старі заглушки (fallback) залежно від типу
+
         switch (service.type) {
             case 'tv': return 'https://images.unsplash.com/photo-1593784991188-c899ca07263b?w=400&h=300&fit=crop';
             case 'internet': return 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=400&h=300&fit=crop';
@@ -96,7 +96,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         if (userStr) {
             try {
                 const user = JSON.parse(userStr);
-                // Send tracking request without awaiting to not delay navigation too much
+
                 fetch('/api/analytics/view', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -107,7 +107,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 console.error("Tracking error", e);
             }
         }
-        // Navigate immediately
+
         window.location.href = `order-form.html?id=${serviceId}`;
     });
     function renderServices(services) {
@@ -121,8 +121,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             services.forEach(service => {
                 const card = document.createElement('div');
                 card.className = 'card flex flex-col';
-                // ЗМІНА 1: Просто беремо опис з об'єкта. Якщо його немає — буде undefined/порожній рядок.
-                // Ми більше не викликаємо getServiceDescription(service.type)
+
                 const descriptionText = service.description;
                 card.innerHTML = `
                     <div class="relative h-48 overflow-hidden bg-gray-200">
@@ -136,7 +135,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                         <h3 class="text-lg font-medium text-[#1a3a5c] mb-2">
                           ${service.name}
                         </h3>
-                        
+
                         ${descriptionText ? `
                             <p class="text-sm text-gray-600 mb-4 flex-1 line-clamp-3">
                                 ${descriptionText}
@@ -184,3 +183,4 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         init();
     }
 })();
+

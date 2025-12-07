@@ -8,7 +8,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { Modal } from './utils/Modal.js';
-// Допоміжна функція для відкриття/закриття модалок
 function toggleModal(modalId) {
     const modal = document.getElementById(modalId);
     if (!modal)
@@ -69,7 +68,6 @@ const typeTranslations = {
 function translateType(type) {
     return typeTranslations[type] || type;
 }
-// --- Custom Select Logic ---
 function setupCustomSelect(containerId) {
     const container = document.getElementById(containerId);
     if (!container)
@@ -132,7 +130,6 @@ function setupCustomSelect(containerId) {
         }
     });
 }
-// --- Логіка попереднього перегляду зображення ---
 function setupImagePreview() {
     const input = document.getElementById('service-image-input');
     const preview = document.getElementById('service-image-preview');
@@ -163,7 +160,6 @@ function setupImagePreview() {
         });
     }
 }
-// --- API запити ---
 function fetchServices() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -196,7 +192,7 @@ function renderResourcesDropdown() {
     const list = document.getElementById('resources-options-list');
     if (!list)
         return;
-    // Тут ми прибрали (type) як ви просили в попередньому запиті
+   
     list.innerHTML = resourcesList.map(res => `
         <label class="flex items-center gap-3 px-3 py-2.5 hover:bg-blue-50 rounded-lg cursor-pointer transition-colors">
             <input type="checkbox" value="${res.id}" class="resource-checkbox w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
@@ -253,7 +249,7 @@ function openAddServiceModal() {
     const placeholder = document.getElementById('service-image-placeholder');
     const descriptionInput = document.getElementById('service-description');
     const availableInput = document.getElementById('serviceAvailable');
-    // Reset inputs
+
     if (nameInput)
         nameInput.value = '';
     if (priceInput)
@@ -264,14 +260,14 @@ function openAddServiceModal() {
         typeText.textContent = 'Інтернет';
     if (descriptionInput) {
         descriptionInput.value = '';
-        // Re-attach listener just in case
+
         descriptionInput.removeEventListener('input', updateDescriptionCounter);
         descriptionInput.addEventListener('input', updateDescriptionCounter);
         updateDescriptionCounter();
     }
     if (availableInput)
         availableInput.checked = true;
-    // Reset image inputs
+
     if (fileInput)
         fileInput.value = '';
     const filenameEl = document.getElementById('service-image-filename');
@@ -282,7 +278,7 @@ function openAddServiceModal() {
         preview.classList.add('hidden');
     }
     placeholder === null || placeholder === void 0 ? void 0 : placeholder.classList.remove('hidden');
-    // Uncheck resources
+
     document.querySelectorAll('.resource-checkbox').forEach((cb) => cb.checked = false);
     const resTriggerText = document.querySelector('#resourcesSelectContainer .selected-text');
     if (resTriggerText)
@@ -306,7 +302,7 @@ window.editService = function (id) {
     const descriptionInput = document.getElementById('service-description');
     if (descriptionInput) {
         descriptionInput.value = service.description || '';
-        // Re-attach listener just in case
+  
         descriptionInput.removeEventListener('input', updateDescriptionCounter);
         descriptionInput.addEventListener('input', updateDescriptionCounter);
         updateDescriptionCounter();
@@ -323,15 +319,15 @@ window.editService = function (id) {
         };
         typeText.textContent = typeMap[service.type || 'internet'] || 'Інтернет';
     }
-    // --- Логіка відображення поточного зображення ---
+   
     const preview = document.getElementById('service-image-preview');
     const placeholder = document.getElementById('service-image-placeholder');
     const fileInput = document.getElementById('service-image-input');
     if (fileInput)
-        fileInput.value = ''; // Скидаємо файл
+        fileInput.value = '';
     if (service.image_path) {
         if (preview) {
-            preview.src = service.image_path; // Показуємо існуюче фото з сервера
+            preview.src = service.image_path; 
             preview.classList.remove('hidden');
         }
         placeholder === null || placeholder === void 0 ? void 0 : placeholder.classList.add('hidden');
@@ -341,8 +337,7 @@ window.editService = function (id) {
             preview.classList.add('hidden');
         placeholder === null || placeholder === void 0 ? void 0 : placeholder.classList.remove('hidden');
     }
-    // ----------------------------------------------
-    // Pre-select resources
+    
     const checkBoxes = document.querySelectorAll('.resource-checkbox');
     let selectedCount = 0;
     checkBoxes.forEach((cb) => {
@@ -368,13 +363,13 @@ function handleSaveService() {
         const nameInput = document.getElementById('service-name');
         const priceInput = document.getElementById('service-price');
         const typeInput = document.getElementById('service-type');
-        const fileInput = document.getElementById('service-image-input'); // Отримуємо input файлу
+        const fileInput = document.getElementById('service-image-input'); 
         const descriptionInput = document.getElementById('service-description');
         const availableInput = document.getElementById('serviceAvailable');
         const description = descriptionInput ? descriptionInput.value.trim() : '';
         const is_available = availableInput ? availableInput.checked : true;
         const name = nameInput.value.trim();
-        const base_price = priceInput.value; // Беремо як рядок
+        const base_price = priceInput.value; 
         const type = typeInput.value;
         const selectedResources = [];
         document.querySelectorAll('.resource-checkbox:checked').forEach((cb) => {
@@ -388,7 +383,7 @@ function handleSaveService() {
             yield Modal.alert(`Опис занадто довгий! Максимум ${MAX_DESCRIPTION_LENGTH} символів.`);
             return;
         }
-        // --- Використовуємо FormData для відправки файлу ---
+     
         const formData = new FormData();
         formData.append('name', name);
         formData.append('base_price', base_price);
@@ -396,23 +391,23 @@ function handleSaveService() {
         formData.append('description', description);
         formData.append('resourceIds', JSON.stringify(selectedResources));
         formData.append('is_available', is_available.toString());
-        // Якщо файл обрано, додаємо його
+   
         if (fileInput.files && fileInput.files[0]) {
             formData.append('image', fileInput.files[0]);
         }
-        // --------------------------------------------------
+   
         try {
             let response;
             if (editingServiceId) {
                 response = yield fetch(`/api/services/${editingServiceId}`, {
                     method: 'PATCH',
-                    body: formData // ВІДПРАВЛЯЄМО FORMDATA (без header Content-Type!)
+                    body: formData 
                 });
             }
             else {
                 response = yield fetch('/api/services', {
                     method: 'POST',
-                    body: formData // ВІДПРАВЛЯЄМО FORMDATA
+                    body: formData 
                 });
             }
             if (response.ok) {
@@ -460,7 +455,6 @@ function init() {
         setupCustomSelect('resourcesSelectContainer');
         fetchServices();
         fetchAllResources();
-        // Ініціалізація прев'ю картинки
         setupImagePreview();
         const descriptionInput = document.getElementById('service-description');
         if (descriptionInput) {

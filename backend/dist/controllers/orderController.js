@@ -78,12 +78,12 @@ const rescheduleOrder = async (req, res) => {
     const { id } = req.params;
     try {
         const updatedOrder = await (0, postgres_1.runTransaction)(async (client) => {
-            // 1. Отримуємо поточне замовлення
+
             const orderRes = await postgres_1.OrderDB.getById(client, id);
             if (orderRes.rows.length === 0)
                 throw new Error('Order not found');
             const order = orderRes.rows[0];
-            // 2. Розрахунок нової тривалості
+
             const start = new Date(event_date);
             const end = new Date(end_date);
             const diffTime = Math.abs(end.getTime() - start.getTime());
@@ -91,9 +91,9 @@ const rescheduleOrder = async (req, res) => {
             if (newDays <= 0)
                 throw new Error('Invalid dates');
             let newTotal = Number(order.total_cost);
-            // 3. Логіка перевірки статусу
+
             if (order.status === 'paid') {
-                // Для оплачених замовлень тривалість має зберігатися
+
                 const oldStart = new Date(order.event_date);
                 const oldEnd = new Date(order.end_date || order.event_date);
                 const oldDiff = Math.abs(oldEnd.getTime() - oldStart.getTime());
@@ -101,10 +101,10 @@ const rescheduleOrder = async (req, res) => {
                 if (newDays !== oldDays) {
                     throw new Error('Duration change not allowed for paid orders');
                 }
-                // Сума залишається старою, бо тривалість та сама
+
             }
             else {
-                // Для нових замовлень перераховуємо ціну
+
                 const serviceRes = await postgres_1.ServiceDB.getById(client, order.service_id);
                 const basePricePerDay = Number(serviceRes.rows[0].base_price);
                 const resourcesRes = await postgres_1.OrderDB.getResourceIdsByOrderId(client, id);
@@ -116,7 +116,7 @@ const rescheduleOrder = async (req, res) => {
                 }
                 newTotal = (basePricePerDay + resourcesCostPerDay) * newDays;
             }
-            // 4. Оновлення в БД
+
             const updateRes = await postgres_1.OrderDB.updateOrderDetails(id, event_date, end_date, newTotal);
             return updateRes.rows[0];
         });
@@ -133,3 +133,4 @@ const rescheduleOrder = async (req, res) => {
     }
 };
 exports.rescheduleOrder = rescheduleOrder;
+

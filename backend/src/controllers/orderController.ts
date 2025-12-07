@@ -13,7 +13,7 @@ export const getOrders = async (req: Request, res: Response) => {
 
 export const createOrder = async (req: Request, res: Response) => {
     const { user_id, service_id, event_date, end_date, resources } = req.body;
-    
+
     try {
         const result = await runTransaction(async (client) => {
             const serviceRes = await ServiceDB.getById(client, service_id);
@@ -43,7 +43,7 @@ export const createOrder = async (req: Request, res: Response) => {
                     await OrderDB.addResource(client, orderId, resId);
                 }
             }
-            
+
             return { orderId, total };
         });
 
@@ -81,12 +81,11 @@ export const rescheduleOrder = async (req: Request, res: Response) => {
 
     try {
         const updatedOrder = await runTransaction(async (client) => {
-            // 1. Отримуємо поточне замовлення
+
             const orderRes = await OrderDB.getById(client, id);
             if (orderRes.rows.length === 0) throw new Error('Order not found');
             const order = orderRes.rows[0];
 
-            // 2. Розрахунок нової тривалості
             const start = new Date(event_date);
             const end = new Date(end_date);
             const diffTime = Math.abs(end.getTime() - start.getTime());
@@ -96,9 +95,8 @@ export const rescheduleOrder = async (req: Request, res: Response) => {
 
             let newTotal = Number(order.total_cost);
 
-            // 3. Логіка перевірки статусу
             if (order.status === 'paid') {
-                // Для оплачених замовлень тривалість має зберігатися
+
                 const oldStart = new Date(order.event_date);
                 const oldEnd = new Date(order.end_date || order.event_date);
                 const oldDiff = Math.abs(oldEnd.getTime() - oldStart.getTime());
@@ -107,15 +105,15 @@ export const rescheduleOrder = async (req: Request, res: Response) => {
                 if (newDays !== oldDays) {
                     throw new Error('Duration change not allowed for paid orders');
                 }
-                // Сума залишається старою, бо тривалість та сама
+
             } else {
-                // Для нових замовлень перераховуємо ціну
+
                 const serviceRes = await ServiceDB.getById(client, order.service_id);
                 const basePricePerDay = Number(serviceRes.rows[0].base_price);
 
                 const resourcesRes = await OrderDB.getResourceIdsByOrderId(client, id);
                 let resourcesCostPerDay = 0;
-                
+
                 if (resourcesRes.rows.length > 0) {
                     const resourceIds = resourcesRes.rows.map(r => r.resource_id);
                     const resourceDetails = await ResourceDB.getByIds(client, resourceIds);
@@ -125,7 +123,6 @@ export const rescheduleOrder = async (req: Request, res: Response) => {
                 newTotal = (basePricePerDay + resourcesCostPerDay) * newDays;
             }
 
-            // 4. Оновлення в БД
             const updateRes = await OrderDB.updateOrderDetails(id, event_date, end_date, newTotal);
             return updateRes.rows[0];
         });

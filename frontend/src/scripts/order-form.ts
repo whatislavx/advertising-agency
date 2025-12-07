@@ -7,7 +7,7 @@ import { Modal } from './utils/Modal.js';
         id: number;
         name: string;
         base_price: string | number;
-        allowed_resources?: number[]; // IDs available for this service
+        allowed_resources?: number[]; 
     }
 
     interface Resource {
@@ -30,7 +30,6 @@ import { Modal } from './utils/Modal.js';
     let servicePricePerDay = 0;
     let durationInDays = 0; 
 
-    // Функція завантаження даних
     async function fetchData() {
         try {
             const [servicesRes, resourcesRes] = await Promise.all([
@@ -148,7 +147,6 @@ import { Modal } from './utils/Modal.js';
 
         resourceContainer.innerHTML = '';
         
-        // Filter resources based on allowed_resources IDs
         const allowedIds = currentService.allowed_resources || [];
         const availableResources = resources.filter(res => allowedIds.includes(res.id));
 
@@ -187,7 +185,7 @@ import { Modal } from './utils/Modal.js';
             if (priceEl) priceEl.innerText = formatCurrency(servicePricePerDay) + ' / добу';
             
             updateSummary();
-            renderResourcesForService(); // NEW: Filter and render
+            renderResourcesForService();
         }
     }
 

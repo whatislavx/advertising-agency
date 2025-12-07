@@ -10,7 +10,6 @@
     }
 }
 
-// Картка вибору ресурсу в формі замовлення
 .resource-card {
     display: flex;
     align-items: flex-start;
@@ -22,14 +21,13 @@
     transition: all 0.2s;
 
     &:hover {
-        border-color: #9ca3af; // gray-400
+        border-color: #9ca3af; 
     }
 
-    // Стан, коли чекбокс вибрано (додається через JS логіку або :has в CSS)
     &:has(input:checked),
     &.selected {
         border-color: $orange;
-        background-color: #fff5f2; // Світло-помаранчевий
+        background-color: #fff5f2; 
     }
 }
 
