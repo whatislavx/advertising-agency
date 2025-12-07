@@ -27,6 +27,36 @@ const lucide = window.lucide;
 let services = [];
 let resourcesList = [];
 let editingServiceId = null;
+const MAX_DESCRIPTION_LENGTH = 100;
+function updateDescriptionCounter() {
+    const textarea = document.getElementById('service-description');
+    const counter = document.getElementById('description-counter');
+    const error = document.getElementById('description-error');
+    if (!textarea || !counter)
+        return;
+    const length = textarea.value.length;
+    counter.textContent = `${length}/${MAX_DESCRIPTION_LENGTH}`;
+    if (length > MAX_DESCRIPTION_LENGTH) {
+        counter.classList.add('text-red-500');
+        counter.classList.remove('text-gray-500');
+        textarea.classList.add('border-red-500');
+        textarea.classList.remove('border-gray-300');
+        textarea.classList.add('focus:ring-red-500');
+        textarea.classList.remove('focus:ring-[#ff6b35]');
+        if (error)
+            error.classList.remove('hidden');
+    }
+    else {
+        counter.classList.remove('text-red-500');
+        counter.classList.add('text-gray-500');
+        textarea.classList.remove('border-red-500');
+        textarea.classList.add('border-gray-300');
+        textarea.classList.remove('focus:ring-red-500');
+        textarea.classList.add('focus:ring-[#ff6b35]');
+        if (error)
+            error.classList.add('hidden');
+    }
+}
 function formatCurrency(amount) {
     return Number(amount).toLocaleString('uk-UA', { style: 'currency', currency: 'UAH' }).replace('UAH', '₴').replace(',', '.');
 }
@@ -107,6 +137,7 @@ function setupImagePreview() {
     const input = document.getElementById('service-image-input');
     const preview = document.getElementById('service-image-preview');
     const placeholder = document.getElementById('service-image-placeholder');
+    const filenameEl = document.getElementById('service-image-filename');
     if (input) {
         input.addEventListener('change', () => {
             var _a;
@@ -122,6 +153,12 @@ function setupImagePreview() {
                     placeholder === null || placeholder === void 0 ? void 0 : placeholder.classList.add('hidden');
                 };
                 reader.readAsDataURL(file);
+                if (filenameEl)
+                    filenameEl.textContent = file.name;
+            }
+            else {
+                if (filenameEl)
+                    filenameEl.textContent = 'Файл не вибрано';
             }
         });
     }
@@ -179,7 +216,6 @@ function renderServices(servicesData) {
         <tr>
             <td class="text-gray-600 text-sm text-left">SRV-${service.id.toString().padStart(3, '0')}</td>
             <td class="text-primary font-medium text-left flex items-center gap-2">
-               ${service.image_path ? `<img src="${service.image_path}" class="w-8 h-8 rounded object-cover border border-gray-200" alt="">` : ''}
                ${service.name}
             </td>
             <td class="text-left"><span class="badge badge-blue">${translateType(service.type || 'other')}</span></td>
@@ -226,13 +262,21 @@ function openAddServiceModal() {
         typeInput.value = 'internet';
     if (typeText)
         typeText.textContent = 'Інтернет';
-    if (descriptionInput)
+    if (descriptionInput) {
         descriptionInput.value = '';
+        // Re-attach listener just in case
+        descriptionInput.removeEventListener('input', updateDescriptionCounter);
+        descriptionInput.addEventListener('input', updateDescriptionCounter);
+        updateDescriptionCounter();
+    }
     if (availableInput)
         availableInput.checked = true;
     // Reset image inputs
     if (fileInput)
         fileInput.value = '';
+    const filenameEl = document.getElementById('service-image-filename');
+    if (filenameEl)
+        filenameEl.textContent = 'Файл не вибрано';
     if (preview) {
         preview.src = '';
         preview.classList.add('hidden');
@@ -260,8 +304,13 @@ window.editService = function (id) {
     const typeText = document.querySelector('#serviceTypeContainer .selected-text');
     const availableInput = document.getElementById('serviceAvailable');
     const descriptionInput = document.getElementById('service-description');
-    if (descriptionInput)
+    if (descriptionInput) {
         descriptionInput.value = service.description || '';
+        // Re-attach listener just in case
+        descriptionInput.removeEventListener('input', updateDescriptionCounter);
+        descriptionInput.addEventListener('input', updateDescriptionCounter);
+        updateDescriptionCounter();
+    }
     if (availableInput)
         availableInput.checked = service.is_available;
     if (typeInput)
@@ -333,6 +382,10 @@ function handleSaveService() {
         });
         if (!name || !base_price) {
             yield Modal.alert('Будь ласка, заповніть всі поля коректно');
+            return;
+        }
+        if (description.length > MAX_DESCRIPTION_LENGTH) {
+            yield Modal.alert(`Опис занадто довгий! Максимум ${MAX_DESCRIPTION_LENGTH} символів.`);
             return;
         }
         // --- Використовуємо FormData для відправки файлу ---
@@ -409,6 +462,10 @@ function init() {
         fetchAllResources();
         // Ініціалізація прев'ю картинки
         setupImagePreview();
+        const descriptionInput = document.getElementById('service-description');
+        if (descriptionInput) {
+            descriptionInput.addEventListener('input', updateDescriptionCounter);
+        }
         const btnAddService = document.getElementById('btn-add-service');
         if (btnAddService) {
             btnAddService.addEventListener('click', (e) => {

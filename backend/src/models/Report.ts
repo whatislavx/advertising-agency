@@ -3,7 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface IReport extends Document {
     type: string;
     period: string;
-    generatedData: any; // Schema.Types.Mixed
+    generatedData: any; 
     managerId?: number;
     createdAt: Date;
 }
@@ -19,7 +19,7 @@ const ReportSchema: Schema = new Schema({
     },
     generatedData: { 
         type: Schema.Types.Mixed, 
-        required: true // Mongoose зберігає тут будь-яку JSON структуру "як є" [cite: 13-16]
+        required: true 
     },
     managerId: { 
         type: Number, 
