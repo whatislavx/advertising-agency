@@ -43,9 +43,10 @@
 
     .container {
         max-width: 900px;
-        margin: 30px auto;
+        margin: 30px auto 80px;
         width: 100%;
         padding: 0 20px;
+        flex: 1;
     }
 
     .card {
